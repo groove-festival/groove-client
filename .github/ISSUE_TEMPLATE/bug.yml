@@ -1,0 +1,93 @@
+name: 버그 신고
+description: 재현 절차와 기대 동작이 확인된 프론트엔드 문제를 신고합니다.
+title: "[버그] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        재현 가능한 사실과 사용자 영향을 중심으로 작성해 주세요.
+        로그와 화면 자료에서 비밀번호, 토큰, 개인정보, 원본 사용자 데이터를 제거하세요.
+
+  - type: checkboxes
+    id: duplicate_check
+    attributes:
+      label: 중복 확인
+      options:
+        - label: 같은 증상을 다루는 기존 Issue를 확인했습니다.
+          required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: 문제와 영향
+      description: 어떤 사용자가 어떤 기능을 사용할 수 없는지 설명해 주세요.
+      placeholder: 사용자가 ... 할 때 ... 문제가 발생합니다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 재현 절차
+      description: 최소한의 재현 순서를 번호로 작성해 주세요.
+      placeholder: |
+        1. ... 페이지로 이동합니다.
+        2. ... 값을 입력합니다.
+        3. ... 동작을 실행합니다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_behavior
+    attributes:
+      label: 실제 결과
+      description: 실제로 관찰된 결과와 오류 문구를 적어 주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: 기대 결과
+      description: 올바르게 동작했을 때 사용자가 보게 될 결과를 적어 주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 재현 환경
+      description: 브라우저, OS, 화면 크기, 실행 환경 등 재현에 필요한 정보만 적어 주세요.
+      placeholder: |
+        - 브라우저와 버전:
+        - OS:
+        - 화면 크기:
+        - 실행 환경: local / preview / production
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 안전하게 정리한 증거
+      description: 민감정보를 제거한 스크린샷, 영상, 로그 또는 오류 추적 링크를 첨부하세요.
+      placeholder: 없음
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: 완료 기준
+      description: 수정과 회귀 방지를 확인할 조건을 적어 주세요.
+      placeholder: |
+        - [ ] 위 재현 절차에서 문제가 발생하지 않는다.
+        - [ ] 가능한 경우 회귀 테스트가 추가된다.
+        - [ ] FSD와 관련 품질 검사가 실행된다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: ai_context
+    attributes:
+      label: AI 지원 사용 맥락
+      description: AI가 원인 분석이나 제안에 실질적으로 기여했다면 사용 목적과 참고 맥락을 요약하세요.
+      placeholder: 사용하지 않음 또는 사용 목적과 안전한 입력 맥락 요약
