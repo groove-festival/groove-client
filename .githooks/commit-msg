@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Git for Windows may launch hooks without its POSIX tools on PATH.
+PATH="/usr/bin:$PATH"
+export PATH
+
+commit_message_file="$1"
+commit_message=$(head -n 1 "$commit_message_file")
+pattern='^(feat|fix|refactor|docs|design|chore|test|style|perf|ci)(\([a-z0-9/-]+\))?: .+'
+
+if ! printf '%s\n' "$commit_message" | grep -Eq "$pattern"; then
+  echo "Invalid commit message."
+  echo "Use: <type>(<scope>): <summary>"
+  echo "Example: feat(application): 가요제 신청 기능 추가"
+  exit 1
+fi
