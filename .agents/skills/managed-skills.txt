@@ -1,0 +1,10 @@
+# Canonical repository Skills copied to .claude/skills/.
+# Keep one lowercase skill directory name per line.
+project-workflow
+project-ai-worklog
+project-testing
+project-quality-gates
+project-coding
+project-review
+project-specs-sync
+project-fsd
