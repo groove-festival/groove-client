@@ -158,9 +158,28 @@ pnpm hooks:install
 ```
 
 `.githooks/commit-msg`가 shell에서 메시지 첫 줄을 직접 검사해 위 형식에 맞지
-않는 메시지를 거부한다. 별도 hook 패키지는 사용하지 않는다. 관련 없는
-변경을 한 커밋에 섞거나 비밀정보·개인 설정을 커밋하지 않는다. AI Agent는
-사용자가 명시적으로 요청하고 커밋 계획을 승인하기 전에는 staging이나
+않는 메시지를 거부한다. `post-commit`은 현재 HEAD를 Notion 기록 대기로
+표시하고 `pre-push`는 확인된 Notion 기록이 없으면 push를 막는다. 별도 hook
+패키지는 사용하지 않는다.
+
+팀원은 checkout마다 자신의 이름 하위 페이지를 설정한다.
+
+```sh
+pnpm notion:setup -- "<내 Notion 하위 페이지 URL>"
+```
+
+사람 이름이나 개인 페이지 매핑, OAuth 인증 정보는 저장소에 커밋하지 않는다.
+여러 커밋을 한 작업으로 나누었다면 마지막 계획 커밋 뒤, push 전에 한 개의
+Notion 기록으로 묶고 포함된 commit hash를 모두 적는다. MCP 장애나 긴급한
+예외로 guard를 우회해야 할 때만 아래 one-shot 명령을 사용하고, 미동기화
+상태와 이유를 숨기지 않는다.
+
+```sh
+git -c aiworklog.skip=true push
+```
+
+관련 없는 변경을 한 커밋에 섞거나 비밀정보·개인 설정을 커밋하지 않는다. AI
+Agent는 사용자가 명시적으로 요청하고 커밋 계획을 승인하기 전에는 staging이나
 commit을 실행하지 않는다.
 
 ## 8. 문서와 작업 기록

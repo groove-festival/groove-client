@@ -75,7 +75,11 @@ AI 자기 점검이나 다른 AI의 교차 점검은 AI 산출물에 포함할 �
 6. 결과를 `통과`, `실패`, `미실행`, `수동 확인 필요`로 구분한다.
 7. 기록 대상이면 `project-ai-worklog` 기준으로 현재 월의 파일에 증거를
    기록하되 과거 기록은 읽지 않는다.
-8. 변경, 검증, 보존한 기존 변경, 실패, 남은 위험을 사용자에게 보고한다.
+8. commit과 push가 함께 승인되고 checkout이 Notion 기록에 opt-in했다면
+   로컬 기록을 포함해 최종 계획 commit을 만든 뒤 `project-notion-worklog`로
+   개인 하위 페이지에 한 건을 작성하고 다시 읽어 확인한다.
+9. Notion 기록 확인 뒤에만 동기화 표시를 남기고 push한다.
+10. 변경, 검증, 보존한 기존 변경, 실패, 남은 위험을 사용자에게 보고한다.
 
 삭제, 배포, 프로덕션 변경, 외부 메시지, 비용 발생 작업은 이 흐름만으로
 허가되지 않는다. 사용자의 별도 승인과 기존 저장소 규칙이 필요하다.
@@ -140,6 +144,23 @@ AI 자기 점검이나 다른 AI의 교차 점검은 AI 산출물에 포함할 �
 사람 검토·승인 상태는 이 표와 작업 기록에 추가하지 않는다. 자동 검증은
 실제로 관찰한 결과만 위 상태로 기록한다.
 
+### 팀 Notion 기록
+
+- 저장소 월별 worklog가 추적 가능한 원본이고 Notion은 읽기 좋은 팀 공유
+  사본이다.
+- 부모 페이지의 팀원별 하위 페이지 중 현재 checkout에 설정된 한 곳에만
+  기록한다. 팀원의 이름과 페이지 매핑은 저장소에 넣지 않는다.
+- 한 번의 push에 여러 계획 commit이 포함되면 한 개의 Notion 페이지로
+  묶고 모든 commit hash를 남긴다.
+- 페이지는 `작업 내용`, `결정과 이유`, `AI와 정리한 내용`, `검증`, `남은
+사항`을 사용한다. 대화 원문, 반복 질문, 결과에 영향 없는 시행착오는
+  복사하지 않는다.
+- 실제 작성 뒤 페이지를 다시 읽고 제목, 필수 구획, commit hash, 검증 표현,
+  민감 정보 부재를 확인한다. 가능한 환경에서는 첫 화면과 목록 구획도
+  시각적으로 확인한다.
+- 작성·재조회가 실패하면 동기화 표시를 남기지 않는다. `pre-push` hook은
+  현재 HEAD의 확인 증거가 없으면 push를 막는다.
+
 ## 5. 민감 정보와 권한
 
 - API 키, 토큰, 비밀번호, 개인정보, 원본 사용자 데이터, 비공개 운영
@@ -152,6 +173,9 @@ AI 자기 점검이나 다른 AI의 교차 점검은 AI 산출물에 포함할 �
 - 기존 사용자·팀원 변경을 임의로 되돌리거나 덮어쓰지 않는다.
 - commit, push, branch·PR 생성, 배포, 삭제, 프로덕션 변경, 외부 쓰기는
   사용자 요청과 승인 범위를 각각 확인한다.
+- `pnpm notion:setup`으로 현재 checkout의 개인 대상 페이지를 설정한 것은
+  해당 페이지 아래에 이 Workflow의 작업 기록을 게시하는 opt-in이다. 다른
+  페이지나 다른 외부 시스템 쓰기 권한으로 확대하지 않는다.
 - 사용자가 commit을 요청한 경우에도 먼저 commit 순서, 메시지, 포함 파일,
   분리 이유, 각 검증 방법을 제시한다. 사용자가 그 계획을 명시적으로
   승인하기 전에는 `git add`나 `git commit`을 실행하지 않는다.
@@ -191,6 +215,8 @@ AI 자기 점검이나 다른 AI의 교차 점검은 AI 산출물에 포함할 �
 | Skill 탐색 경로 | `.agents/skills/`                      | `.claude/skills/`                       |
 | Skill 원본      | `.agents/skills/`                      | 원본에서 생성된 호환 사본               |
 | 기록 기준       | 이 문서의 템플릿과 검증 상태 의미      | 동일                                    |
+| Notion MCP 설정 | `.codex/config.toml`                   | `.mcp.json`                             |
+| 개인 대상·OAuth | checkout·Codex 사용자 로컬 설정        | checkout·Claude 사용자 로컬 설정        |
 
 `.agents/skills/`만 사람이 수정한다. `.claude/skills/`의 manifest 관리
 대상은 생성물이며 직접 수정하지 않는다. 동기화 스크립트는
@@ -242,6 +268,7 @@ Playwright, ESLint, Prettier, Tailwind, Steiger 설정이 존재한다.
 | 애플리케이션 fast/full gate         | `pnpm check:fast`, `pnpm check:full` |
 | Workflow Skill 동기화               | 위 `Sync` 명령                       |
 | Workflow Skill 드리프트·frontmatter | 위 `Check` 명령                      |
+| Notion 대상·동기화 상태             | `pnpm notion:status`                 |
 
 명령은 실행 전에 현재 `package.json`, 설정, CI를 다시 확인한다. CI는 아직
 없으므로 위 명령은 현재 로컬 품질 게이트다.
@@ -323,9 +350,12 @@ AI 산출물과 실제 사람의 결정·수정 구분, 실패·미실행·남�
 
 - [OpenAI Codex `AGENTS.md`](https://developers.openai.com/codex/guides/agents-md)
 - [OpenAI Codex Skills](https://developers.openai.com/codex/skills)
+- [OpenAI Codex MCP](https://developers.openai.com/codex/mcp)
 - [Agent Skills Specification](https://agentskills.io/specification)
 - [Claude Code Skills](https://code.claude.com/docs/en/slash-commands)
+- [Claude Code MCP](https://code.claude.com/docs/en/mcp)
 - [Claude Code `CLAUDE.md`](https://docs.anthropic.com/en/docs/claude-code/memory)
+- [Notion MCP](https://developers.notion.com/guides/mcp/get-started-with-mcp)
 - [GitHub Issue Form syntax](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-issue-forms)
 - [GitHub Pull Request templates](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/creating-a-pull-request-template-for-your-repository)
 
@@ -334,3 +364,4 @@ AI 산출물과 실제 사람의 결정·수정 구분, 실패·미실행·남�
 실질적인 AI 지원 작업 기록은 `docs/ai-worklogs/YYYY-MM.md`에 월별로 둔다.
 이 정책 문서에는 실제 기록을 추가하지 않는다. 과거 기록은 확인 가능한
 증거 없이 소급 작성하지 않으며, 일상 작업에서 전체 기록을 다시 읽지 않는다.
+Notion 사본은 commit 이후 push 전에 생성하며 로컬 기록을 대체하지 않는다.

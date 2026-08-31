@@ -18,6 +18,34 @@ pnpm dev
 않습니다. `pnpm hooks:install`은 현재 checkout의 `core.hooksPath`를
 `.githooks`로 설정해 커밋 메시지 형식을 검사합니다.
 
+### 팀 Notion 작업 기록 설정
+
+저장소는 Codex와 Claude Code에서 공식 Notion 원격 MCP 설정을 공유하지만,
+OAuth와 기록 대상은 팀원별 컴퓨터에 따로 설정합니다. 각 팀원은 자신의 이름
+하위 페이지 URL로 checkout마다 한 번 실행합니다.
+
+```sh
+pnpm notion:setup -- "<내 Notion 하위 페이지 URL>"
+pnpm notion:status
+```
+
+Codex는 먼저 `codex mcp list`로 프로젝트 설정이 보이는지 확인합니다. 현재
+클라이언트가 tracked 설정을 표시하지 않으면 아래 명령으로 사용자 로컬 설정을
+추가한 뒤 인증합니다.
+
+```sh
+codex mcp add notion --url https://mcp.notion.com/mcp
+codex mcp login notion
+```
+
+Claude Code는 `/mcp`에서 프로젝트 서버를 승인하고 각자의 Notion 계정으로
+인증합니다. 인증 정보와 개인 페이지 URL은 커밋되지 않습니다.
+
+최종 계획 커밋이 만들어지면 `post-commit` hook이 Notion 기록을 대기 상태로
+표시합니다. AI Agent가 개인 하위 페이지에 기록을 작성하고 다시 읽어 확인한
+뒤 동기화 표시를 남깁니다. 이 증거가 없으면 `pre-push` hook이 push를
+차단합니다.
+
 ## 기술 구성
 
 - TypeScript, React, Vite, React Router
@@ -38,6 +66,8 @@ GA·Sentry·Clarity는 `VITE_TELEMETRY_ENABLED=true`이고 각 서비스 식별�
 | -------------------- | --------------------------------------- |
 | `pnpm dev`           | `/groove/` 개발 서버                    |
 | `pnpm hooks:install` | tracked Git hook 활성화                 |
+| `pnpm notion:setup`  | 현재 checkout의 개인 Notion 대상 설정   |
+| `pnpm notion:status` | commit·Notion 동기화 상태 확인          |
 | `pnpm build`         | TypeScript 검사 후 production build     |
 | `pnpm lint`          | ESLint                                  |
 | `pnpm typecheck`     | TypeScript project 검사                 |
