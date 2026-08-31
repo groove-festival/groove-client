@@ -31,6 +31,7 @@ Load a focused Skill only when its decision is needed:
 | Need | Skill |
 |---|---|
 | Material AI evidence | `project-ai-worklog` |
+| Post-commit Notion publication before push | `project-notion-worklog` |
 | Non-trivial test selection or regression coverage | `project-testing` |
 | Targeted/fast/full gate decision or failure analysis | `project-quality-gates` |
 | Code implementation or refactor | `project-coding` |
@@ -69,3 +70,8 @@ Report:
 
 Work is complete when requested artifacts exist and the risk-relevant evidence
 is truthful. Completion does not require every available check.
+
+When the user authorized both commit and push and the checkout opted into the
+Notion guard, keep this order: local evidence, final planned commit, verified
+Notion publication, push. Do not create one Notion page per split commit; one
+record may cover the complete unpushed commit batch.

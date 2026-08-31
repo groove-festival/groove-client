@@ -52,3 +52,8 @@ artifact's existence. Do not record human review or approval statuses.
 Never read or rewrite older entries merely to prepare a new one. Correct a
 factual error transparently only when the task concerns that entry and evidence
 supports the change.
+
+When the user authorized a commit and push and this checkout is configured for
+Notion publishing, finish this local entry before the final planned commit.
+After commit, route to `project-notion-worklog`; do not publish an uncommitted
+draft or mark an external record as synchronized from an expected result.

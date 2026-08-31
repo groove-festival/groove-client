@@ -47,6 +47,11 @@ full project survey.
   authorized.
 - For a requested commit, present the order, messages, files, separation reason,
   and validation first; wait for approval before `git add` or `git commit`.
+- When commit and push are authorized, finish the local AI worklog before the
+  final planned commit, commit, publish one verified Notion record with
+  `project-notion-worklog`, then push. A checkout opted in with
+  `pnpm notion:setup` authorizes writes only below its configured personal page.
+  Never mark Notion synchronization without reading the written page back.
 
 ## Skill routing
 
@@ -57,6 +62,8 @@ Load only the smallest applicable set of canonical Skills under
   coordination; do not load it by default for a narrow task.
 - `project-ai-worklog`: material AI-use evidence in
   `docs/ai-worklogs/YYYY-MM.md`.
+- `project-notion-worklog`: post-commit, pre-push publication to the checkout
+  owner's configured Notion page.
 - `project-testing`: non-trivial test selection, design, or regression coverage.
 - `project-quality-gates`: choosing targeted/fast/full gates, interpreting a
   failure, or assessing commit/PR/release readiness.
