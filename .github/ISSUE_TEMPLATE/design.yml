@@ -1,0 +1,30 @@
+name: 디자인
+description: 화면과 UI 디자인 작업을 제안합니다.
+title: "[디자인] "
+body:
+  - type: markdown
+    attributes:
+      value: 비밀번호, 토큰, 개인정보, 원본 사용자 데이터는 포함하지 마세요.
+
+  - type: textarea
+    id: target
+    attributes:
+      label: 디자인 대상
+      description: 변경할 화면이나 UI와 현재 문제를 적어 주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    id: change
+    attributes:
+      label: 원하는 변경
+      description: 어떻게 바뀌면 되는지 적어 주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: 참고 자료
+      description: 관련 디자인, 이미지, Issue가 있으면 첨부해 주세요.
+      placeholder: 없음
