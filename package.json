@@ -10,6 +10,9 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "hooks:install": "node scripts/install-git-hooks.mjs",
+    "notion:setup": "node scripts/notion-worklog-state.mjs setup",
+    "notion:status": "node scripts/notion-worklog-state.mjs status",
+    "notion:mark": "node scripts/notion-worklog-state.mjs mark",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "lint": "eslint . --max-warnings 0",

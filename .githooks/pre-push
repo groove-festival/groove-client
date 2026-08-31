@@ -1,0 +1,18 @@
+#!/bin/sh
+
+PATH="/usr/bin:$PATH"
+export PATH
+
+repository_root=$(git rev-parse --show-toplevel) || exit 1
+
+while read -r local_ref local_oid remote_ref remote_oid; do
+  case "$local_oid" in
+    ""|0000000000000000000000000000000000000000) continue ;;
+  esac
+
+  if ! node "$repository_root/scripts/notion-worklog-state.mjs" check "$local_oid"; then
+    echo "Push blocked for $local_ref: publish the pending work record with project-notion-worklog."
+    echo "For an MCP outage or urgent exception only: git -c aiworklog.skip=true push"
+    exit 1
+  fi
+done
