@@ -1,13 +1,13 @@
 ---
 name: project-ai-worklog
-description: Record material AI-assisted project work with supplied context, AI output, actual human decisions or edits, executed validation, failures, and remaining unknowns. Use before handing off AI-influenced artifacts or decisions; do not use for trivial conversations with no material impact.
+description: Record material AI-assisted artifacts or decisions in the current monthly worklog with actual context, output, decisions, validation, and unknowns. Do not use for trivial questions or unadopted suggestions.
 ---
 
 # Project AI Worklog
 
-Use `docs/AI_AGENT_WORKFLOW.md` as the single source for field meanings,
-validation statuses, and the exact template. The canonical Skill source is
-`.agents/skills/project-ai-worklog/SKILL.md`.
+Use sections 4 and 5 of `docs/AI_AGENT_WORKFLOW.md` as the source for field
+meanings, statuses, and the exact template. Do not load the whole policy for a
+routine entry, and do not read prior worklogs unless auditing or correcting one.
 
 ## Decide whether to record
 
@@ -32,8 +32,10 @@ artifact's existence. Do not record human review or approval statuses.
 
 ## Write the entry
 
-- Append an entry under `## 11. 실제 작업 기록` in
-  `docs/AI_AGENT_WORKFLOW.md` using the canonical template.
+- Append the entry to `docs/ai-worklogs/YYYY-MM.md` for the current month.
+- If the monthly file does not exist, create it with
+  `# AI worklog — YYYY-MM` before the first entry. Do not copy policy prose into
+  the log.
 - Use safe paths, categories, or summaries instead of secrets, personal data,
   raw user data, or private operations data.
 - Name major changed or proposed files under `AI 제안 또는 산출물`.
@@ -47,5 +49,6 @@ artifact's existence. Do not record human review or approval statuses.
   `남은 확인 사항`.
 - Use `없음` when there is no real Issue, PR, or Discussion.
 
-Never rewrite older entries to imply evidence that was not recorded at the
-time. Correct a factual error transparently when evidence supports the change.
+Never read or rewrite older entries merely to prepare a new one. Correct a
+factual error transparently only when the task concerns that entry and evidence
+supports the change.

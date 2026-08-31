@@ -1,6 +1,6 @@
 ---
 name: project-review
-description: Review repository changes for correctness, security, regressions, test adequacy, and maintainability with evidence-based findings. Use for review-only tasks or pre-handoff risk review; keep the result identified as AI output.
+description: Review repository changes for correctness, security, regressions, tests, and maintainability when the user requests review or a high-risk change warrants independent defect search. Do not use for routine self-checks.
 ---
 
 # Project Review
@@ -36,5 +36,5 @@ Order findings by severity. If no actionable findings are found, say so and
 state residual testing or context gaps. A clean AI review is not proof of
 correctness.
 
-Record the activity under the AI contribution. Do not create a human review or
-approval status. Send findings and open questions to `project-ai-worklog`.
+Record the activity as AI contribution. Do not create a human review or approval
+status. Send findings to `project-ai-worklog` only when a worklog is required.

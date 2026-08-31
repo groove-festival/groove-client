@@ -19,7 +19,7 @@
 8. [Issue·PR·리뷰 통합](#8-issuepr리뷰-통합)
 9. [평가와 개선](#9-평가와-개선)
 10. [참고 자료](#10-참고-자료)
-11. [실제 작업 기록](#11-실제-작업-기록)
+11. [작업 기록 위치](#11-작업-기록-위치)
 
 ## 1. 목적과 기록 범위
 
@@ -66,20 +66,31 @@ AI 자기 점검이나 다른 AI의 교차 점검은 AI 산출물에 포함할 �
 
 ## 3. 표준 작업 흐름
 
-1. 관련 지침, 프로젝트 문서, 현재 Git 변경, 코드, 테스트, 명세를 읽는다.
+1. 가장 가까운 지침과 현재 Git 변경을 확인하고, 결정에 직접 필요한 코드,
+   테스트, 명세만 읽는다.
 2. 사용자 문제, 작업 범위, 비목표, 완료 기준을 사실에 근거해 정리한다.
-3. 영향 범위, 위험, 변경 파일, 필요한 Skill과 문서를 확인한다.
+3. 영향 범위, 위험, 변경 파일과 가장 작은 Skill·문서 집합을 확인한다.
 4. 기존 패턴을 지키며 필요한 구현이나 문서 변경을 최소 범위로 수행한다.
 5. 가장 작고 관련성 높은 검증부터 실행하고 위험에 따라 범위를 넓힌다.
 6. 결과를 `통과`, `실패`, `미실행`, `수동 확인 필요`로 구분한다.
-7. AI 사용, 실제 사람의 결정·수정, 검증 증거를 `project-ai-worklog`
-   기준으로 기록한다.
+7. 기록 대상이면 `project-ai-worklog` 기준으로 현재 월의 파일에 증거를
+   기록하되 과거 기록은 읽지 않는다.
 8. 변경, 검증, 보존한 기존 변경, 실패, 남은 위험을 사용자에게 보고한다.
 
 삭제, 배포, 프로덕션 변경, 외부 메시지, 비용 발생 작업은 이 흐름만으로
 허가되지 않는다. 사용자의 별도 승인과 기존 저장소 규칙이 필요하다.
 
 ## 4. 작업 기록
+
+### 저장 위치와 로딩 범위
+
+- 이 문서는 기록 정책과 템플릿만 보관한다.
+- 실제 항목은 `docs/ai-worklogs/YYYY-MM.md`에 월별로 추가한다.
+- 새 월 파일의 제목은 `# AI worklog — YYYY-MM`으로 시작한다.
+- 새 항목 작성 시 현재 월 파일의 끝만 확인한다. 감사, 오류 수정, 과거 결정
+  조사 작업이 아니면 이전 월 파일이나 기존 항목을 AI 맥락에 넣지 않는다.
+- Issue나 PR이 이미 같은 증거를 충분히 담고 있어도 저장소 정책상 기록 대상인
+  경우에는 링크와 간결한 요약만 남기고 내용을 장문으로 복제하지 않는다.
 
 ### 작성 규칙
 
@@ -162,12 +173,21 @@ AI 자기 점검이나 다른 AI의 교차 점검은 AI 산출물에 포함할 �
 
 ## 6. Codex와 Claude Code 공통 운영
 
+### 최소 맥락 원칙
+
+- Codex와 Claude Code는 상시 계약만 먼저 읽고, 현재 결정에 필요한 문서와
+  Skill만 추가로 연다.
+- 좁은 단일 파일 작업이나 단순 질의에는 `project-workflow`를 자동으로
+  호출하지 않는다. 여러 단계·영역을 조율해야 할 때만 사용한다.
+- Skill 라우터에 나열됐다는 이유만으로 모든 전문 Skill을 함께 읽지 않는다.
+- 과거 작업 로그는 기본 입력 맥락이 아니다.
+
 ### 라우터와 단일 원본
 
 | 항목            | Codex                                  | Claude Code                             |
 | --------------- | -------------------------------------- | --------------------------------------- |
 | 상시 지침       | 루트 `AGENTS.md`와 더 가까운 범위 지침 | `CLAUDE.md`가 루트 `AGENTS.md`를 import |
-| Skill 호출      | `$project-workflow` 등                 | `/project-workflow` 등                  |
+| Skill 호출      | 가장 좁은 `$project-*`                 | 가장 좁은 `/project-*`                  |
 | Skill 탐색 경로 | `.agents/skills/`                      | `.claude/skills/`                       |
 | Skill 원본      | `.agents/skills/`                      | 원본에서 생성된 호환 사본               |
 | 기록 기준       | 이 문서의 템플릿과 검증 상태 의미      | 동일                                    |
@@ -228,26 +248,36 @@ Playwright, ESLint, Prettier, Tailwind, Steiger 설정이 존재한다.
 
 ### Gate 선택과 보고
 
-- Fast gate는 변경 파일 format/lint, typecheck, 관련 단위 테스트,
-  생성물·스키마 드리프트처럼 작고 직접적인 검증으로 구성한다.
+- Targeted gate는 문서 format, 관련 테스트 파일, 필요한 typecheck, FSD 또는
+  생성물 드리프트처럼 좁은 변경을 직접 검증한다.
+- Fast gate는 여러 소스 영역을 변경했거나 commit·PR 판단에 저장소 전체의
+  format, lint, typecheck, unit test, FSD 신호가 필요할 때 사용한다.
 - Full gate는 전체 테스트, 통합·E2E·브라우저 테스트, production build,
   마이그레이션, 보안·의존성 검사 중 저장소가 실제 제공하는 항목으로
   구성한다.
 - 현재 fast gate는 format check, lint, typecheck, Vitest, Steiger이며 full
   gate는 fast gate, production build, Playwright Chromium E2E다.
+- 문서·Skill 변경이라는 이유만으로 애플리케이션 build나 E2E를 실행하지
+  않는다. handoff 자체도 fast/full gate의 trigger가 아니다.
 - 모든 결과에는 명령, `통과`/`실패`, 실패 원인, `미실행` 이유,
   미확인 영향 범위를 남긴다.
 
 ## 8. Issue·PR·리뷰 통합
 
-현재 저장소는 `.github/ISSUE_TEMPLATE/feature.yml`과 `bug.yml` Issue Form,
-`.github/pull_request_template.md`를 사용한다. 템플릿은 다음 필드가 실제
-작업 맥락과 증거로 이어지게 구성한다.
+현재 저장소는 `.github/ISSUE_TEMPLATE/` 아래의 `디자인`, `리팩토링`, `버그`,
+`기능`, `문서 작업` Issue Form과 `.github/pull_request_template.md`를 사용한다.
+Issue Form은 문제와 원하는 결과처럼 작업 시작에 필요한 최소 정보만 받는다.
 
-- AI 사용 목적
-- 사람이 실제로 결정·수정한 내용
-- 실제 검증
-- 남은 확인 사항
+PR에는 다음 내용을 간결하게 남긴다.
+
+- 관련 이슈
+- 작업 내용
+- 해당 작업 방식을 선택한 이유
+- AI와 논의하며 정리한 결정, 시행착오, 트러블슈팅 등의 문서화 내용
+- 실제 실행한 검증과 결과
+
+AI 대화 원문을 복사하지 않고 결정에 영향을 준 안전한 요약만 적는다. 같은
+증거를 월별 worklog에 다시 장문으로 복제하지 말고 관련 PR과 요약을 남긴다.
 
 AI 점검은 기존 팀 절차를 대체하지 않는다. 실제 Issue, PR, Discussion이
 없다면 작업 기록에는 `없음`이라고 쓴다. 사람 검토·승인 상태 필드는
@@ -299,7 +329,8 @@ AI 산출물과 실제 사람의 결정·수정 구분, 실패·미실행·남�
 - [GitHub Issue Form syntax](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-issue-forms)
 - [GitHub Pull Request templates](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/creating-a-pull-request-template-for-your-repository)
 
-## 11. 실제 작업 기록
+## 11. 작업 기록 위치
 
-실질적인 AI 지원 작업 기록은 최신 항목을 이 섹션 아래에 추가한다. 과거
-작업은 확인 가능한 증거 없이 소급 작성하지 않는다.
+실질적인 AI 지원 작업 기록은 `docs/ai-worklogs/YYYY-MM.md`에 월별로 둔다.
+이 정책 문서에는 실제 기록을 추가하지 않는다. 과거 기록은 확인 가능한
+증거 없이 소급 작성하지 않으며, 일상 작업에서 전체 기록을 다시 읽지 않는다.

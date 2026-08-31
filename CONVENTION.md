@@ -90,21 +90,27 @@ app → pages → widgets → features → entities → shared
 변경 위험에 맞는 가장 작은 테스트부터 실행한다. 버그 수정에는 가능한 경우
 실패를 재현하는 회귀 테스트를 추가한다.
 
-프론트엔드 작업은 종료 직전에 반드시 다음 명령으로 FSD 배치와 import 경계를
-확인한다.
+문서·Agent 지침만 바꾼 작업은 애플리케이션 build나 E2E를 자동 실행하지
+않는다. 변경된 Markdown의 format과 diff 오류처럼 직접 관련된 검사만 먼저
+실행한다.
+
+프론트엔드 소스, 파일 배치, public API, import를 바꾼 작업은 종료 직전에
+다음 명령으로 FSD 경계를 확인한다.
 
 ```sh
 pnpm check:fsd
 ```
 
-일반적인 handoff에는 FSD 검사를 포함하는 fast gate를 사용한다.
+관련 테스트나 타입 검사를 개별 실행할 수 있으면 그 결과부터 확인한다.
+여러 소스 영역을 변경했거나 commit·PR 전에 저장소 전체 신호가 필요할 때
+fast gate로 확장한다.
 
 ```sh
 pnpm check:fast
 ```
 
-라우팅, 앱 조립, 빌드 설정, 사용자 흐름처럼 production build나 브라우저
-동작까지 영향을 주는 변경은 full gate로 확장한다.
+라우팅, 앱 조립, 빌드 설정, 의존성, 핵심 사용자 흐름처럼 production build나
+브라우저 동작까지 영향을 주는 변경만 full gate로 확장한다.
 
 ```sh
 pnpm check:full
@@ -159,12 +165,15 @@ commit을 실행하지 않는다.
 
 ## 8. 문서와 작업 기록
 
-- 기능 제안과 버그 신고는 `.github/ISSUE_TEMPLATE/`의 해당 Issue Form을
-  사용하고, PR은 `.github/pull_request_template.md`의 맥락·검증·남은 사항
-  필드를 실제 내용으로 작성한다.
+- Issue는 `.github/ISSUE_TEMPLATE/`의 `디자인`, `리팩토링`, `버그`, `기능`,
+  `문서 작업` Form 중 목적에 맞는 항목을 사용한다.
+- PR은 `.github/pull_request_template.md`의 관련 이슈, 작업 내용, 작업 방식의
+  이유, AI와 정리한 문서화·트러블슈팅 내용, 실제 검증을 간결하게 작성한다.
 - 제품 동작과 사용자 흐름은 `docs/PRD.md`, 구조는
   `docs/FSD_ARCHITECTURE.md`, AI 지원 작업 증거는
-  `docs/AI_AGENT_WORKFLOW.md`와 동기화한다.
+  `docs/AI_AGENT_WORKFLOW.md`의 정책과 `docs/ai-worklogs/YYYY-MM.md`의 월별
+  기록으로 분리해 관리한다. 과거 작업 기록은 감사·수정 작업이 아니면 읽지
+  않는다.
 - 실제 Issue, PR, Discussion이 없으면 링크를 만들지 않는다.
 - 존재하지 않는 회의, 결정, 기여, 검토, 승인, 테스트 결과를 만들지 않는다.
 - 완료 보고에는 변경 파일, 실행한 검증과 결과, 실패·미실행, 남은 위험,
@@ -176,5 +185,6 @@ commit을 실행하지 않는다.
 - FSD 레이어, slice, segment, public API와 import 방향이 맞는가?
 - `pnpm check:fsd`를 마지막 변경 뒤 실행했는가?
 - 관련 타입, 테스트, error/loading/empty 상태를 확인했는가?
+- 위험에 비해 과도한 fast/full gate를 자동 실행하지 않았는가?
 - PRD, 환경 예시, FSD 문서 등 변경된 계약을 동기화했는가?
 - 실패, 미실행, 수동 확인 필요, 남은 위험을 사실대로 남겼는가?

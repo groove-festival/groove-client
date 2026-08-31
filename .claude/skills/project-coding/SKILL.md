@@ -29,7 +29,6 @@ Make a minimal change grounded in current repository evidence.
 - Avoid unrelated refactors, file moves, dependencies, generated architecture,
   or speculative abstractions.
 
-Run `pnpm check:fsd` for frontend file or import changes. Route tests to
-`project-testing`, validation status to
-`project-quality-gates`, contract changes to `project-specs-sync`, and the
-material AI contribution to `project-ai-worklog`.
+Run `pnpm check:fsd` for frontend source, placement, public-API, or import
+changes. Load testing, quality-gate, specification, and worklog Skills only when
+their individual triggers apply; do not load the full chain preemptively.

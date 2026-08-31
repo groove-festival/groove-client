@@ -52,7 +52,7 @@ GA·Sentry·Clarity는 `VITE_TELEMETRY_ENABLED=true`이고 각 서비스 식별�
 - [프론트엔드 프로젝트 컨벤션](CONVENTION.md)
 - [제품 요구사항](docs/PRD.md)
 - [FSD 아키텍처 규칙](docs/FSD_ARCHITECTURE.md)
-- [AI 지원 작업 정책과 기록](docs/AI_AGENT_WORKFLOW.md)
+- [AI 지원 작업 정책과 기록 위치](docs/AI_AGENT_WORKFLOW.md)
 - [Codex 진입점](AGENTS.md)
 - [Claude Code 진입점](CLAUDE.md)
 

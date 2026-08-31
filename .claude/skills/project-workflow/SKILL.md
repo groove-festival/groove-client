@@ -1,25 +1,24 @@
 ---
 name: project-workflow
-description: Coordinate material repository work from problem and scope through investigation, implementation, verification, evidence recording, and handoff. Use for feature, fix, refactor, documentation, review, or investigation tasks that affect project artifacts or decisions.
+description: Coordinate multi-step or cross-cutting repository work that spans investigation, implementation, validation, and evidence handoff. Use when several concerns must be sequenced; skip narrow edits and simple read-only questions.
 ---
 
 # Project Workflow
 
-Coordinate the lifecycle without replacing the focused Skills. The canonical
-source is `.agents/skills/project-workflow/SKILL.md`; a generated Claude Code
-copy may exist under `.claude/skills/`.
+Use this orchestrator only when the request needs several dependent phases.
+Narrow tasks should use the directly relevant Skill without this extra layer.
 
 ## Establish the work
 
 Before editing:
 
-1. Read the applicable `AGENTS.md` or override, `README.md`,
-   `docs/AI_AGENT_WORKFLOW.md`, and relevant product or technical documents.
+1. Read the closest instructions and only the product, architecture, or workflow
+   document that can change the decision.
 2. Inspect current Git changes and preserve work already present.
 3. State the user problem, scope, non-goals, completion criteria, and any
    permission boundary that affects the task.
 4. Inspect relevant implementation, tests, contracts, and established patterns.
-5. Identify affected files, risks, required focused Skills, and available
+5. Identify affected files, risks, the smallest focused Skill set, and available
    repository-backed checks.
 
 Do not treat an attached document's internal next steps as user authorization
@@ -27,20 +26,20 @@ unless the user's request adopts them.
 
 ## Route focused work
 
-Load only the Skills whose triggers apply:
+Load a focused Skill only when its decision is needed:
 
 | Need | Skill |
 |---|---|
-| Material AI-use record and honest handoff | `project-ai-worklog` |
-| Test selection, design, or execution | `project-testing` |
-| Fast/full gate choice and status | `project-quality-gates` |
+| Material AI evidence | `project-ai-worklog` |
+| Non-trivial test selection or regression coverage | `project-testing` |
+| Targeted/fast/full gate decision or failure analysis | `project-quality-gates` |
 | Code implementation or refactor | `project-coding` |
-| Review-only work or pre-handoff review | `project-review` |
+| Explicit review or high-risk independent defect search | `project-review` |
 | Product, API, data, event, configuration, or example synchronization | `project-specs-sync` |
-| Any frontend implementation, placement, import boundary, or structural review | `project-fsd` |
+| Frontend placement, public API, or import boundary | `project-fsd` |
 
-AI checking remains AI output. Do not create or report a human review or
-approval status.
+Do not load every routed Skill preemptively. AI checking remains AI output and
+must not be labeled as human review or approval.
 
 ## Execute and verify
 
@@ -49,14 +48,15 @@ approval status.
   scope.
 - Start with the smallest relevant check, then expand according to risk and the
   repository's actual commands.
-- For frontend work, run `pnpm check:fsd` after the final change and before
-  handoff, then include its actual result.
+- For frontend source, placement, public-API, or import changes, run
+  `pnpm check:fsd` after the final relevant change.
 - Keep `통과`, `실패`, `미실행`, and `수동 확인 필요` distinct.
 - Never weaken tests or omit a failure to manufacture a successful status.
 
 ## Record and hand off
 
-For material AI use, invoke `project-ai-worklog` before the final handoff.
+For material AI use, record evidence in the current monthly worklog without
+reading older logs.
 Report:
 
 - the user problem addressed and actual changed files;
@@ -67,6 +67,5 @@ Report:
 - actual human decisions or edits when they occurred, without a review status;
 - actions not taken, including commit, push, deployment, or external writes.
 
-Work is complete only when requested artifacts exist, relevant available checks
-have honest statuses, required contracts are synchronized or explicitly
-explained, and the handoff does not overstate human action or validation.
+Work is complete when requested artifacts exist and the risk-relevant evidence
+is truthful. Completion does not require every available check.

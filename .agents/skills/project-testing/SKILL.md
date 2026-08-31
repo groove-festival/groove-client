@@ -1,6 +1,6 @@
 ---
 name: project-testing
-description: Select, design, and run the smallest risk-relevant tests for repository changes, expanding to integration, end-to-end, or browser checks when warranted. Use for code changes, bug fixes, test planning, or validation gaps; derive commands from repository configuration rather than guessing.
+description: Select or design risk-relevant tests when behavior changes, a bug needs regression coverage, or validation choice is non-trivial. Do not use for documentation-only work or a single already-known check.
 ---
 
 # Project Testing
@@ -43,4 +43,6 @@ contract.
   Vitest path or filter for a focused run when appropriate.
 - Do not convert failures into skips, weaken assertions, or add unrelated mocks.
 - Report the exact command, outcome, relevant failure, and any test not run.
-- Pass the evidence to `project-quality-gates` and `project-ai-worklog`.
+- Keep output concise. Route to `project-quality-gates` only when gate selection
+  or failure interpretation is needed, and to `project-ai-worklog` only when a
+  worklog is required.

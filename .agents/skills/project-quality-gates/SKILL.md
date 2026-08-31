@@ -1,23 +1,25 @@
 ---
 name: project-quality-gates
-description: Choose and report repository-backed fast and full quality gates without overstating completion. Use before handoff, review, or release decisions and whenever validation fails or cannot run.
+description: Choose between targeted, fast, and full repository-backed quality gates, or interpret a failed or unavailable check. Use when validation scope is non-obvious or for commit, PR, and release readiness; skip a single obvious targeted check.
 ---
 
 # Project Quality Gates
 
-Use the current command baseline in `docs/AI_AGENT_WORKFLOW.md`, but confirm it
-against repository configuration because commands can change.
+Confirm commands against `package.json` and current repository configuration.
+Read the Workflow policy only when validation status semantics are in question.
 
 ## Build the gate
 
-- Fast gate: the smallest applicable format/lint, typecheck, focused test, and
-  generated-file or schema drift checks.
+- Targeted gate: the smallest relevant file-format, focused test, type, FSD, or
+  drift check for a narrow change.
+- Fast gate: repository-wide format, lint, typecheck, unit tests, and FSD checks
+  when several source areas changed or broad pre-commit/PR confidence is needed.
 - Full gate: broader tests, integration/E2E/browser checks, production build,
   migrations, security, or dependency checks that the repository actually
   defines.
-- Scale the gate to the changed behavior and risk. A documentation-only change
-  does not imply an application build; a contract or runtime change may require
-  broader checks.
+- Scale the gate to changed behavior and risk. Documentation-only work does not
+  imply an application build. Do not run fast or full gates solely because a
+  handoff is occurring.
 
 The current repository defines these Workflow checks:
 
@@ -29,9 +31,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-skills.ps
 sh scripts/sync-agent-skills.sh check
 ```
 
-No application install, build, test, lint, format, typecheck, CI, E2E, or
-browser command was present at the initial 2026-08-31 baseline. The current
-application commands are:
+The current broad application commands are:
 
 ```sh
 pnpm check:fast
@@ -54,5 +54,5 @@ For every candidate check, record one state:
 - `해당 없음`: it does not apply and the reason is explicit.
 
 Do not call the work verified when a relevant failure remains unresolved.
-Automated success is validation evidence only. Pass the exact evidence to
-`project-ai-worklog` and the final handoff.
+Automated success is validation evidence only. Pass concise exact evidence to
+the final handoff and to `project-ai-worklog` when a worklog is required.
