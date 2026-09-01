@@ -1,10 +1,32 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "SlowGothic";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-01@1.0/neurimboGothicRegular.woff2")
+    format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pretendard Variable";
+  src: url("./fonts/PretendardVariable.woff2") format("woff2-variations");
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-pretendard: "Pretendard Variable", Pretendard, sans-serif;
+  --font-slow-gothic: "SlowGothic", sans-serif;
+}
+
 :root {
-  color: #f7f7f4;
-  background: #080a0d;
+  color: #fcfcfc;
+  background: #1c1c1c;
   font-family:
-    Inter,
+    "Pretendard Variable",
     Pretendard,
     -apple-system,
     BlinkMacSystemFont,
@@ -22,18 +44,12 @@
 html {
   min-width: 320px;
   min-height: 100%;
-  background: #080a0d;
+  background: #1c1c1c;
 }
 
 body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-}
-
-button,
-input,
-textarea,
-select {
-  font: inherit;
+  background: #1c1c1c;
 }
