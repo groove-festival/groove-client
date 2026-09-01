@@ -35,6 +35,11 @@ full project survey.
   documentation or specification synchronization.
 - After the final frontend source, file-placement, public-API, or import change,
   run `pnpm check:fsd`. Keep that result distinct from behavior tests.
+- For a Figma-backed screen, use the exact frame or component node as the
+  static target and the Prototype only for state transitions. Compare the
+  target with the real browser under pinned conditions using
+  `project-figma-visual-parity`; do not call a result identical without
+  measured evidence. A Figma link authorizes inspection, not writes.
 - Choose the smallest repository-backed validation that matches the risk. Do
   not run `pnpm check:fast` or `pnpm check:full` automatically for documentation
   or a narrow change when targeted evidence is sufficient.
@@ -52,6 +57,10 @@ full project survey.
   `project-notion-worklog`, then push. A checkout opted in with
   `pnpm notion:setup` authorizes writes only below its configured personal page.
   Never mark Notion synchronization without reading the written page back.
+- When the user explicitly asks to document current work, a concept question,
+  troubleshooting, a decision, or discussion in Notion,
+  `project-notion-worklog` may publish an on-demand record bundle without a
+  commit. Do not run `notion:mark` or treat that record as pre-push evidence.
 
 ## Skill routing
 
@@ -62,8 +71,8 @@ Load only the smallest applicable set of canonical Skills under
   coordination; do not load it by default for a narrow task.
 - `project-ai-worklog`: material AI-use evidence in
   `docs/ai-worklogs/YYYY-MM.md`.
-- `project-notion-worklog`: post-commit, pre-push publication to the checkout
-  owner's configured Notion page.
+- `project-notion-worklog`: structured on-demand documentation or post-commit,
+  pre-push publication to the checkout owner's configured Notion page.
 - `project-testing`: non-trivial test selection, design, or regression coverage.
 - `project-quality-gates`: choosing targeted/fast/full gates, interpreting a
   failure, or assessing commit/PR/release readiness.
@@ -71,6 +80,8 @@ Load only the smallest applicable set of canonical Skills under
 - `project-review`: explicit review or high-risk independent defect search.
 - `project-specs-sync`: product, API, data, event, or configuration contracts.
 - `project-fsd`: every frontend placement, public API, or import-boundary task.
+- `project-figma-visual-parity`: Figma-backed implementation, visual
+  correction, or Prototype-flow verification.
 
 Treat `.agents/skills/` as the only editable Skill source. Generate
 `.claude/skills/` with the documented sync script.

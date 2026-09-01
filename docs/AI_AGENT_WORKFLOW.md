@@ -81,6 +81,11 @@ AI 자기 점검이나 다른 AI의 교차 점검은 AI 산출물에 포함할 �
 9. Notion 기록 확인 뒤에만 동기화 표시를 남기고 push한다.
 10. 변경, 검증, 보존한 기존 변경, 실패, 남은 위험을 사용자에게 보고한다.
 
+사용자가 commit·push와 무관하게 현재 작업이나 논의를 Notion에 문서화하도록
+명시적으로 요청하면 8~9번의 push 기록과 분리된 `요청 기록` mode를 사용한다.
+이 mode는 작성 페이지를 다시 읽어 확인하지만 commit 동기화 표시를 남기거나
+pre-push guard를 충족하지 않는다.
+
 삭제, 배포, 프로덕션 변경, 외부 메시지, 비용 발생 작업은 이 흐름만으로
 허가되지 않는다. 사용자의 별도 승인과 기존 저장소 규칙이 필요하다.
 
@@ -150,14 +155,29 @@ AI 자기 점검이나 다른 AI의 교차 점검은 AI 산출물에 포함할 �
   사본이다.
 - 부모 페이지의 팀원별 하위 페이지 중 현재 checkout에 설정된 한 곳에만
   기록한다. 팀원의 이름과 페이지 매핑은 저장소에 넣지 않는다.
+- Notion 기록은 `Push 기록`과 `요청 기록`으로 구분한다. `Push 기록`은 최종
+  commit 뒤 push 전에 작성하고, `요청 기록`은 사용자가 현재 작업·개념 질문·
+  논의·트러블슈팅·의사결정의 문서화를 명시적으로 요청할 때 commit 없이도
+  작성한다.
 - 한 번의 push에 여러 계획 commit이 포함되면 한 개의 Notion 페이지로
   묶고 모든 commit hash를 남긴다.
-- 페이지는 `작업 내용`, `결정과 이유`, `AI와 정리한 내용`, `검증`, `남은
-사항`을 사용한다. 대화 원문, 반복 질문, 결과에 영향 없는 시행착오는
-  복사하지 않는다.
-- 실제 작성 뒤 페이지를 다시 읽고 제목, 필수 구획, commit hash, 검증 표현,
-  민감 정보 부재를 확인한다. 가능한 환경에서는 첫 화면과 목록 구획도
-  시각적으로 확인한다.
+- 상위 페이지에는 `작업 내용`, `문제 상황`, `원인`, `시도한 방법`, `최종 해결
+및 선택 이유`, `결과`, `배운 점 / 다음 개선`을 둔다. 확인할 수 없는 항목은
+  이유와 함께 `확인하지 못함` 또는 `해당 없음`으로 표시한다.
+- 상위 페이지 아래에 `Raw Development Log`, `Decision Log`,
+  `Troubleshooting Log`, `Portfolio Candidate`를 별도 기록으로 구성한다. 실제
+  의사결정이 없으면 Decision Log에 그 사실만 적고 선택지를 만들지 않는다.
+  트러블슈팅이 없으면 Troubleshooting Log를 만들지 않는다. Portfolio Candidate는
+  단순 수정·일상 설정을 제외하고 문제 해결, 기술 결정, 구현 난이도 또는
+  검증된 개선이 있을 때만 5~10줄로 작성한다.
+- 접근 가능한 대화는 코드 변경, 오류, 명령 출력과 대조해 요약한다. 대화 원문,
+  반복 질문, 확인되지 않은 시간·원인·결과를 만들지 않는다.
+- 실제 작성 뒤 상위 페이지와 생성한 모든 하위 페이지를 다시 읽고 제목, 필수
+  구획, 상호 링크, commit hash, 검증 표현, 민감 정보 부재를 확인한다. 가능한
+  환경에서는 첫 화면과 목록 구획도 시각적으로 확인한다.
+- `요청 기록`에 포함할 commit이 없다면 `없음 (미커밋 작업 기록)`으로
+  표시하며 `pnpm notion:mark`를 실행하지 않는다. 이후 push가 필요해지면
+  별도의 `Push 기록`을 작성·확인한다.
 - 작성·재조회가 실패하면 동기화 표시를 남기지 않는다. `pre-push` hook은
   현재 HEAD의 확인 증거가 없으면 push를 막는다.
 
@@ -176,6 +196,9 @@ AI 자기 점검이나 다른 AI의 교차 점검은 AI 산출물에 포함할 �
 - `pnpm notion:setup`으로 현재 checkout의 개인 대상 페이지를 설정한 것은
   해당 페이지 아래에 이 Workflow의 작업 기록을 게시하는 opt-in이다. 다른
   페이지나 다른 외부 시스템 쓰기 권한으로 확대하지 않는다.
+- Figma 파일이나 node URL 제공은 기본적으로 읽기와 비교만 허용한다. 원본
+  디자인 수정 또는 구현 결과의 Figma QA 페이지 생성은 별도 요청이 있어야
+  하며, 원본과 분리된 대상에만 쓴다.
 - 사용자가 commit을 요청한 경우에도 먼저 commit 순서, 메시지, 포함 파일,
   분리 이유, 각 검증 방법을 제시한다. 사용자가 그 계획을 명시적으로
   승인하기 전에는 `git add`나 `git commit`을 실행하지 않는다.
@@ -216,6 +239,7 @@ AI 자기 점검이나 다른 AI의 교차 점검은 AI 산출물에 포함할 �
 | Skill 원본      | `.agents/skills/`                      | 원본에서 생성된 호환 사본               |
 | 기록 기준       | 이 문서의 템플릿과 검증 상태 의미      | 동일                                    |
 | Notion MCP 설정 | `.codex/config.toml`                   | `.mcp.json`                             |
+| Figma MCP 설정  | `.codex/config.toml`                   | `.mcp.json`                             |
 | 개인 대상·OAuth | checkout·Codex 사용자 로컬 설정        | checkout·Claude 사용자 로컬 설정        |
 
 `.agents/skills/`만 사람이 수정한다. `.claude/skills/`의 manifest 관리
@@ -243,32 +267,36 @@ sh scripts/sync-agent-skills.sh check
 결정한다.
 
 공식 FSD 규칙을 모든 프론트엔드 변경에 반복 적용하기 위해 `project-fsd`를
-추가했다. `project-debugging`, `project-security`, `project-deployment` 같은
-다른 Optional Skill은 실제 반복 실패나 운영 필요가 확인될 때 기존 Skill과
-중복되지 않는 범위에서 추가한다.
+추가했다. Figma 기반 화면은 `project-figma-visual-parity`에서 원본 frame,
+실제 브라우저, DOM geometry, token·component, Prototype flow 증거를 분리해
+검증한다. Figma로 재구성한 구현 화면은 선택적 QA 보조물이며 원본 frame과
+브라우저 screenshot의 직접 비교를 대체하지 않는다. `project-debugging`,
+`project-security`, `project-deployment` 같은 다른 Optional Skill은 실제 반복
+실패나 운영 필요가 확인될 때 기존 Skill과 중복되지 않는 범위에서 추가한다.
 
 ## 7. 품질 게이트
 
 ### 현재 저장소 기준
 
-2026-08-31 기준 `package.json`, pnpm lockfile, Vite, TypeScript, Vitest,
+2026-09-01 기준 `package.json`, pnpm lockfile, Vite, TypeScript, Vitest,
 Playwright, ESLint, Prettier, Tailwind, Steiger 설정이 존재한다.
 
-| 범주                                | 확인된 명령                          |
-| ----------------------------------- | ------------------------------------ |
-| 설치                                | `pnpm install --frozen-lockfile`     |
-| 로컬 Git hook 활성화                | `pnpm hooks:install`                 |
-| 개발 서버                           | `pnpm dev`                           |
-| production build                    | `pnpm build`                         |
-| lint / format                       | `pnpm lint`, `pnpm format:check`     |
-| typecheck                           | `pnpm typecheck`                     |
-| 단위·컴포넌트 테스트                | `pnpm test`                          |
-| E2E 브라우저 테스트                 | `pnpm test:e2e`                      |
-| FSD 구조·import                     | `pnpm check:fsd`                     |
-| 애플리케이션 fast/full gate         | `pnpm check:fast`, `pnpm check:full` |
-| Workflow Skill 동기화               | 위 `Sync` 명령                       |
-| Workflow Skill 드리프트·frontmatter | 위 `Check` 명령                      |
-| Notion 대상·동기화 상태             | `pnpm notion:status`                 |
+| 범주                                | 확인된 명령                                                |
+| ----------------------------------- | ---------------------------------------------------------- |
+| 설치                                | `pnpm install --frozen-lockfile`                           |
+| 로컬 Git hook 활성화                | `pnpm hooks:install`                                       |
+| 개발 서버                           | `pnpm dev`                                                 |
+| production build                    | `pnpm build`                                               |
+| lint / format                       | `pnpm lint`, `pnpm format:check`                           |
+| typecheck                           | `pnpm typecheck`                                           |
+| 단위·컴포넌트 테스트                | `pnpm test`                                                |
+| E2E 브라우저 테스트                 | `pnpm test:e2e`                                            |
+| FSD 구조·import                     | `pnpm check:fsd`                                           |
+| 애플리케이션 fast/full gate         | `pnpm check:fast`, `pnpm check:full`                       |
+| Workflow Skill 동기화               | 위 `Sync` 명령                                             |
+| Workflow Skill 드리프트·frontmatter | 위 `Check` 명령                                            |
+| Notion 대상·동기화 상태             | `pnpm notion:status`                                       |
+| 시각 비교 harness                   | `pnpm test:e2e -- tests/e2e/visual-parity-harness.spec.ts` |
 
 명령은 실행 전에 현재 `package.json`, 설정, CI를 다시 확인한다. CI는 아직
 없으므로 위 명령은 현재 로컬 품질 게이트다.
@@ -286,6 +314,9 @@ Playwright, ESLint, Prettier, Tailwind, Steiger 설정이 존재한다.
   gate는 fast gate, production build, Playwright Chromium E2E다.
 - 문서·Skill 변경이라는 이유만으로 애플리케이션 build나 E2E를 실행하지
   않는다. handoff 자체도 fast/full gate의 trigger가 아니다.
+- Figma 기반 화면의 시각 검증은 정확한 frame export, route, viewport, UI state가
+  있어야 실행한다. 기준이 없으면 controlled harness 검증과 실제 화면 parity를
+  구분하고, 실제 비교는 `미실행`으로 남긴다.
 - 모든 결과에는 명령, `통과`/`실패`, 실패 원인, `미실행` 이유,
   미확인 영향 범위를 남긴다.
 
@@ -315,20 +346,21 @@ AI 점검은 기존 팀 절차를 대체하지 않는다. 실제 Issue, PR, Disc
 현재 별도 eval 인프라는 없다. 아래는 대표 작업을 이용한 초기 평가
 계획이며, 아직 실행하지 않았다.
 
-| 대표 사례                | 관찰할 증거                             | 현재 상태           |
-| ------------------------ | --------------------------------------- | ------------------- |
-| 작은 기능 추가           | 범위·비목표, 최소 변경, 관련 검증       | 계획만 작성, 미실행 |
-| 버그 수정과 회귀 테스트  | 재현 증거, 회귀 테스트, 실패 전후 상태  | 계획만 작성, 미실행 |
-| API 계약 변경            | 구현·PRD·명세·예제 동기화               | 계획만 작성, 미실행 |
-| DB 또는 데이터 모델 변경 | 마이그레이션·호환성·롤백 확인           | 계획만 작성, 미실행 |
-| 설정·기본값 변경         | 환경별 영향과 문서 동기화               | 계획만 작성, 미실행 |
-| 실패한 test/CI 진단      | 실패 보존, 확인 원인과 미확인 원인 분리 | 계획만 작성, 미실행 |
-| 리뷰 전용 작업           | severity·근거·위치·재현 방법            | 계획만 작성, 미실행 |
-| 문서 전용 작업           | 사실 출처, 링크, 실제 결정·수정         | 계획만 작성, 미실행 |
-| 민감 정보 가능 입력      | 비식별 요약과 최소 권한                 | 계획만 작성, 미실행 |
-| 사람의 결정이 없는 작업  | 상태 추측 없이 AI·검증 증거만 기록      | 계획만 작성, 미실행 |
-| 일부 검증 실패·미실행    | 완료 상태 과장 없이 잔여 위험 기록      | 계획만 작성, 미실행 |
-| Codex·Claude 동일 요청   | Skill 선택과 기록 의미의 일치           | 계획만 작성, 미실행 |
+| 대표 사례                | 관찰할 증거                             | 현재 상태                 |
+| ------------------------ | --------------------------------------- | ------------------------- |
+| 작은 기능 추가           | 범위·비목표, 최소 변경, 관련 검증       | 계획만 작성, 미실행       |
+| 버그 수정과 회귀 테스트  | 재현 증거, 회귀 테스트, 실패 전후 상태  | 계획만 작성, 미실행       |
+| API 계약 변경            | 구현·PRD·명세·예제 동기화               | 계획만 작성, 미실행       |
+| DB 또는 데이터 모델 변경 | 마이그레이션·호환성·롤백 확인           | 계획만 작성, 미실행       |
+| 설정·기본값 변경         | 환경별 영향과 문서 동기화               | 계획만 작성, 미실행       |
+| 실패한 test/CI 진단      | 실패 보존, 확인 원인과 미확인 원인 분리 | 계획만 작성, 미실행       |
+| 리뷰 전용 작업           | severity·근거·위치·재현 방법            | 계획만 작성, 미실행       |
+| 문서 전용 작업           | 사실 출처, 링크, 실제 결정·수정         | 계획만 작성, 미실행       |
+| 민감 정보 가능 입력      | 비식별 요약과 최소 권한                 | 계획만 작성, 미실행       |
+| 사람의 결정이 없는 작업  | 상태 추측 없이 AI·검증 증거만 기록      | 계획만 작성, 미실행       |
+| 일부 검증 실패·미실행    | 완료 상태 과장 없이 잔여 위험 기록      | 계획만 작성, 미실행       |
+| Codex·Claude 동일 요청   | Skill 선택과 기록 의미의 일치           | 계획만 작성, 미실행       |
+| Figma 시각 parity        | frame·browser·geometry·flow 증거 일치   | controlled harness만 실행 |
 
 평가에서는 올바른 Skill 선택, 범위 밖 변경 수, 검증과 기록의 일치,
 AI 산출물과 실제 사람의 결정·수정 구분, 실패·미실행·남은 위험 누락,
@@ -356,6 +388,11 @@ AI 산출물과 실제 사람의 결정·수정 구분, 실패·미실행·남�
 - [Claude Code MCP](https://code.claude.com/docs/en/mcp)
 - [Claude Code `CLAUDE.md`](https://docs.anthropic.com/en/docs/claude-code/memory)
 - [Notion MCP](https://developers.notion.com/guides/mcp/get-started-with-mcp)
+- [Figma MCP server](https://developers.figma.com/docs/figma-mcp-server/)
+- [Figma MCP tools](https://developers.figma.com/docs/figma-mcp-server/tools-and-prompts/)
+- [Figma Code to canvas](https://help.figma.com/hc/en-us/articles/40219873508247-Workflow-lab-Code-to-canvas)
+- [Figma Prototype 실행](https://help.figma.com/hc/en-us/articles/360040318013-Play-your-prototypes)
+- [Playwright screenshot comparison](https://playwright.dev/docs/test-snapshots)
 - [GitHub Issue Form syntax](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-issue-forms)
 - [GitHub Pull Request templates](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/creating-a-pull-request-template-for-your-repository)
 
@@ -364,4 +401,6 @@ AI 산출물과 실제 사람의 결정·수정 구분, 실패·미실행·남�
 실질적인 AI 지원 작업 기록은 `docs/ai-worklogs/YYYY-MM.md`에 월별로 둔다.
 이 정책 문서에는 실제 기록을 추가하지 않는다. 과거 기록은 확인 가능한
 증거 없이 소급 작성하지 않으며, 일상 작업에서 전체 기록을 다시 읽지 않는다.
-Notion 사본은 commit 이후 push 전에 생성하며 로컬 기록을 대체하지 않는다.
+Notion의 `Push 기록`은 commit 이후 push 전에 생성하며 로컬 기록을 대체하지
+않는다. 사용자가 명시적으로 요청한 `요청 기록`은 commit 없이 생성할 수
+있지만 push 동기화 증거로 사용하지 않는다.

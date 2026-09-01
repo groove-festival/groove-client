@@ -119,6 +119,21 @@ pnpm check:full
 검사 실패를 숨기기 위해 규칙을 끄거나 테스트를 skip하거나 assertion을
 약화하지 않는다. 실패 또는 미실행 항목은 원인과 영향 범위를 함께 남긴다.
 
+### Figma 기반 화면 검증
+
+- 정적 디자인 기준은 정확한 Figma 프레임·컴포넌트 node이고, Prototype은
+  클릭과 상태 전이의 기준으로 사용한다. Prototype viewer의 확대·축소 화면을
+  정적 pixel 기준으로 사용하지 않는다.
+- 실제 React 화면을 고정된 viewport, DPR, 브라우저, 폰트, locale, theme,
+  데이터 상태에서 캡처해 원본 export와 비교한다.
+- pixel 차이뿐 아니라 주요 요소의 좌표·크기, token, text, asset, component
+  대응과 Prototype 흐름을 함께 확인한다.
+- 오차를 가리는 임계값 확대, mask, 테스트 skip으로 통과시키지 않는다.
+  `project-figma-visual-parity`의 정지 조건과 증거 형식을 따른다.
+- diff가 0인 고정 환경만 `pixel 동일`로 표현한다. 합의된 임계값 안이면
+  `허용 오차 이내`, 기준이나 환경이 없으면 `수동 확인 필요` 또는 `미실행`으로
+  남긴다.
+
 ## 7. Git과 커밋 메시지
 
 커밋 메시지 첫 줄은 다음 형식을 사용한다.
@@ -173,6 +188,17 @@ pnpm notion:setup -- "<내 Notion 하위 페이지 URL>"
 Notion 기록으로 묶고 포함된 commit hash를 모두 적는다. MCP 장애나 긴급한
 예외로 guard를 우회해야 할 때만 아래 one-shot 명령을 사용하고, 미동기화
 상태와 이유를 숨기지 않는다.
+
+사용자가 현재 작업, 트러블슈팅, 궁금한 내용의 Notion 문서화를 명시적으로
+요청하면 commit이나 push 계획 없이도 개인 하위 페이지에 `요청 기록`을 한 건
+작성할 수 있다. 접근 가능한 대화, 코드 변경, 오류, 실제 시도와 검증을 근거로
+상위 페이지의 7개 핵심 항목과 별도 Raw Development, Decision,
+Troubleshooting, Portfolio Candidate 기록을 구성한다. Decision Log에 확인된
+의사결정이 없으면 그 사실만 적고 선택지를 만들지 않는다. 트러블슈팅이 없거나
+포트폴리오 가치가 확인되지 않으면 해당 기록을 억지로 만들지 않는다. 미커밋
+내용은 commit 결과처럼 표현하지 않는다. 작성한 모든 페이지를 다시 읽어
+확인하되 `pnpm notion:mark`는 실행하지 않으며 이 기록으로 pre-push guard를
+통과시키지 않는다.
 
 ```sh
 git -c aiworklog.skip=true push

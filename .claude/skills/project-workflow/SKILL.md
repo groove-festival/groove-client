@@ -28,16 +28,17 @@ unless the user's request adopts them.
 
 Load a focused Skill only when its decision is needed:
 
-| Need | Skill |
-|---|---|
-| Material AI evidence | `project-ai-worklog` |
-| Post-commit Notion publication before push | `project-notion-worklog` |
-| Non-trivial test selection or regression coverage | `project-testing` |
-| Targeted/fast/full gate decision or failure analysis | `project-quality-gates` |
-| Code implementation or refactor | `project-coding` |
-| Explicit review or high-risk independent defect search | `project-review` |
-| Product, API, data, event, configuration, or example synchronization | `project-specs-sync` |
-| Frontend placement, public API, or import boundary | `project-fsd` |
+| Need                                                                 | Skill                         |
+| -------------------------------------------------------------------- | ----------------------------- |
+| Material AI evidence                                                 | `project-ai-worklog`          |
+| Explicit on-demand or post-commit Notion publication                 | `project-notion-worklog`      |
+| Non-trivial test selection or regression coverage                    | `project-testing`             |
+| Targeted/fast/full gate decision or failure analysis                 | `project-quality-gates`       |
+| Code implementation or refactor                                      | `project-coding`              |
+| Explicit review or high-risk independent defect search               | `project-review`              |
+| Product, API, data, event, configuration, or example synchronization | `project-specs-sync`          |
+| Frontend placement, public API, or import boundary                   | `project-fsd`                 |
+| Figma-backed visual or prototype parity                              | `project-figma-visual-parity` |
 
 Do not load every routed Skill preemptively. AI checking remains AI output and
 must not be labeled as human review or approval.
@@ -75,3 +76,9 @@ When the user authorized both commit and push and the checkout opted into the
 Notion guard, keep this order: local evidence, final planned commit, verified
 Notion publication, push. Do not create one Notion page per split commit; one
 record may cover the complete unpushed commit batch.
+
+When the user explicitly asks to document current work, a concept question,
+troubleshooting, a decision, or discussion in Notion, route to the on-demand
+mode even without a commit or planned push. Publish the structured record bundle
+defined by `project-notion-worklog`; it must not mark commit synchronization or
+satisfy the pre-push guard.
