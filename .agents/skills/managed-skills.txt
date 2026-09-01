@@ -9,3 +9,4 @@ project-coding
 project-review
 project-specs-sync
 project-fsd
+project-figma-visual-parity
