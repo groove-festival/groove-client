@@ -1,188 +1,261 @@
-# Notion work record bundle
+# Purpose-shaped Notion work record
 
-Create one parent record below the checkout owner's configured Notion page. Put
-the seven-part core summary on that page and create the evidence-backed logs as
-its child pages.
+Use this reference after selecting the record purpose in `SKILL.md`. The default
+artifact is one calm, single-column Notion page. It should read like a useful
+development journal written after checking the evidence, not like a pull request
+template or a transcript rewritten into bullets.
 
-## Parent record
+## Single-page composition
 
-Title:
-
-```text
-YYYY-MM-DD · 구체적인 작업 또는 주제
-```
-
-Opening summary:
+Use this visual order and omit any element that has no useful content:
 
 ```text
-무엇을 해결·이해·결정했고 현재 결과가 무엇인지 한두 문장으로 설명한다.
+YYYY-MM-DD · 구체적인 문제, 결정 또는 배움
+
+2–4문장의 도입부
+[선택] 현재 결론 또는 상태를 담은 callout 1개
+
+목적에 맞는 본문
+배운 점과 다음 판단
+검증과 남은 문제
+
+[선택] 자세한 작업 기록 toggle
+[선택] 명령어·오류·변경 근거 toggle
+[선택] 기록 정보 toggle
 ```
 
-Use all seven headings. Write `해당 없음` or `확인하지 못함` with a short
-reason when a field genuinely has no evidence; do not invent filler.
+The opening should tell the reader why the work started, what changed in the
+understanding or repository, and the current outcome. Do not repeat the same
+summary in a callout and the first section.
 
-```markdown
-## 1. 작업 내용
+### Visual language
 
-- 실제 구현·수정·조사·질문 범위와 주요 파일 또는 자료
+- Prefer a single column so the page remains readable on desktop and mobile.
+- Use no cover image by default. Avoid decorative icons, emoji-heavy headings,
+  progress bars, badges, and colored boxes around every section.
+- Use at most one gray, blue, or green callout near the top when it adds a clear
+  current decision, outcome, or caution. Reserve red for an actual hard failure.
+- Add a table of contents only when the page has at least six useful top-level
+  sections and is long enough to require navigation.
+- Use dividers to separate major reading phases, not after every heading.
+- Use a table only for genuinely comparable options or repeated evidence. Keep
+  it to two to five short columns; move prose out of cells.
+- Avoid columns for the main narrative. They wrap poorly on mobile and make a
+  chronological record harder to follow.
+- Before emitting advanced Notion blocks, read the current connector syntax.
+  Confirm after publication that callouts and toggles rendered natively.
 
-## 2. 문제 상황
+## Select a narrative spine
 
-- 해결하려던 사용자 문제, 발생한 오류·증상 또는 궁금했던 개념
+The headings below are prompts, not mandatory form fields. Keep only those that
+help tell the observed story, rename them to fit the subject, and allow important
+sections to be longer than routine ones. Do not write `해당 없음` merely to keep
+a template symmetrical.
 
-## 3. 원인
+### Implementation
 
-- 증거로 확인한 원인
-- 아직 가설뿐이라면 `확인하지 못함`과 미확인 범위
+Use for a feature, refactor, documentation rewrite, or focused repository
+change.
 
-## 4. 시도한 방법
+Possible flow:
 
-- 실제 시도한 방법과 각각의 결과를 관찰된 순서대로 정리
+1. `왜 이 작업을 시작했나` — the user problem, expected behavior, and scope.
+2. `기존 구조에서 확인한 것` — constraints or conventions that changed the
+   implementation plan.
+3. `구현 과정과 판단` — meaningful choices, course corrections, and why the
+   final shape fits the existing system.
+4. `달라진 결과` — behavior or artifacts that are now different.
+5. Common learning and validation sections.
 
-## 5. 최종 해결 및 선택 이유
+Do not turn `달라진 결과` into a file inventory. Mention a file only where its
+responsibility makes the decision easier to understand.
 
-- 최종 해결·결론·선택과 이유
-- 확정되지 않았다면 현재 상태와 필요한 다음 판단
+### Troubleshooting
 
-## 6. 결과
+Use when the durable value is how an unexpected behavior was understood and
+resolved.
 
-- 실제 변경 결과, 실행한 검증, 관찰한 수치와 실패·미실행 상태
+Possible flow:
 
-## 7. 배운 점 / 다음 개선
+1. `문제가 어떻게 드러났나` — symptom, impact, and reproduction context.
+2. `원인을 좁힌 과정` — the investigation in observed order.
+3. `확인된 원인` — confirmed cause, or the exact boundary that remains
+   unconfirmed.
+4. `해결과 재검증` — applied correction and what happened afterward.
+5. Common learning, prevention, and remaining-risk sections.
 
-- 다음 작업에도 재사용할 수 있는 구체적인 배움과 후속 개선
+Write investigation as short hypothesis loops when useful:
 
----
-
-- 기록 유형: `요청 기록` 또는 `Push 기록`
-- Commit: 아래 mode 규칙 적용
-- 생성한 세부 기록: child page 링크 또는 생략 이유
-- 관련 Issue / PR: 실제 링크 또는 `없음`
-- Agent: 실제 사용한 Agent와 Skill
+```text
+관찰한 단서 → 세운 가설 → 확인한 방법 → 나온 결과 → 다음 판단
 ```
 
-For a guarded push record, use `Push 기록` and list each covered full commit
-hash under `Commit`. For an on-demand note, use `요청 기록`; write
-`없음 (미커밋 작업 기록)` when no commit is covered. If a commit is mentioned
-only as context, label it as related context rather than synchronization
-evidence. Do not add a human review or approval status.
+Preserve failed attempts when they explain the eventual diagnosis. Do not make
+the author look prescient by erasing a reasonable false start.
 
-## Child records
+### Decision
 
-Create each applicable record as a separate child page below the parent. Link
-every created child from `생성한 세부 기록`. If a conditional record is omitted,
-write its omission reason there instead of creating an empty page.
+Use when the page should preserve why one approach was chosen.
 
-### Raw Development Log
+Possible flow:
 
-Create whenever the request has a meaningful development or investigation
-process. Preserve the observed order without guessing timestamps.
+1. `결정이 필요했던 이유` — context and the cost of leaving it undecided.
+2. `판단 기준` — the few drivers that actually affected the choice.
+3. `검토한 선택지` — only alternatives that were genuinely considered.
+4. `선택과 감수한 것` — decision, rationale, tradeoffs, and consequences.
+5. `다시 검토할 조건` — a trigger that would invalidate the current choice.
+6. Common learning and validation sections.
 
-```markdown
-## 진행 기록
+When the options share dimensions, a compact table may use
+`선택지 | 유리한 점 | 부담 | 판단`. Follow it with prose explaining the real
+decision; the table is not the conclusion.
 
-1. 요청·목표 — 무엇을 하려 했는지
-2. 확인 — 읽은 코드·문서와 확인한 상태
-3. 변경·시도 — 주요 코드 변경, 수정 파일, 명령 또는 접근
-4. 문제·결과 — 발생한 오류와 각 시도의 관찰 결과
-5. 현재 상태 — 최종 결과와 남은 사항
+### Research and learning
+
+Use when the main result is a changed mental model, a comparison, or a reusable
+explanation.
+
+Possible flow:
+
+1. `처음 가졌던 질문` — why the question mattered now.
+2. `확인 전의 이해` — the prior expectation, clearly labeled as such.
+3. `무엇을 확인했나` — relevant source, repository evidence, or experiment.
+4. `이해가 어떻게 달라졌나` — findings explained in connected prose.
+5. `프로젝트에 적용하면` — concrete implications, without pretending they
+   have already been implemented.
+6. Common learning and open-question sections.
+
+Do not dump source summaries. Connect each source or observation to the question
+it helped answer.
+
+### Operations and configuration
+
+Use for Git hooks, CI, local setup, deployment, observability, compatibility, or
+other operational changes.
+
+Possible flow:
+
+1. `바꾸려던 것과 위험` — goal, affected environments, and failure impact.
+2. `기존 설정에서 확인한 제약` — current behavior and platform boundaries.
+3. `적용한 변경과 선택 이유` — compatibility and maintenance tradeoffs.
+4. `복구하거나 되돌리는 방법` — only when rollback is meaningful.
+5. `환경별 확인 결과` — actual checks, with untested environments visible.
+6. Common learning and remaining-risk sections.
+
+## Write the reasoning trail, not hidden reasoning
+
+Capture the observable trail that another developer can audit:
+
+- what was expected;
+- what was observed in the conversation, repository, or tool output;
+- which plausible explanation or option was considered;
+- what evidence changed the direction;
+- what was chosen and which tradeoff remains.
+
+Do not claim private chain-of-thought, fabricate deliberation, or list every
+possible alternative. A natural paragraph often works better than labeled
+micro-fields:
+
+```text
+처음에는 Issue Form 파일이 누락된 것으로 보였다. 실제 파일을 확인해 보니
+템플릿은 존재했고, GitHub가 두 글자인 이름을 유효하지 않은 설정으로 처리하고
+있었다. 새 템플릿을 추가하는 대신 기존 이름을 명확하게 늘린 이유가 여기에 있다.
 ```
 
-Use additional numbered steps when the process needs them. Do not turn the log
-into a transcript or add times that were not observed.
+## Make learning concrete
 
-### Decision Log
+For a material record, include `배운 점과 다음 판단` when the evidence shows a
+new fact, a changed mental model, a reusable diagnostic rule, or a prevention
+step. Build the paragraph from:
 
-Create this child for every record bundle. Include only actual technical or
-product decisions.
-
-```markdown
-## 결정: 구체적인 결정 제목
-
-- 맥락:
-- 검토한 선택지:
-- 최종 선택:
-- 선택 이유:
-- 버린 대안과 이유:
-- Trade-off:
-- 관련 근거:
+```text
+처음 예상 → 실제 관찰 → 달라진 이해 → 다음 적용 방법
 ```
 
-Do not infer rejected alternatives merely because other implementations were
-possible. If no actual decision occurred, write
-`이번 작업에서 확인된 기술적 의사결정 없음` instead of filling the template
-with invented choices.
+Do not write generic lessons such as “협업의 중요성을 배웠다.” If the work was
+routine and produced no defensible learning, omit the section instead of
+inventing one. Keep an unresolved question visible when it is more honest than a
+lesson.
 
-### Troubleshooting Log
+## Keep evidence available without crowding the story
 
-Create only when an error, unexpected behavior, or failed approach was actually
-investigated.
+Create only non-empty toggles that materially help later investigation.
 
-```markdown
-## 문제
+### 자세한 작업 기록
 
-- 관찰한 증상과 영향
+- Preserve meaningful events in observed order without invented times.
+- Include changes of direction and failed attempts, not every conversational
+  exchange.
+- A long troubleshooting loop may live here when the main section already
+  explains its conclusion.
 
-## 가설
+### 명령어·오류·변경 근거
 
-- 당시 세운 가설과 근거
+- Put literal commands, concise error excerpts, relevant paths, diff summaries,
+  and source links here.
+- Use code blocks for commands and errors. Do not paste large raw logs when a
+  short excerpt and result preserve the evidence.
+- Record only checks that ran and mark failures or unrun checks honestly.
 
-## 검증
+### 기록 정보
 
-- 실제 확인·명령·실험과 결과
+Keep administrative metadata at the bottom so the first viewport stays about
+the work:
 
-## 원인
+- 기록 목적: `구현`, `트러블슈팅`, `결정`, `조사·학습`, or `운영·설정`
+- 게시 모드: `요청 기록` or `Push 기록`
+- Commit: every covered full hash once, or `없음 (현재 대화/미커밋 작업)`
+- 관련 Issue / PR / 자료: actual links only
+- 사용한 Agent / Skill: actual use only
+- AI 검토, 자동 검증, 사람 검토: distinguish them only when material and only
+  claim human review that actually occurred
 
-- 확인된 원인 또는 `확인하지 못함`
+Do not create an empty troubleshooting, decision, portfolio, or raw-log child
+page. Do not evaluate routine work as a portfolio candidate unless the user asks
+for that assessment.
 
-## 해결
+## Natural Korean writing
 
-- 적용한 해결과 재검증 결과 또는 현재 미해결 상태
-```
+- Prefer connected paragraphs of roughly two to five sentences for context,
+  investigation, and conclusions. Use bullets for parallel facts, options, or
+  checks rather than turning every sentence into a bullet.
+- Use concrete subjects and verbs: `이름을 늘렸다`, `hook이 push를 막았다`,
+  `검사하지 못했다`.
+- Preserve uncertainty with `추정했다`, `확인되지 않았다`, or `이 범위에서는`
+  instead of smoothing it into certainty.
+- Avoid generic praise and stock phrases such as `효율적으로`, `체계적으로`,
+  `성공적으로`, `품질을 향상했다`, and `최적의 해결책` unless evidence gives
+  them a precise meaning.
+- Do not end every section with a miniature conclusion. Vary paragraph length
+  naturally and let the important part receive more space.
+- Keep AI/tool metadata out of the main narrative unless it materially changed
+  the result. Never imply that AI self-review or automated checks were human
+  approval.
 
-If no troubleshooting occurred, omit this child and state
-`생성하지 않음 — 트러블슈팅 없음` on the parent.
+## Read-back checklist
 
-### Portfolio Candidate
+- The title is searchable and names the real problem, decision, or learning.
+- The first viewport contains a useful opening and, if needed, one restrained
+  status callout rather than decorative blocks.
+- The selected purpose matches the whole work unit, not just the latest message.
+- The main narrative explains at least one meaningful evidence-to-judgment link
+  when such a link occurred.
+- There are no empty mandatory headings, repeated summaries, or invented
+  lessons and alternatives.
+- Actual changes, failed attempts, validation state, evidence gaps, and remaining
+  risk are distinguishable.
+- Every toggle has useful content and renders as a native block.
+- No child page exists unless it met the exception in `SKILL.md`.
+- Guarded records contain every covered full commit hash exactly once; on-demand
+  records do not imply push synchronization.
+- Secrets, personal data, raw user data, and private operations data are absent.
 
-Create only when the work has clear portfolio value such as non-trivial problem
-solving, a meaningful technical decision, implementation difficulty, or a
-measured improvement. Summarize it in 5–10 concise Korean lines covering the
-problem, role or action, difficult point, decision, and verified result.
+## Pattern references
 
-Exclude trivial file edits, routine setup, and unverified claims. If the work is
-not a useful candidate, omit this child and state
-`생성하지 않음 — 포트폴리오 후보 기준 미충족` on the parent.
+These sources inform the structure; do not cite them in every work record unless
+they were evidence for that record's subject.
 
-## Writing style
-
-- Use short Korean sentences and concrete verbs. Prefer “필드를 줄였다” over
-  “효율적이고 체계적인 개선을 성공적으로 수행했다.”
-- Base every claim on accessible conversation, code changes, errors, commands,
-  or observed results. Keep confirmed causes separate from hypotheses.
-- Compress repeated questions into the durable question and its answer. Preserve
-  why the answer mattered, important exceptions, and how it affected the result.
-- Keep each bullet focused on one fact. Use code formatting for files, commands,
-  errors, identifiers, and commit hashes.
-- Avoid emojis, decorative covers, generic praise, marketing language, and
-  repeated conclusions.
-- Exclude credentials, tokens, personal data, raw user data, and private
-  operations data. Replace sensitive input with a safe category or summary.
-
-## Read-back and readability checks
-
-- The parent title identifies the work or topic without opening the page.
-- The first viewport contains the opening summary and the beginning of the
-  seven-part summary without decoration.
-- All seven parent headings exist, and empty evidence is labeled rather than
-  fabricated.
-- Every created child is linked from the parent and renders with the intended
-  hierarchy.
-- Raw Development Log follows the observed sequence and does not invent time.
-- Decision and Troubleshooting Logs distinguish facts, hypotheses, and choices.
-- Portfolio Candidate is 5–10 lines and exists only when its criteria are met.
-- Actual failures, unrun validation, evidence gaps, and remaining work are
-  visible. No human review or approval status appears.
-- In guarded mode, every covered commit hash appears exactly once in the parent
-  metadata. In on-demand mode, the parent says whether a commit is covered and
-  does not imply push synchronization.
+- [OpenAI Notion knowledge capture](https://github.com/openai/skills/tree/main/skills/.curated/notion-knowledge-capture): classify the capture purpose before choosing a template.
+- [MADR](https://github.com/adr/madr/blob/develop/template/adr-template.md): preserve decision drivers, considered options, consequences, and revisit context only for real decisions.
+- [Systematic debugging](https://github.com/obra/superpowers/blob/main/skills/systematic-debugging/SKILL.md): retain evidence-driven hypothesis and verification loops.
+- [Simon Willison's TIL](https://github.com/simonw/til) and [postmortem examples](https://github.com/danluu/post-mortems): explain discoveries and failed paths in a human narrative rather than reducing them to a release summary.
