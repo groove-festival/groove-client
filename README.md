@@ -18,10 +18,10 @@ pnpm dev
 않습니다. `pnpm hooks:install`은 현재 checkout의 `core.hooksPath`를
 `.githooks`로 설정해 커밋 메시지 형식을 검사합니다.
 
-### 팀 Notion 작업 기록 설정
+### 팀 Notion 문서화 설정
 
 저장소는 Codex와 Claude Code에서 공식 Notion 원격 MCP 설정을 공유하지만,
-OAuth와 기록 대상은 팀원별 컴퓨터에 따로 설정합니다. 각 팀원은 자신의 이름
+OAuth와 문서 대상은 팀원별 컴퓨터에 따로 설정합니다. 각 팀원은 자신의 이름
 하위 페이지 URL로 checkout마다 한 번 실행합니다.
 
 ```sh
@@ -29,9 +29,9 @@ pnpm notion:setup -- "<내 Notion 하위 페이지 URL>"
 pnpm notion:status
 ```
 
-Codex는 먼저 `codex mcp list`로 프로젝트 설정이 보이는지 확인합니다. 현재
-클라이언트가 tracked 설정을 표시하지 않으면 아래 명령으로 사용자 로컬 설정을
-추가한 뒤 인증합니다.
+Codex는 프로젝트 루트에서 `codex mcp list`로 설정을 확인하고, 현재
+클라이언트가 tracked 설정을 표시하지 않을 때만 사용자 로컬 설정을 추가한 뒤
+인증합니다.
 
 ```sh
 codex mcp add notion --url https://mcp.notion.com/mcp
@@ -41,22 +41,16 @@ codex mcp login notion
 Claude Code는 `/mcp`에서 프로젝트 서버를 승인하고 각자의 Notion 계정으로
 인증합니다. 인증 정보와 개인 페이지 URL은 커밋되지 않습니다.
 
-최종 계획 커밋이 만들어지면 `post-commit` hook이 Notion 기록을 대기 상태로
-표시합니다. AI Agent가 개인 하위 페이지에 기록을 작성하고 다시 읽어 확인한
-뒤 동기화 표시를 남깁니다. 이 증거가 없으면 `pre-push` hook이 push를
-차단합니다.
+최종 계획 commit이 만들어지면 `post-commit` hook이 Notion 문서화를 대기
+상태로 표시합니다. Agent가 대화와 변경 내용을 Notion에 문서화하고 다시 읽어
+확인한 뒤 `pnpm notion:mark -- "<Notion 문서 URL>"`로 현재 commit과 연결합니다.
+`pre-push`는 연결된 문서가 없는 commit의 push를 막습니다. 저장소에는 별도 AI
+활동 기록 파일을 남기지 않습니다.
 
-커밋이나 push 계획이 없어도 사용자가 “지금까지 작업한 내용을 Notion에
-문서화해줘”, “이 트러블슈팅을 Notion에 정리해줘”, “방금 질문한 개념을
-정리해줘”라고 명시적으로 요청하면 Agent는 같은 개인 하위 페이지에 요청 기록을
-작성할 수 있습니다.
-
-상위 기록에는 작업 내용, 문제 상황, 원인, 시도한 방법, 최종 해결과 선택 이유,
-결과, 배운 점·다음 개선을 정리합니다. 그 아래에는 Raw Development Log와
-Decision Log를 별도 페이지로 만들고, 실제 근거가 있을 때만 Troubleshooting
-Log와 Portfolio Candidate를 추가합니다. 작성한 페이지를 다시 읽어
-확인하지만 `notion:mark`는 실행하지 않으며, 요청 기록은 `pre-push` 동기화
-증거로 사용되지 않습니다.
+commit이나 push 계획 없이 사용자가 현재 작업·질문·트러블슈팅의 Notion
+문서화를 명시적으로 요청한 경우에도 같은 개인 하위 페이지에 요청 문서를 만들
+수 있습니다. 이 경우 문서를 다시 읽어 확인하지만 `notion:mark`는 실행하지
+않으며 push guard 상태도 바꾸지 않습니다.
 
 ### 팀 Figma MCP 설정
 
@@ -97,7 +91,6 @@ Figma 원본 수정이나 구현 결과의 Figma QA 페이지 생성은 별도 �
 - Vitest, React Testing Library, Playwright
 - Google Analytics, Sentry, Microsoft Clarity 초기화 모듈
 - Feature-Sliced Design과 Steiger 구조 검사
-- Codex와 Claude Code 공용 AI Agent Workflow
 
 GA·Sentry·Clarity는 `VITE_TELEMETRY_ENABLED=true`이고 각 서비스 식별자가
 설정된 production build에서만 초기화됩니다. 기본값은 비활성화입니다.
@@ -109,7 +102,8 @@ GA·Sentry·Clarity는 `VITE_TELEMETRY_ENABLED=true`이고 각 서비스 식별�
 | `pnpm dev`           | `/groove/` 개발 서버                    |
 | `pnpm hooks:install` | tracked Git hook 활성화                 |
 | `pnpm notion:setup`  | 현재 checkout의 개인 Notion 대상 설정   |
-| `pnpm notion:status` | commit·Notion 동기화 상태 확인          |
+| `pnpm notion:status` | commit·Notion 문서 연결 상태 확인       |
+| `pnpm notion:mark`   | 검증한 Notion 문서를 현재 commit에 연결 |
 | `pnpm build`         | TypeScript 검사 후 production build     |
 | `pnpm lint`          | ESLint                                  |
 | `pnpm typecheck`     | TypeScript project 검사                 |
@@ -124,7 +118,6 @@ GA·Sentry·Clarity는 `VITE_TELEMETRY_ENABLED=true`이고 각 서비스 식별�
 - [프론트엔드 프로젝트 컨벤션](CONVENTION.md)
 - [제품 요구사항](docs/PRD.md)
 - [FSD 아키텍처 규칙](docs/FSD_ARCHITECTURE.md)
-- [AI 지원 작업 정책과 기록 위치](docs/AI_AGENT_WORKFLOW.md)
 - [Codex 진입점](AGENTS.md)
 - [Claude Code 진입점](CLAUDE.md)
 

@@ -11,7 +11,11 @@ import sparkle from "../festival-visuals/sparkle.svg";
 
 const colleges = ["IT", "간호", "예술", "사회", "사범", "자연"] as const;
 
-function FormInput({ label }: { label: string }) {
+interface FormInputProps {
+  label: string;
+}
+
+const FormInput = ({ label }: FormInputProps) => {
   return (
     <div className="relative h-[55px] w-full">
       <input
@@ -25,9 +29,9 @@ function FormInput({ label }: { label: string }) {
       </span>
     </div>
   );
-}
+};
 
-export function HomePage() {
+export default function HomePage() {
   const [selectedCollege, setSelectedCollege] =
     useState<(typeof colleges)[number]>("IT");
 

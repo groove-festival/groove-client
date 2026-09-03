@@ -6,7 +6,6 @@ description: Choose between targeted, fast, and full repository-backed quality g
 # Project Quality Gates
 
 Confirm commands against `package.json` and current repository configuration.
-Read the Workflow policy only when validation status semantics are in question.
 
 ## Build the gate
 
@@ -55,4 +54,4 @@ For every candidate check, record one state:
 
 Do not call the work verified when a relevant failure remains unresolved.
 Automated success is validation evidence only. Pass concise exact evidence to
-the final handoff and to `project-ai-worklog` when a worklog is required.
+the final handoff.

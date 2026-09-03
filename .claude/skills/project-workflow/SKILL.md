@@ -30,8 +30,7 @@ Load a focused Skill only when its decision is needed:
 
 | Need                                                                 | Skill                         |
 | -------------------------------------------------------------------- | ----------------------------- |
-| Material AI evidence                                                 | `project-ai-worklog`          |
-| Explicit on-demand or post-commit Notion publication                 | `project-notion-worklog`      |
+| On-demand or guarded post-commit Notion documentation                | `project-notion-worklog`      |
 | Non-trivial test selection or regression coverage                    | `project-testing`             |
 | Targeted/fast/full gate decision or failure analysis                 | `project-quality-gates`       |
 | Code implementation or refactor                                      | `project-coding`              |
@@ -55,30 +54,19 @@ must not be labeled as human review or approval.
 - Keep `통과`, `실패`, `미실행`, and `수동 확인 필요` distinct.
 - Never weaken tests or omit a failure to manufacture a successful status.
 
-## Record and hand off
+## Hand off
 
-For material AI use, record evidence in the current monthly worklog without
-reading older logs.
 Report:
 
 - the user problem addressed and actual changed files;
 - executed checks and their results;
 - failures, unrun checks, manual checks, and remaining risks;
 - preserved pre-existing changes;
-- AI-generated or AI-proposed content;
-- actual human decisions or edits when they occurred, without a review status;
 - actions not taken, including commit, push, deployment, or external writes.
 
 Work is complete when requested artifacts exist and the risk-relevant evidence
 is truthful. Completion does not require every available check.
 
-When the user authorized both commit and push and the checkout opted into the
-Notion guard, keep this order: local evidence, final planned commit, verified
-Notion publication, push. Do not create one Notion page per split commit; one
-record may cover the complete unpushed commit batch.
-
-When the user explicitly asks to document current work, a concept question,
-troubleshooting, a decision, or discussion in Notion, route to the on-demand
-mode even without a commit or planned push. Publish the structured record bundle
-defined by `project-notion-worklog`; it must not mark commit synchronization or
-satisfy the pre-push guard.
+When commit and push are authorized and the checkout uses the Notion guard,
+create the final planned commit, publish and read back one Notion document for
+the unpushed commit batch, run `pnpm notion:mark` with its URL, then push.

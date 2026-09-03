@@ -1,6 +1,6 @@
 ---
 name: project-notion-worklog
-description: Publish a structured Notion record bundle from actual AI conversation, code changes, errors, attempts, decisions, and validation when the user explicitly requests documentation or after commit before push. Use only with the checkout owner's configured personal subpage; on-demand records never satisfy the push guard.
+description: Publish a structured Notion record bundle from actual conversation, code changes, errors, attempts, decisions, and validation when the user explicitly requests documentation or after commit before push. Use only with the checkout owner's configured personal subpage; on-demand records never satisfy the push guard.
 ---
 
 # Project Notion Worklog
@@ -25,9 +25,8 @@ An on-demand note does not require a pending commit. It must not run
 ### Guarded push record
 
 Use this mode after the final planned commit and before an authorized push.
-Publish one record for the complete unpushed commit batch. The repository
-worklog remains the durable evidence source, and successful verified publication
-is required before marking the current commit synchronized.
+Publish one record for the complete unpushed commit batch. Successful verified
+publication is required before marking the current commit synchronized.
 
 ## Shared preconditions
 
@@ -48,9 +47,6 @@ gap. Leave any pending commit unchanged and do not push.
 - Use the accessible conversation for the current work as narrative evidence,
   then cross-check it against relevant code diffs, changed files, command output,
   and observed errors. Summarize the exchange; do not copy the transcript.
-- Read only the new local worklog entry when one exists. Do not load older
-  monthly entries. Add a local worklog entry first only when the record meets
-  `project-ai-worklog`'s material-impact criteria.
 - For an on-demand note, inspect the current discussion and only the repository
   evidence relevant to it. A concept-only record does not require a working-tree
   change. Label uncommitted content as current work, not as a commit result.
@@ -61,6 +57,7 @@ gap. Leave any pending commit unchanged and do not push.
 - Preserve the observed order of events without inventing timestamps. If part of
   the conversation or command history is unavailable, state the evidence gap
   instead of reconstructing it.
+- Do not create a repository activity log as part of this workflow.
 
 ## Publish
 

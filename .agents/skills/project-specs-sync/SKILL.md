@@ -37,4 +37,4 @@ another specification, surface the conflict instead of silently choosing one.
   `수동 확인 필요`.
 
 Pass changed contracts, deliberate non-changes, drift results, and unresolved
-decisions to `project-ai-worklog` and the final handoff.
+decisions to the final handoff.

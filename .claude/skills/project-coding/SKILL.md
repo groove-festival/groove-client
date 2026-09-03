@@ -30,5 +30,5 @@ Make a minimal change grounded in current repository evidence.
   or speculative abstractions.
 
 Run `pnpm check:fsd` for frontend source, placement, public-API, or import
-changes. Load testing, quality-gate, specification, and worklog Skills only when
-their individual triggers apply; do not load the full chain preemptively.
+changes. Load testing, quality-gate, and specification Skills only when their
+individual triggers apply; do not load the full chain preemptively.

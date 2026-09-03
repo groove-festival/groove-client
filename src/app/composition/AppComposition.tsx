@@ -1,11 +1,15 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState, type PropsWithChildren } from "react";
+import { useState, type ReactNode } from "react";
 import { BrowserRouter } from "react-router";
 
 import { AppRouter } from "@/app/routes";
 import { appConfig } from "@/shared/config";
 
-function QueryProvider({ children }: PropsWithChildren) {
+interface QueryProviderProps {
+  children: ReactNode;
+}
+
+const QueryProvider = ({ children }: QueryProviderProps) => {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -23,9 +27,9 @@ function QueryProvider({ children }: PropsWithChildren) {
   );
 
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
-}
+};
 
-export function AppComposition() {
+export const AppComposition = () => {
   return (
     <QueryProvider>
       <BrowserRouter basename={appConfig.basePath}>
@@ -33,4 +37,4 @@ export function AppComposition() {
       </BrowserRouter>
     </QueryProvider>
   );
-}
+};

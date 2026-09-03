@@ -40,7 +40,9 @@ app → pages → widgets → features → entities → shared
 
 ## 3. Public API
 
-- 외부 slice에서 사용할 항목은 slice 루트의 `index.ts`로만 공개한다.
+- 외부 slice에서 사용할 항목은 slice 루트의 `index.ts`로만 공개한다. page
+  slice의 대표 page 컴포넌트는 default로, 그 밖의 항목은 named export로
+  공개한다.
 - `app`과 `shared`에서는 각 segment 루트의 `index.ts`를 public API로 둔다.
 - 레이어 루트에 전체 레이어를 재노출하는 `index.ts`는 만들지 않는다.
 - 같은 slice 내부에서는 상대 경로 import를 사용한다.
@@ -48,10 +50,10 @@ app → pages → widgets → features → entities → shared
 
 ```ts
 // 허용: pages/home slice의 public API
-import { HomePage } from "@/pages/home";
+import HomePage from "@/pages/home";
 
 // 금지: slice 내부 구현 우회
-import { HomePage } from "@/pages/home/ui/HomePage";
+import HomePage from "@/pages/home/ui/HomePage";
 ```
 
 ## 4. 기술별 배치 기준

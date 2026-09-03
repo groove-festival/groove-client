@@ -44,5 +44,4 @@ contract.
 - Do not convert failures into skips, weaken assertions, or add unrelated mocks.
 - Report the exact command, outcome, relevant failure, and any test not run.
 - Keep output concise. Route to `project-quality-gates` only when gate selection
-  or failure interpretation is needed, and to `project-ai-worklog` only when a
-  worklog is required.
+  or failure interpretation is needed.

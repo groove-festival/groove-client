@@ -186,8 +186,8 @@ constraint and show the measured remainder. Do not call it identical.
 
 After frontend source, placement, public API, or import changes, run
 `pnpm check:fsd`. Run the smallest relevant behavior test and expand to wider
-quality gates only when the risk requires it. Record actual commands, artifacts,
-failed or unrun states, and remaining differences in the current AI worklog.
+quality gates only when the risk requires it. Report actual commands, artifacts,
+failed or unrun states, and remaining differences in the final handoff.
 
 ## Optional Figma QA writeback
 

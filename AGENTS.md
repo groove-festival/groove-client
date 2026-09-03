@@ -1,8 +1,7 @@
 # Repository agent contract
 
 Use the smallest context, Skill set, and validation scope that can safely answer
-the request. Detailed evidence rules live in `docs/AI_AGENT_WORKFLOW.md` and are
-loaded only when they apply.
+the request.
 
 ## Load context on demand
 
@@ -16,9 +15,6 @@ loaded only when they apply.
   user flows.
 - Read `docs/FSD_ARCHITECTURE.md` before frontend file placement, movement,
   public API, or import-boundary work.
-- Read `docs/AI_AGENT_WORKFLOW.md` only when recording or auditing AI evidence,
-  changing the Workflow, or resolving a validation-status question. Do not read
-  historical files under `docs/ai-worklogs/` unless the task concerns them.
 
 Confirm the user problem, scope, non-goals, and completion criteria in
 proportion to the task. A narrow question or single-file edit does not require a
@@ -45,22 +41,18 @@ full project survey.
   or a narrow change when targeted evidence is sufficient.
 - Record only checks that actually ran. Distinguish `통과`, `실패`, `미실행`,
   `수동 확인 필요`, and `해당 없음`.
-- Keep AI output, actual human decisions or edits, and automated evidence
-  distinct. Do not record a human review or approval status.
 - Do not commit, push, create a branch or PR, deploy, delete material data,
   change production, send external messages, or incur cost unless explicitly
   authorized.
 - For a requested commit, present the order, messages, files, separation reason,
   and validation first; wait for approval before `git add` or `git commit`.
-- When commit and push are authorized, finish the local AI worklog before the
-  final planned commit, commit, publish one verified Notion record with
-  `project-notion-worklog`, then push. A checkout opted in with
-  `pnpm notion:setup` authorizes writes only below its configured personal page.
-  Never mark Notion synchronization without reading the written page back.
-- When the user explicitly asks to document current work, a concept question,
-  troubleshooting, a decision, or discussion in Notion,
-  `project-notion-worklog` may publish an on-demand record bundle without a
-  commit. Do not run `notion:mark` or treat that record as pre-push evidence.
+- When commit and push are authorized, create the final planned commit, publish
+  and read back one Notion document for the unpushed commit batch, run
+  `pnpm notion:mark` with its URL, then push. The post-commit hook marks the new
+  commit pending, and pre-push blocks commits without a verified document.
+- When the user explicitly asks to document a discussion in Notion without a
+  commit, use `project-notion-worklog` in on-demand mode and do not change
+  commit guard state.
 
 ## Skill routing
 
@@ -69,10 +61,8 @@ Load only the smallest applicable set of canonical Skills under
 
 - `project-workflow`: multi-step or cross-cutting work that needs lifecycle
   coordination; do not load it by default for a narrow task.
-- `project-ai-worklog`: material AI-use evidence in
-  `docs/ai-worklogs/YYYY-MM.md`.
-- `project-notion-worklog`: structured on-demand documentation or post-commit,
-  pre-push publication to the checkout owner's configured Notion page.
+- `project-notion-worklog`: requested Notion conversation documentation and
+  post-commit documentation required by the push guard.
 - `project-testing`: non-trivial test selection, design, or regression coverage.
 - `project-quality-gates`: choosing targeted/fast/full gates, interpreting a
   failure, or assessing commit/PR/release readiness.
@@ -89,6 +79,5 @@ Treat `.agents/skills/` as the only editable Skill source. Generate
 ## Handoff
 
 Report changed files, actual validation, unresolved failures or unrun checks,
-remaining risks, and preserved pre-existing changes. Record material AI use in
-the current monthly worklog without loading previous logs. The responsible
-person retains final decision authority.
+remaining risks, and preserved pre-existing changes. The responsible person
+retains final decision authority.

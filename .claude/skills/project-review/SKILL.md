@@ -36,5 +36,4 @@ Order findings by severity. If no actionable findings are found, say so and
 state residual testing or context gaps. A clean AI review is not proof of
 correctness.
 
-Record the activity as AI contribution. Do not create a human review or approval
-status. Send findings to `project-ai-worklog` only when a worklog is required.
+Do not describe an AI review as human review or approval.
