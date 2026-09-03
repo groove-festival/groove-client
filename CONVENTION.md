@@ -401,7 +401,7 @@ commit을 실행하지 않는다.
 
 ## 11. 문서와 협업
 
-- Issue는 `.github/ISSUE_TEMPLATE/`의 `디자인`, `리팩토링`, `버그`, `기능`,
+- Issue는 `.github/ISSUE_TEMPLATE/`의 `디자인`, `리팩토링`, `버그 신고`, `기능 작업`,
   `문서 작업` Form 중 목적에 맞는 항목을 사용한다.
 - PR은 `.github/pull_request_template.md`의 관련 이슈, 작업 내용, 작업 방식의
   이유와 실제 검증을 간결하게 작성한다.

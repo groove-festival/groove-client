@@ -1,5 +1,5 @@
-name: 기능
-description: 새로운 기능이나 사용자 동작을 제안합니다.
+name: 기능 작업
+description: 새로운 기능이나 사용자 동작의 구현 작업을 등록합니다.
 title: "[기능] "
 body:
   - type: markdown
