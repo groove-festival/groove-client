@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@700&display=swap");
 
 @font-face {
   font-family: "SlowGothic";
@@ -20,6 +21,7 @@
 @theme {
   --font-pretendard: "Pretendard Variable", Pretendard, sans-serif;
   --font-slow-gothic: "SlowGothic", sans-serif;
+  --font-roboto: "Roboto", sans-serif;
 }
 
 :root {
