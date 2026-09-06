@@ -1,6 +1,8 @@
 import { useSearchParams } from "react-router";
 
-import { parsePlaylistPhase } from "../model/playlistPhase";
+import { parsePlaylistPhaseOverride } from "../model/playlistPhase";
+import { resolvePlaylistPhaseAt } from "../model/playlistSchedule";
+import { useNow } from "../model/useNow";
 import { ClosedSection } from "./ClosedSection";
 import { CountdownSection } from "./CountdownSection";
 import { FestivalHero } from "./FestivalHero";
@@ -8,7 +10,10 @@ import { SongRequestForm } from "./SongRequestForm";
 
 export default function PlaylistPage() {
   const [searchParams] = useSearchParams();
-  const phase = parsePlaylistPhase(searchParams.get("phase"));
+  const now = useNow();
+  const phase =
+    parsePlaylistPhaseOverride(searchParams.get("phase")) ??
+    resolvePlaylistPhaseAt(now);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#1c1c1c] text-[#fcfcfc]">

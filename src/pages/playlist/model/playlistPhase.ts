@@ -2,10 +2,8 @@ export type PlaylistPhase = "before" | "during" | "after";
 
 const playlistPhases: readonly PlaylistPhase[] = ["before", "during", "after"] as const;
 
-// 접수 여정 중 "신청 중" 화면을 기본값으로 둔다. 실제 단계 자동/수동 전환은
-// 후속 이슈(PRD §11-16)에서 다루며, 여기서는 정적 UI 확인용 값 파싱만 한다.
-export const DEFAULT_PLAYLIST_PHASE: PlaylistPhase = "during";
-
-export function parsePlaylistPhase(value: string | null): PlaylistPhase {
-  return playlistPhases.find((phase) => phase === value) ?? DEFAULT_PLAYLIST_PHASE;
+// URL의 `phase` 파라미터를 개발·미리보기용 강제값으로 해석한다. 유효한 값이
+// 아니면 null을 돌려주고, 이때 실제 단계는 접수 일정(playlistSchedule)이 정한다.
+export function parsePlaylistPhaseOverride(value: string | null): PlaylistPhase | null {
+  return playlistPhases.find((phase) => phase === value) ?? null;
 }

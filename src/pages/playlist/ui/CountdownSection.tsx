@@ -1,10 +1,19 @@
+import { SONG_REQUEST_OPENS_AT } from "../model/playlistSchedule";
+import { useCountdown } from "../model/useCountdown";
 import { PLAYLIST_BOTTOM_ANCHOR_ID } from "./FestivalHero";
 
-// 신청 전(오픈 전 ~9/11) 하단 섹션. Figma 555:2391.
+// 신청 전(오픈 전) 하단 섹션. Figma 804:4335.
 // 각 텍스트는 Figma 텍스트 박스 높이(66/105/30)에 맞춘 박스 안에서 중앙 정렬해
-// 세로 위치를 원본과 맞춘다. 타이머는 정적 표기(00:00:00)이며 실제 카운트다운
-// 로직은 후속 이슈로 분리한다.
+// 세로 위치를 원본과 맞춘다. 타이머는 신청 오픈 시각까지 1초 간격으로
+// 카운트다운한다. 100시간을 넘어 시(hour)가 3자리 이상이 되면 좌우가 잘리지
+// 않도록 글자 크기를 줄인다.
 export const CountdownSection = () => {
+  const { hours, minutes, seconds } = useCountdown(SONG_REQUEST_OPENS_AT);
+  const hh = String(hours).padStart(2, "0");
+  const mm = String(minutes).padStart(2, "0");
+  const ss = String(seconds).padStart(2, "0");
+  const timerSizeClass = hh.length > 2 ? "text-[72px]" : "text-[90px]";
+
   return (
     <section
       className="absolute top-[2269px] left-0 h-[852px] w-full bg-[#1c1c1c]"
@@ -16,12 +25,12 @@ export const CountdownSection = () => {
         </p>
       </div>
 
-      <div className="absolute top-[375px] left-0 flex h-[105px] w-full items-center justify-center">
+      <div className="absolute top-[375px] left-0 flex h-[105px] w-full items-center justify-center px-4">
         <p
-          aria-label="남은 시간 00시간 00분 00초"
-          className="font-roboto text-[90px] leading-none font-bold whitespace-nowrap text-[#00ffff] tabular-nums"
+          aria-label={`신청 시작까지 ${hours}시간 ${minutes}분 ${seconds}초 남음`}
+          className={`font-roboto leading-none font-bold whitespace-nowrap text-[#00ffff] tabular-nums ${timerSizeClass}`}
         >
-          00:00:00
+          {hh}:{mm}:{ss}
         </p>
       </div>
 
