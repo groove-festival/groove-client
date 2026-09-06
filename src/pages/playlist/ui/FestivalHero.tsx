@@ -1,10 +1,10 @@
+import { SiteHeader } from "@/widgets/site-header";
+
 import chevronDown from "../festival-visuals/chevron-down.svg";
 import contourBottom from "../festival-visuals/contour-bottom.svg";
 import contourTop from "../festival-visuals/contour-top.svg";
 import grooveLogo from "../festival-visuals/groove-logo.png";
-import headerHome from "../festival-visuals/header-home.png";
 import heroIllustration from "../festival-visuals/hero-illustration.png";
-import menuIcon from "../festival-visuals/menu.svg";
 import sparkle from "../festival-visuals/sparkle.svg";
 
 // 세 상태(신청 전/중/후) 화면이 공유하는 상단 히어로와 중간 다크 섹션.
@@ -103,22 +103,7 @@ export const FestivalHero = () => {
         <br />그 어떤 낮보다 아름답습니다.
       </p>
 
-      <header className="absolute top-0 left-[-4px] z-20 flex h-20 w-[400px] items-center bg-[rgba(28,28,28,0.4)] py-[5px] pr-[163px] pl-[21px] backdrop-blur-[12px]">
-        <button aria-label="메뉴 열기" className="size-7 shrink-0" type="button">
-          <img alt="" className="size-full" src={menuIcon} />
-        </button>
-        <a
-          aria-label="GROOVE 홈"
-          className="relative ml-[116px] block h-[70px] w-[72px] shrink-0 overflow-hidden"
-          href="#top"
-        >
-          <img
-            alt=""
-            className="absolute top-[-23.04%] left-[-24.74%] h-[145.24%] w-[148.51%] max-w-none"
-            src={headerHome}
-          />
-        </a>
-      </header>
+      <SiteHeader className="left-[-4px]" />
     </>
   );
 };
