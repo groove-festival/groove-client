@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 
@@ -5,11 +6,16 @@ import PlaylistPage from "./PlaylistPage";
 
 const renderAtPhase = (phase?: string) => {
   const path = phase ? `/?phase=${phase}` : "/";
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
 
   return render(
-    <MemoryRouter initialEntries={[path]}>
-      <PlaylistPage />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[path]}>
+        <PlaylistPage />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 };
 
@@ -25,14 +31,18 @@ describe("PlaylistPage", () => {
   it("shows the song request form during the application phase", () => {
     renderAtPhase("during");
 
-    expect(screen.getByRole("heading", { name: "노래 신청하기" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "노래 신청하기" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "신청하기" })).toBeInTheDocument();
   });
 
   it("defaults to the application phase without a phase param", () => {
     renderAtPhase();
 
-    expect(screen.getByRole("heading", { name: "노래 신청하기" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "노래 신청하기" }),
+    ).toBeInTheDocument();
   });
 
   it("changes the selected college", () => {
