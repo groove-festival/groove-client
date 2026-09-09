@@ -1,4 +1,4 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -9,12 +9,16 @@ export default defineConfig({
   reporter: "html",
   use: {
     baseURL: "http://127.0.0.1:4173/groove/",
+    deviceScaleFactor: 3,
+    hasTouch: true,
+    isMobile: true,
     trace: "on-first-retry",
+    viewport: { width: 390, height: 844 },
   },
   projects: [
     {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      name: "mobile-chromium",
+      use: { browserName: "chromium" },
     },
   ],
   webServer: {
