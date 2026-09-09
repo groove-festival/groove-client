@@ -54,6 +54,27 @@ repository's existing components, tokens, assets, and FSD public APIs. Load
 `project-fsd` for placement or import decisions and `project-testing` when the
 flow needs non-trivial coverage.
 
+## Apply the repository mobile frame rule
+
+Before coding a Figma-backed route, check the source frame width. When the
+source frame is 393 CSS pixels wide, keep the source canvas at 393px and apply
+the repository `.figma-mobile-canvas` class to the route's canvas root. Do not
+manually recalculate Figma coordinates, image sizes, or decorative assets for a
+600px canvas; the shared CSS scales the 393px canvas up to the global 600px app
+frame.
+
+The global app frame already belongs to `AppComposition`. Do not add a nested
+page-level frame wrapper for Figma screens. Fixed top navigation belongs
+outside the scaled canvas and should align to the app frame with
+`w-full max-w-[600px]` and a matching 64px body spacer, unless the source design
+requires a different product behavior.
+
+If the source frame width is not 393px, record the exact width and choose a
+screen-scoped adaptation instead of silently reusing `.figma-mobile-canvas`.
+For final browser evidence, include the mobile viewport and at least one wider
+viewport to confirm the header, canvas, and key hero/media assets scale
+together and cap at 600px.
+
 ## Normalize and capture the browser
 
 Use the repository Playwright installation and the real route. Pin Chromium,
