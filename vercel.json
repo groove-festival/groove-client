@@ -17,6 +17,10 @@
   ],
   "rewrites": [
     {
+      "source": "/groove/",
+      "destination": "/index.html"
+    },
+    {
       "source": "/groove/assets/:path*",
       "destination": "/assets/:path*"
     },
