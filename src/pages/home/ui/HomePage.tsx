@@ -1,12 +1,12 @@
 import { useState } from "react";
 
+import { FestivalHeader } from "@/widgets/festival-header";
+
 import chevronDown from "../festival-visuals/chevron-down.svg";
 import contourBottom from "../festival-visuals/contour-bottom.svg";
 import contourTop from "../festival-visuals/contour-top.svg";
 import grooveLogo from "../festival-visuals/groove-logo.png";
-import headerHome from "../festival-visuals/header-home.png";
 import heroIllustration from "../festival-visuals/hero-illustration.png";
-import menuIcon from "../festival-visuals/menu.svg";
 import sparkle from "../festival-visuals/sparkle.svg";
 
 const colleges = ["IT", "간호", "예술", "사회", "사범", "자연"] as const;
@@ -37,33 +37,7 @@ export default function HomePage() {
 
   return (
     <>
-      <header
-        className="fixed top-0 left-1/2 z-50 h-16 w-full max-w-[600px] -translate-x-1/2 bg-[rgba(28,28,28,0.4)] backdrop-blur-[12px]"
-        data-node-id="555:2351"
-      >
-        <div className="relative mx-auto flex h-full max-w-[600px] items-center justify-center px-5">
-          <button
-            aria-label="메뉴 열기"
-            className="absolute top-1/2 left-5 size-7 shrink-0 -translate-y-1/2"
-            type="button"
-          >
-            <img alt="" className="size-full" src={menuIcon} />
-          </button>
-          <a
-            aria-label="GROOVE 홈"
-            className="relative block h-14 w-[58px] shrink-0 overflow-hidden"
-            href="#top"
-          >
-            <img
-              alt=""
-              className="absolute top-[-23.04%] left-[-24.74%] h-[145.24%] w-[148.51%] max-w-none"
-              src={headerHome}
-            />
-          </a>
-        </div>
-      </header>
-
-      <div className="h-16 shrink-0" />
+      <FestivalHeader />
 
       <main className="flex flex-1 flex-col overflow-x-hidden bg-[#1c1c1c] text-[#fcfcfc]">
         <div

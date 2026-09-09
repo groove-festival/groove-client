@@ -1,10 +1,18 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
 
 import HomePage from "./HomePage";
 
+const renderHomePage = () =>
+  render(
+    <MemoryRouter>
+      <HomePage />
+    </MemoryRouter>,
+  );
+
 describe("HomePage", () => {
   it("renders the festival song request screen", () => {
-    render(<HomePage />);
+    renderHomePage();
 
     expect(
       screen.getByRole("heading", { name: "GROOVE FESTIVAL" }),
@@ -14,7 +22,7 @@ describe("HomePage", () => {
   });
 
   it("changes the selected college", () => {
-    render(<HomePage />);
+    renderHomePage();
 
     const nursingButton = screen.getByRole("button", { name: "간호" });
     fireEvent.click(nursingButton);
