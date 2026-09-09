@@ -81,6 +81,9 @@ claude mcp add --transport http figma https://mcp.figma.com/mcp
 Figma 원본 수정이나 구현 결과의 Figma QA 페이지 생성은 별도 요청이 있을
 때만 수행합니다. Figma 기반 화면 작업은
 `.agents/skills/project-figma-visual-parity` 절차를 사용합니다.
+393px 기준 Figma 화면은 route의 원본 캔버스에 `.figma-mobile-canvas`를
+적용해 600px 앱 프레임까지 자동 확대합니다. 화면마다 좌표와 asset 크기를
+600px 기준으로 다시 계산하지 않습니다.
 
 ## 기술 구성
 

@@ -180,6 +180,20 @@ ui/
   `widgets/festival-header`처럼 경로가 아키텍처 역할을 나타내므로 컴포넌트는
   `FestivalHeader`처럼 제품 개념으로 이름 짓는다.
 
+### 모바일 앱 프레임과 Figma 캔버스
+
+- 앱 전체의 600px 모바일 프레임은 `AppComposition`의 전역 shell이 담당한다.
+  route 화면 안에서 별도의 page frame이나 중첩된 `max-w-[600px]` wrapper를
+  다시 만들지 않는다.
+- Figma 원본 프레임이 393px 기준이면 route의 원본 캔버스 루트에
+  `.figma-mobile-canvas`를 적용한다. 절대 좌표, 이미지, 장식 요소는 393px
+  좌표계를 유지하고 CSS가 600px 앱 프레임까지 비율 확대하게 둔다.
+- 393px Figma 화면을 구현할 때 좌표와 asset 크기를 600px 기준으로 수동 변환하지
+  않는다. 다른 기준 폭의 프레임이면 원본 폭을 기록하고 화면 slice 안에서 좁게
+  보정한다.
+- 상단 고정 네비게이션은 확대 캔버스 안에 넣지 않는다. 전역 앱 프레임 폭에
+  맞춰 `w-full max-w-[600px]` 기준으로 배치하고, 본문에는 64px spacer를 둔다.
+
 ## 6. API와 서버 상태
 
 ### 배치와 endpoint 선언
