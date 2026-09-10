@@ -1,10 +1,9 @@
-@import "tailwindcss";
 @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@700&display=swap");
+@import "tailwindcss";
 
 @font-face {
   font-family: "SlowGothic";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-01@1.0/neurimboGothicRegular.woff2")
-    format("woff2");
+  src: url("./fonts/neurimboGothicRegular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -83,14 +82,4 @@
     radial-gradient(circle at 16% 12%, rgba(234, 81, 71, 0.12), transparent 28rem),
     radial-gradient(circle at 82% 18%, rgba(91, 121, 200, 0.12), transparent 24rem),
     var(--color-background, #ffffff);
-}
-
-@layer components {
-  .figma-mobile-canvas {
-    width: 393px;
-    max-width: none;
-    margin-inline: auto;
-    overflow: hidden;
-    zoom: calc(min(100vw, 600px) / 393px);
-  }
 }
