@@ -14,12 +14,12 @@ export default function GroovePlaylistPage() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#1c1c1c] text-[#fcfcfc]">
       <div
-        className="font-pretendard relative mx-auto h-[934px] w-full max-w-[393px] overflow-hidden bg-[#1c1c1c]"
+        className="font-pretendard relative h-[934px] w-full overflow-hidden bg-[#1c1c1c]"
         id="top"
       >
-        <FestivalHeader className="left-1/2 -translate-x-1/2" layout="canvas" />
+        <FestivalHeader layout="canvas" />
 
-        <div className="absolute top-[100px] left-6 flex items-center gap-[58px]">
+        <div className="absolute top-[100px] right-4 left-4 flex items-center justify-between gap-4">
           <button
             aria-label="뒤로 가기"
             className="size-6 shrink-0"
@@ -28,17 +28,20 @@ export default function GroovePlaylistPage() {
           >
             <img alt="" className="size-full rotate-90" src={backIcon} />
           </button>
-          <h1 className="text-xl font-bold whitespace-nowrap">GROOVE PLAYLIST</h1>
+          <h1 className="flex-1 text-center text-xl font-bold whitespace-nowrap">
+            GROOVE PLAYLIST
+          </h1>
+          <div aria-hidden="true" className="size-6 shrink-0" />
         </div>
 
         <h2 className="absolute top-[148px] left-4 text-2xl font-bold">PLAYLIST</h2>
 
-        <div className="absolute top-[201px] left-4 h-[602px] w-[361px]">
+        <div className="absolute top-[201px] right-4 left-4 h-[602px]">
           <ul className="flex h-full flex-col gap-4 overflow-y-auto [mask-image:linear-gradient(to_bottom,transparent,#000_3px,#000_93%,transparent)]">
             {isPending &&
               Array.from({ length: 7 }, (_, index) => (
                 <li className="flex items-center gap-4" key={index}>
-                  <div className="size-14 shrink-0 animate-pulse rounded-lg bg-[#323232]" />
+                  <div className="aspect-square w-14 shrink-0 animate-pulse rounded-lg bg-[#323232]" />
                   <div className="h-10 flex-1 animate-pulse rounded bg-[#323232]" />
                 </li>
               ))}

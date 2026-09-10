@@ -49,7 +49,7 @@ interface MemberCardProps {
 const MemberCard = ({ member }: MemberCardProps) => {
   return (
     <article className="flex flex-col items-center rounded-2xl border border-[#3a3a3a] bg-[#232323] px-3 pt-7 pb-8">
-      <div className="size-14 overflow-hidden rounded-full bg-[#d9d9d9]">
+      <div className="aspect-square w-14 overflow-hidden rounded-full bg-[#d9d9d9]">
         {member.profileImage ? (
           <img alt="" className="size-full object-cover" src={member.profileImage} />
         ) : null}
@@ -85,7 +85,7 @@ export default function CreditsPage() {
       <FestivalHeader />
 
       <main className="flex flex-1 flex-col overflow-x-hidden bg-[#1c1c1c] text-[#fcfcfc]">
-        <div className="figma-mobile-canvas relative bg-[#1c1c1c] px-4 pt-5 pb-16">
+        <div className="w-full bg-[#1c1c1c] px-4 pt-5 pb-16">
           <div className="flex h-6 items-center justify-center">
             <h1 className="text-lg font-bold tracking-wide">CREDITS</h1>
           </div>

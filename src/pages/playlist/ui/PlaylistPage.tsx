@@ -18,7 +18,7 @@ export default function PlaylistPage() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#1c1c1c] text-[#fcfcfc]">
       <div
-        className={`relative mx-auto w-full max-w-[393px] overflow-hidden bg-[#1c1c1c] ${
+        className={`relative w-full overflow-hidden bg-[#1c1c1c] ${
           phase === "before" ? "h-[3121px]" : "h-[3195px]"
         }`}
         id="top"

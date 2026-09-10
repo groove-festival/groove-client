@@ -9,7 +9,7 @@ export const PlaylistEntry = ({ entry }: PlaylistEntryProps) => {
   return (
     <li className="flex items-center gap-4">
       {/* 곡 썸네일 자리. 이미지 연동 시 <img>로 교체한다. */}
-      <div className="size-14 shrink-0 rounded-lg bg-[#fcfcfc]" />
+      <div className="aspect-square w-14 shrink-0 rounded-lg bg-[#fcfcfc]" />
       <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-2">
           <p className="truncate text-base font-bold text-[#fcfcfc]">{entry.song}</p>
