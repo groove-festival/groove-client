@@ -11,6 +11,16 @@ const renderHeader = () =>
   );
 
 describe("FestivalHeader", () => {
+  it("merges the positioning class onto the canvas bar", () => {
+    render(
+      <MemoryRouter>
+        <FestivalHeader className="left-[-4px]" layout="canvas" />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("banner").className).toContain("left-[-4px]");
+  });
+
   it("opens and closes the full-screen menu", () => {
     renderHeader();
 
