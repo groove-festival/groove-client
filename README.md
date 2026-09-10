@@ -5,7 +5,7 @@ GROOVE 축제 서비스를 위한 모바일 우선 React 클라이언트입니�
 
 ## 시작하기
 
-요구 환경은 Node.js `20.19+`와 pnpm `10`입니다.
+요구 환경은 Node.js `24+`와 pnpm `10`입니다.
 
 ```sh
 pnpm install
