@@ -5,7 +5,7 @@ GROOVE 축제 서비스를 위한 모바일 우선 React 클라이언트입니�
 
 ## 시작하기
 
-요구 환경은 Node.js `20.19+`와 pnpm `10`입니다.
+요구 환경은 Node.js `24+`와 pnpm `10`입니다.
 
 ```sh
 pnpm install
@@ -81,6 +81,16 @@ claude mcp add --transport http figma https://mcp.figma.com/mcp
 Figma 원본 수정이나 구현 결과의 Figma QA 페이지 생성은 별도 요청이 있을
 때만 수행합니다. Figma 기반 화면 작업은
 `.agents/skills/project-figma-visual-parity` 절차를 사용합니다.
+일반 사용자 화면은 600px 앱 프레임 안에서 `w-full`, `px`, `flex/grid`,
+`aspect-ratio` 중심으로 반응형 구현합니다. 이미지와 영상은 용도별 비율을 고정하고
+`object-cover`/`object-contain`과 `object-position`을 명시해 예측 가능하게
+자릅니다. 텍스트가 이미지 위에 올라가면 contrast overlay나 safe area로 대비를
+보장합니다. 히어로처럼 이미지 위에 텍스트와 장식 요소가 함께 올라가는 화면은
+각 요소를 서로 다른 viewport 기준으로 고정하지 않고, 같은 visual stage나 앱 프레임
+중앙 기준에 묶어 넓은 화면에서도 관계가 유지되게 합니다. 한 이미지 안의 CD나 제품
+같은 전경 오브젝트 뒤로 텍스트가 지나가야 하면 배경과 전경 레이어를 분리합니다.
+좌표 보존과 scale 계산은 축제 지도처럼 지도 좌표와 화면 좌표를 맞춰야 하는 화면에만
+사용합니다.
 
 ## 기술 구성
 
@@ -117,6 +127,8 @@ GA·Sentry·Clarity는 `VITE_TELEMETRY_ENABLED=true`이고 각 서비스 식별�
 
 - [프론트엔드 프로젝트 컨벤션](CONVENTION.md)
 - [제품 요구사항](docs/PRD.md)
+- [백엔드 API 연동 메모](docs/BACKEND_API.md)
+- [배포 워크플로](docs/DEPLOYMENT.md)
 - [FSD 아키텍처 규칙](docs/FSD_ARCHITECTURE.md)
 - [Codex 진입점](AGENTS.md)
 - [Claude Code 진입점](CLAUDE.md)

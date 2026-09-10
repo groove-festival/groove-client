@@ -25,6 +25,13 @@ full project survey.
 - Preserve existing user and teammate changes. Make the smallest relevant
   change and avoid unrelated refactors, file moves, dependencies, or
   architecture changes.
+- Before writing code for a non-trivial change, present a short plan (problem,
+  files to add or change, approach, key trade-offs or open decisions, and
+  planned validation) and wait for approval. Non-trivial means new files, new
+  dependencies, structural, public-API, or import-boundary changes, multi-file
+  edits, or a request with unresolved design choices. Skip the plan for a
+  single obvious edit, a rename, a typo, or a change the user already specified
+  precisely.
 - Protect credentials, tokens, passwords, personal data, raw user data, and
   private operations data. Give external tools the minimum necessary access.
 - For code changes, check relevant types, error states, boundaries, tests, and

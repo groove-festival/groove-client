@@ -54,6 +54,50 @@ repository's existing components, tokens, assets, and FSD public APIs. Load
 `project-fsd` for placement or import decisions and `project-testing` when the
 flow needs non-trivial coverage.
 
+## Apply the repository mobile frame rule
+
+The global app frame already belongs to `AppComposition` and caps public user
+pages at 600px. Do not add a nested page-level frame wrapper for Figma screens.
+Fixed top navigation should align to the app frame with `w-full max-w-[600px]`
+and a matching 64px body spacer, unless the source design requires a different
+product behavior.
+
+For ordinary user-facing screens, do not keep a 393px Figma canvas and scale it
+up wholesale. Translate the design into responsive React layout with `w-full`,
+container padding, flex/grid, aspect-ratio, and sensible max widths. Treat
+Figma `left`, `top`, and fixed-width values as source measurements, not as the
+runtime layout contract.
+
+For image and video media, choose an explicit aspect ratio for the component's
+role before sizing it. Use `object-cover` or `object-contain` within that
+ratio, and set `object-position` whenever crop matters. If readable text sits
+on top of media, add a contrast overlay, gradient scrim, text shadow, or a
+separate safe area so text contrast does not depend on whichever image region
+happens to be visible at a wider viewport.
+
+For media hero sections where text, logos, and decorative elements overlap the
+same image, keep foreground elements tied to one visual stage or to the app
+frame center. Do not mix unrelated anchors such as pinning one element to the
+viewport left while centering another over the media. Layer media first, then
+contrast overlay, supporting foreground text, primary logo or decoration, and
+finally navigation or interactive controls.
+
+If text must pass behind a foreground object that is baked into a flat image,
+z-index changes alone cannot solve it. Split the visual into background and
+foreground layers, or derive a transparent foreground layer from the source
+asset, then place both layers in the same visual stage.
+
+Coordinate preservation and scale calculations are reserved for map screens in
+this project, where booth or zone marker coordinates must remain tied to a
+map image or measured board. For those screens, calculate marker positions from
+the rendered container size, preferably with ResizeObserver or equivalent
+measured layout state. Do not use a global zoom wrapper for non-map UI.
+
+For final browser evidence, include the mobile viewport and at least one wider
+viewport to confirm the header, key media, forms, and cards use the available
+app-frame width and cap at 600px. For map screens, also verify marker alignment
+after the container resizes.
+
 ## Normalize and capture the browser
 
 Use the repository Playwright installation and the real route. Pin Chromium,

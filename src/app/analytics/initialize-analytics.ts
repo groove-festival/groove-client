@@ -16,6 +16,23 @@ declare global {
 
 let initialized = false;
 
+function resolveAnalyticsPagePath(pathname: string) {
+  const normalizedPathname = `/${pathname.trim().replace(/^\/+/, "")}`;
+
+  if (appConfig.basePath === "/") {
+    return normalizedPathname;
+  }
+
+  if (
+    normalizedPathname === appConfig.basePath ||
+    normalizedPathname.startsWith(`${appConfig.basePath}/`)
+  ) {
+    return normalizedPathname;
+  }
+
+  return `${appConfig.basePath}${normalizedPathname}`;
+}
+
 function appendScriptOnce(id: string, source: string) {
   if (document.getElementById(id)) {
     return;
@@ -42,8 +59,6 @@ function initializeGoogleAnalytics(measurementId: string) {
   window.gtag("js", new Date());
   window.gtag("config", measurementId, {
     anonymize_ip: true,
-    page_location: `${window.location.origin}${appConfig.basePath}`,
-    page_path: appConfig.basePath,
     send_page_view: false,
   });
 
@@ -108,6 +123,22 @@ function initializeSentry(dsn: string) {
           : undefined,
       };
     },
+  });
+}
+
+export function trackAnalyticsPageView(pathname: string) {
+  const measurementId = appConfig.telemetry.googleAnalyticsMeasurementId;
+
+  if (!initialized || !appConfig.telemetry.enabled || !measurementId || !window.gtag) {
+    return;
+  }
+
+  const pagePath = resolveAnalyticsPagePath(pathname);
+
+  window.gtag("event", "page_view", {
+    page_location: `${window.location.origin}${pagePath}`,
+    page_path: pagePath,
+    page_title: document.title,
   });
 }
 
