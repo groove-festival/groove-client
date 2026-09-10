@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 
-import { SiteHeader } from "@/widgets/site-header";
+import { FestivalHeader } from "@/widgets/festival-header";
 
 import { useGroovePlaylist } from "../api/getGroovePlaylist";
 import backIcon from "../playlist-visuals/back.svg";
@@ -17,7 +17,7 @@ export default function GroovePlaylistPage() {
         className="font-pretendard relative mx-auto h-[934px] w-full max-w-[393px] overflow-hidden bg-[#1c1c1c]"
         id="top"
       >
-        <SiteHeader className="left-1/2 -translate-x-1/2" />
+        <FestivalHeader className="left-1/2 -translate-x-1/2" layout="canvas" />
 
         <div className="absolute top-[100px] left-6 flex items-center gap-[58px]">
           <button

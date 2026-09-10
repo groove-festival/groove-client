@@ -1,4 +1,4 @@
-import { SiteHeader } from "@/widgets/site-header";
+import { FestivalHeader } from "@/widgets/festival-header";
 
 import chevronDown from "../festival-visuals/chevron-down.svg";
 import contourBottom from "../festival-visuals/contour-bottom.svg";
@@ -103,7 +103,7 @@ export const FestivalHero = () => {
         <br />그 어떤 낮보다 아름답습니다.
       </p>
 
-      <SiteHeader className="left-[-4px]" />
+      <FestivalHeader className="left-[-4px]" layout="canvas" />
     </>
   );
 };
