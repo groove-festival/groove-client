@@ -90,7 +90,7 @@ export const FestivalHero = () => {
         <div className="font-slow-gothic absolute top-[69.18%] left-[4.07%] w-[270px] whitespace-nowrap text-[#fcfcfc]">
           <h1
             aria-label="GROOVE FESTIVAL"
-            className="text-[44px] leading-10 font-normal"
+            className="text-[44px] leading-10 font-normal subpixel-antialiased [-webkit-text-stroke:1.3px_currentColor]"
           >
             <span className="block">GROOVE</span>
             <span className="block">FESTIVAL</span>
