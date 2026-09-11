@@ -1,0 +1,32 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist",
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/groove/",
+      "permanent": false
+    },
+    {
+      "source": "/groove",
+      "destination": "/groove/",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/groove/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/groove/assets/:path*",
+      "destination": "/assets/:path*"
+    },
+    {
+      "source": "/groove/:path*",
+      "destination": "/index.html"
+    }
+  ]
+}
