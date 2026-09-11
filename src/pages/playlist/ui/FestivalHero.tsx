@@ -106,10 +106,14 @@ export const FestivalHero = () => {
       <div className="pointer-events-none absolute top-0 left-0 z-50 aspect-[393/850] w-full">
         <a
           aria-label="아래로 이동"
-          className="pointer-events-auto absolute top-[92.59%] left-1/2 block size-8 -translate-x-1/2"
+          className="pointer-events-auto absolute top-[95.41%] left-1/2 block size-8 -translate-x-1/2"
           href={`#${PLAYLIST_BOTTOM_ANCHOR_ID}`}
         >
-          <img alt="" className="size-full" src={chevronDown} />
+          <img
+            alt=""
+            className="animate-float size-full motion-reduce:animate-none"
+            src={chevronDown}
+          />
         </a>
       </div>
 
