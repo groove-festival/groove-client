@@ -1,7 +1,10 @@
 import hanNaYoungProfile from "../festival-visuals/profile-hannayoung.png";
+import jeonByeongJinProfile from "../festival-visuals/profile-jeonbyeongjin.jpg";
 import kimJiAnProfile from "../festival-visuals/profile-kimjian.png";
+import kimJiHunProfile from "../festival-visuals/profile-kimjihun.jpg";
 import kimTaeHuiProfile from "../festival-visuals/profile-kimtaehui.png";
 import seoHyeongCheolProfile from "../festival-visuals/profile-seohyeongcheol.png";
+import yunJiMinProfile from "../festival-visuals/profile-yunjimin.jpg";
 
 export interface TeamMember {
   name: string;
@@ -32,6 +35,7 @@ export const creditSections: CreditSection[] = [
       {
         name: "윤지민",
         affiliation: "글로벌SW융합전공 22학번",
+        profileImage: yunJiMinProfile,
         instagram: "1a._supernova",
         github: "Y-jimin",
       },
@@ -43,6 +47,7 @@ export const creditSections: CreditSection[] = [
       {
         name: "김지훈",
         affiliation: "글로벌SW융합전공 20학번",
+        profileImage: kimJiHunProfile,
         instagram: "hoon_ground",
         github: "hoon-ground",
       },
@@ -74,6 +79,7 @@ export const creditSections: CreditSection[] = [
       {
         name: "윤지민",
         affiliation: "글로벌SW융합전공 22학번",
+        profileImage: yunJiMinProfile,
         instagram: "1a._supernova",
         github: "Y-jimin",
       },
@@ -106,7 +112,12 @@ export const creditSections: CreditSection[] = [
         profileImage: kimJiAnProfile,
         instagram: "khehhaz",
       },
-      { name: "전병진", affiliation: "디자인학과 24학번", instagram: "twojwithinun" },
+      {
+        name: "전병진",
+        affiliation: "디자인학과 24학번",
+        profileImage: jeonByeongJinProfile,
+        instagram: "twojwithinun",
+      },
     ],
   },
 ];
