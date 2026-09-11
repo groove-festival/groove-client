@@ -40,7 +40,7 @@ describe("FestivalHeader", () => {
     expect(screen.getByRole("link", { name: "HOME" })).toHaveAttribute("href", "/");
     expect(screen.getByRole("link", { name: "GROOVE PLAYLIST" })).toHaveAttribute(
       "href",
-      "/playlist",
+      "/",
     );
     expect(screen.getByRole("link", { name: "CREDITS" })).toHaveAttribute(
       "href",

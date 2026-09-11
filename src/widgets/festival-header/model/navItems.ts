@@ -8,6 +8,6 @@ export const navItems: NavItem[] = [
   { label: "BOOTH", to: "/coming-soon" },
   { label: "SONG CONTEST", to: "/coming-soon" },
   { label: "PROGRAM", to: "/coming-soon" },
-  { label: "GROOVE PLAYLIST", to: "/playlist" },
+  { label: "GROOVE PLAYLIST", to: "/" },
   { label: "CREDITS", to: "/credits" },
 ];
