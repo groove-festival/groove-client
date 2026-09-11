@@ -2,14 +2,15 @@ import { useNavigate } from "react-router";
 
 import { FestivalHeader } from "@/widgets/festival-header";
 
-import { useGroovePlaylist } from "../api/getGroovePlaylist";
+import { isNotPublishedYet, useFinalPlaylist } from "../api/getFinalPlaylist";
 import backIcon from "../playlist-visuals/back.svg";
 import { PlaylistEntry } from "./PlaylistEntry";
 
 // 축제 기간에 최종 선정 곡을 보여주는 전용 페이지. Figma 805:12036.
 export default function GroovePlaylistPage() {
   const navigate = useNavigate();
-  const { data: playlist, isPending, isError } = useGroovePlaylist();
+  const { data: playlist, isPending, isError, error } = useFinalPlaylist();
+  const notPublishedYet = isError && isNotPublishedYet(error);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#1c1c1c] text-[#fcfcfc]">
@@ -46,7 +47,13 @@ export default function GroovePlaylistPage() {
                 </li>
               ))}
 
-            {isError && (
+            {notPublishedYet && (
+              <li className="text-sm text-[#a2a2a2]">
+                아직 공개 전이에요. 축제 기간에 다시 확인해 주세요.
+              </li>
+            )}
+
+            {isError && !notPublishedYet && (
               <li className="text-sm text-[#a2a2a2]">
                 플레이리스트를 불러오지 못했어요.
               </li>
@@ -56,8 +63,11 @@ export default function GroovePlaylistPage() {
               <li className="text-sm text-[#a2a2a2]">아직 공개된 곡이 없어요.</li>
             )}
 
-            {playlist?.map((entry) => (
-              <PlaylistEntry entry={entry} key={entry.id} />
+            {playlist?.map((entry, index) => (
+              <PlaylistEntry
+                entry={entry}
+                key={`${entry.title}-${entry.nickname}-${index}`}
+              />
             ))}
           </ul>
         </div>
