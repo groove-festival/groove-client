@@ -41,12 +41,13 @@ jobs:
       - name: Build image
         run: |
           if [ "$TARGET_BRANCH" = "main" ]; then
+            BUILD_DATE=$(date +'%Y%m%d-%H%M%S')
             docker build \
               --build-arg VITE_API_BASE_URL=__VITE_API_BASE_URL__ \
               --build-arg VITE_GA_MEASUREMENT_ID=__VITE_GA_MEASUREMENT_ID__ \
               --build-arg VITE_TELEMETRY_ENABLED=__VITE_TELEMETRY_ENABLED__ \
               -t $REGISTRY/$ORG_LC/$IMAGE_NAME:latest \
-              -t $REGISTRY/$ORG_LC/$IMAGE_NAME:${{ steps.getDate.outputs.date }}
+              -t $REGISTRY/$ORG_LC/$IMAGE_NAME:$BUILD_DATE \
               .
           else
             docker build \
