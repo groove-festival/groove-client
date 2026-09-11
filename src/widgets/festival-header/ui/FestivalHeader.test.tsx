@@ -11,10 +11,10 @@ const renderHeader = () =>
   );
 
 describe("FestivalHeader", () => {
-  it("merges the positioning class onto the canvas bar", () => {
+  it("merges the extra class onto the header bar", () => {
     render(
       <MemoryRouter>
-        <FestivalHeader className="left-[-4px]" layout="canvas" />
+        <FestivalHeader className="left-[-4px]" />
       </MemoryRouter>,
     );
 
@@ -40,7 +40,7 @@ describe("FestivalHeader", () => {
     expect(screen.getByRole("link", { name: "HOME" })).toHaveAttribute("href", "/");
     expect(screen.getByRole("link", { name: "GROOVE PLAYLIST" })).toHaveAttribute(
       "href",
-      "/playlist",
+      "/",
     );
     expect(screen.getByRole("link", { name: "CREDITS" })).toHaveAttribute(
       "href",

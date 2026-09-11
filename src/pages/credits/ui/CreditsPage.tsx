@@ -1,5 +1,3 @@
-import { FestivalHeader } from "@/widgets/festival-header";
-
 import githubIcon from "../festival-visuals/github.png";
 import instagramIcon from "../festival-visuals/instagram.png";
 import { creditSections, type TeamMember } from "../model/teamMembers";
@@ -81,33 +79,29 @@ const MemberCard = ({ member }: MemberCardProps) => {
 
 export default function CreditsPage() {
   return (
-    <>
-      <FestivalHeader />
-
-      <main className="flex flex-1 flex-col overflow-x-hidden bg-[#1c1c1c] text-[#fcfcfc]">
-        <div className="w-full bg-[#1c1c1c] px-4 pt-5 pb-16">
-          <div className="flex h-6 items-center justify-center">
-            <h1 className="text-lg font-bold tracking-wide">CREDITS</h1>
-          </div>
-
-          <div className="mt-14 flex flex-col gap-12">
-            {creditSections.map((section) => (
-              <section key={section.title}>
-                <h2 className="text-xl font-bold text-[#fcfcfc]">{section.title}</h2>
-                <div className="mt-6 grid grid-cols-2 items-start gap-x-4 gap-y-4">
-                  {section.members.map((member, index) => (
-                    <MemberCard key={`${member.name}-${index}`} member={member} />
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
-
-          <p className="mt-14 text-center text-[10px] leading-3 text-[#a2a2a2]">
-            자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요.
-          </p>
+    <main className="flex flex-1 flex-col overflow-x-hidden bg-[#1c1c1c] text-[#fcfcfc]">
+      <div className="w-full bg-[#1c1c1c] px-4 pt-[100px] pb-16">
+        <div className="flex h-6 items-center justify-center">
+          <h1 className="text-lg font-bold tracking-wide">CREDITS</h1>
         </div>
-      </main>
-    </>
+
+        <div className="mt-14 flex flex-col gap-12">
+          {creditSections.map((section) => (
+            <section key={section.title}>
+              <h2 className="text-xl font-bold text-[#fcfcfc]">{section.title}</h2>
+              <div className="mt-6 grid grid-cols-2 items-start gap-x-4 gap-y-4">
+                {section.members.map((member, index) => (
+                  <MemberCard key={`${member.name}-${index}`} member={member} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+
+        <p className="mt-14 text-center text-[10px] leading-3 text-[#a2a2a2]">
+          자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요.
+        </p>
+      </div>
+    </main>
   );
 }
