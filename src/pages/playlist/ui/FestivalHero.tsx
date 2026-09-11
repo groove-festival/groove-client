@@ -1,5 +1,3 @@
-import { FestivalHeader } from "@/widgets/festival-header";
-
 import chevronDown from "../festival-visuals/chevron-down.svg";
 import contourBottom from "../festival-visuals/contour-bottom.svg";
 import contourTop from "../festival-visuals/contour-top.svg";
@@ -132,8 +130,6 @@ export const FestivalHero = () => {
         우리의 그루브는
         <br />그 어떤 낮보다 아름답습니다.
       </p>
-
-      <FestivalHeader layout="canvas" />
     </>
   );
 };
