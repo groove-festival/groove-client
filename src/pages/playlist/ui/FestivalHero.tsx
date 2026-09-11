@@ -1,5 +1,3 @@
-import { FestivalHeader } from "@/widgets/festival-header";
-
 import chevronDown from "../festival-visuals/chevron-down.svg";
 import contourBottom from "../festival-visuals/contour-bottom.svg";
 import contourTop from "../festival-visuals/contour-top.svg";
@@ -90,7 +88,7 @@ export const FestivalHero = () => {
         <div className="font-slow-gothic absolute top-[69.18%] left-[4.07%] w-[270px] whitespace-nowrap text-[#fcfcfc]">
           <h1
             aria-label="GROOVE FESTIVAL"
-            className="text-[44px] leading-10 font-normal"
+            className="text-[44px] leading-10 font-normal subpixel-antialiased [-webkit-text-stroke:1.3px_currentColor]"
           >
             <span className="block">GROOVE</span>
             <span className="block">FESTIVAL</span>
@@ -106,10 +104,14 @@ export const FestivalHero = () => {
       <div className="pointer-events-none absolute top-0 left-0 z-50 aspect-[393/850] w-full">
         <a
           aria-label="아래로 이동"
-          className="pointer-events-auto absolute top-[92.59%] left-1/2 block size-8 -translate-x-1/2"
+          className="pointer-events-auto absolute top-[95.41%] left-1/2 block size-8 -translate-x-1/2"
           href={`#${PLAYLIST_BOTTOM_ANCHOR_ID}`}
         >
-          <img alt="" className="size-full" src={chevronDown} />
+          <img
+            alt=""
+            className="animate-float size-full motion-reduce:animate-none"
+            src={chevronDown}
+          />
         </a>
       </div>
 
@@ -128,8 +130,6 @@ export const FestivalHero = () => {
         우리의 그루브는
         <br />그 어떤 낮보다 아름답습니다.
       </p>
-
-      <FestivalHeader layout="canvas" />
     </>
   );
 };
