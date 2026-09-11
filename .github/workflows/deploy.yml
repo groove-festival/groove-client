@@ -1,0 +1,115 @@
+name: Continuous Deployment
+
+concurrency:
+  group: deploy-${{ github.repository }}
+  cancel-in-progress: false
+
+on:
+  workflow_run:
+    branches: [ main, dev ]
+    workflows: [ "CI" ]
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io
+  ORG: ${{ github.repository_owner }}
+  IMAGE_NAME: ${{ github.event.repository.name }}
+  CONT_NAME: ${{ github.event.repository.name }}
+  TARGET_BRANCH: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+
+jobs:
+  build-and-push:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set organization name to lowercase
+        run: |
+          echo "ORG_LC=${ORG,,}" >> $GITHUB_ENV
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login $REGISTRY -u ${{ github.actor }} --password-stdin
+
+      - name: Build image
+        run: |
+          if [ "$TARGET_BRANCH" = "main" ]; then
+            docker build \
+              --build-arg VITE_API_BASE_URL=__VITE_API_BASE_URL__ \
+              --build-arg VITE_GA_MEASUREMENT_ID=__VITE_GA_MEASUREMENT_ID__ \
+              --build-arg VITE_TELEMETRY_ENABLED=__VITE_TELEMETRY_ENABLED__ \
+              -t $REGISTRY/$ORG_LC/$IMAGE_NAME:latest \
+              -t $REGISTRY/$ORG_LC/$IMAGE_NAME:${{ steps.getDate.outputs.date }}
+              .
+          else
+            docker build \
+            --build-arg VITE_API_BASE_URL=__VITE_API_BASE_URL__ \
+            --build-arg VITE_GA_MEASUREMENT_ID=__VITE_GA_MEASUREMENT_ID__ \
+            --build-arg VITE_TELEMETRY_ENABLED=__VITE_TELEMETRY_ENABLED__ \
+            -t $REGISTRY/$ORG_LC/$IMAGE_NAME:dev \
+            .
+          fi
+
+      - name: Push image
+        run: |
+          docker push $REGISTRY/$ORG_LC/$IMAGE_NAME --all-tags
+
+  deploy:
+    needs: build-and-push
+    runs-on: [ 'self-hosted', 'frontend' ]
+    env:
+      TZ: Asia/Seoul
+    steps:
+      - name: Set organization name to lowercase
+        run: |
+          echo "ORG_LC=${ORG,,}" >> $GITHUB_ENV
+          
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login $REGISTRY -u ${{ github.actor }} --password-stdin
+          
+      - name: Getting current image name
+        id: current_img
+        run: |
+          if [ "$TARGET_BRANCH" = "main" ]; then
+            CURRENT_IMG=$(docker inspect $CONT_NAME --format='{{.Config.Image}}' 2>/dev/null || echo "")
+            echo "image=$CURRENT_IMG" >> $GITHUB_OUTPUT
+          else
+            CURRENT_IMG=$(docker inspect $CONT_NAME-dev --format='{{.Config.Image}}' 2>/dev/null || echo "")
+            echo "image=$CURRENT_IMG" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Pulling latest image
+        run: |
+          if [ "$TARGET_BRANCH" = "main" ]; then
+            docker pull $REGISTRY/$ORG_LC/$IMAGE_NAME:latest
+          else
+            docker pull $REGISTRY/$ORG_LC/$IMAGE_NAME:dev
+          fi
+
+      - name: Executing container using Docker Compose
+        run: |
+          if [ "$TARGET_BRANCH" = "main" ]; then
+            docker compose \
+            -f ${{ secrets.FESTIVAL_DOCKER_COMPOSE_FILE_PATH }} \
+            --env-file ${{ secrets.FESTIVAL_ENV_PATH }} \
+            -p groove-prod \
+            up -d --no-build --pull never \
+            $CONT_NAME
+          else 
+            docker compose \
+            -f ${{ secrets.FESTIVAL_DOCKER_COMPOSE_FILE_PATH }} \
+            --env-file ${{ secrets.FESTIVAL_ENV_DEV_PATH }} \
+            -p groove-dev \
+            up -d --no-build --pull never \
+            $CONT_NAME
+          fi
+          
+      - name: Flushing docker cache
+        run: docker buildx prune -f
