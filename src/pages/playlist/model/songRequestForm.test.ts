@@ -1,7 +1,7 @@
-import { songRequestSchema } from "./songRequestForm";
+import { collegeToApiValue, songRequestSchema } from "./songRequestForm";
 
 const validValues = {
-  song: "Ditto",
+  trackId: "1234567890",
   college: "IT",
   studentId: "2025000123",
   department: "컴퓨터학부",
@@ -14,8 +14,8 @@ describe("songRequestSchema", () => {
     expect(songRequestSchema.safeParse(validValues).success).toBe(true);
   });
 
-  it("rejects an empty song", () => {
-    const result = songRequestSchema.safeParse({ ...validValues, song: "  " });
+  it("rejects a request without a selected track", () => {
+    const result = songRequestSchema.safeParse({ ...validValues, trackId: "" });
 
     expect(result.success).toBe(false);
   });
@@ -38,10 +38,7 @@ describe("songRequestSchema", () => {
   });
 
   it("rejects an unknown college", () => {
-    const result = songRequestSchema.safeParse({
-      ...validValues,
-      college: "약학",
-    });
+    const result = songRequestSchema.safeParse({ ...validValues, college: "약학" });
 
     expect(result.success).toBe(false);
   });
@@ -52,5 +49,18 @@ describe("songRequestSchema", () => {
 
       expect(result.success).toBe(false);
     }
+  });
+});
+
+describe("collegeToApiValue", () => {
+  it("maps every UI label to a backend enum value", () => {
+    expect(collegeToApiValue).toEqual({
+      IT: "IT",
+      간호: "NURSING",
+      예술: "ART",
+      사회: "SOCIAL",
+      사범: "EDU",
+      자연: "NATURE",
+    });
   });
 });
