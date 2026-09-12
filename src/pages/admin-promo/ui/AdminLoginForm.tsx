@@ -67,7 +67,7 @@ export const AdminLoginForm = ({ account }: AdminLoginFormProps) => {
 
   if (loggedInAsOther || wrongRole) {
     return (
-      <div className="font-pretendard flex flex-col gap-4 px-4 py-16 text-[#fcfcfc]">
+      <div className="font-pretendard flex flex-col gap-4 px-4 pt-20 pb-16 text-[#fcfcfc]">
         <h1 className="text-xl font-bold">GROOVE PLAYLIST 관리자</h1>
         <p className="text-sm leading-6 text-[#a2a2a2]">
           홍보팀 관리자 계정이 아니에요. 이 페이지는 홍보팀 관리자만 사용할 수 있습니다.
@@ -85,7 +85,7 @@ export const AdminLoginForm = ({ account }: AdminLoginFormProps) => {
   }
 
   return (
-    <div className="font-pretendard flex flex-col gap-6 px-4 py-16 text-[#fcfcfc]">
+    <div className="font-pretendard flex flex-col gap-6 px-4 pt-20 pb-16 text-[#fcfcfc]">
       <h1 className="text-xl font-bold">GROOVE PLAYLIST 관리자</h1>
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit(onValid)}>

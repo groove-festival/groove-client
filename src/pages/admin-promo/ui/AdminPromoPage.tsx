@@ -26,11 +26,13 @@ export default function AdminPromoPage() {
   return (
     <main className="font-pretendard min-h-screen bg-[#1c1c1c] text-[#fcfcfc]">
       {auth.isPending && (
-        <p className="px-4 py-16 text-sm text-[#a2a2a2]">로그인 상태를 확인하는 중…</p>
+        <p className="px-4 pt-20 pb-16 text-sm text-[#a2a2a2]">
+          로그인 상태를 확인하는 중…
+        </p>
       )}
 
       {auth.isError && (
-        <div className="flex flex-col items-start gap-3 px-4 py-16">
+        <div className="flex flex-col items-start gap-3 px-4 pt-20 pb-16">
           <p className="text-sm text-[#a2a2a2]">로그인 상태를 확인하지 못했어요.</p>
           <button
             className="h-10 rounded-xl bg-[#3a3a3a] px-4 text-sm font-semibold"
@@ -47,7 +49,7 @@ export default function AdminPromoPage() {
       )}
 
       {isPromoAdmin(auth.data) && (
-        <div className="flex flex-col gap-4 px-4 py-6">
+        <div className="flex flex-col gap-4 px-4 pt-20 pb-6">
           <header className="flex items-center justify-between">
             <h1 className="text-lg font-bold">GROOVE PLAYLIST 관리자</h1>
             <button
