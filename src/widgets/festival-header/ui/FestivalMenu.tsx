@@ -49,7 +49,10 @@ export const FestivalMenu = ({ isOpen, onClose }: FestivalMenuProps) => {
         <nav aria-label="사이트 메뉴" className="-mt-2 px-4">
           <ul>
             {navItems.map((item) => (
-              <li className="border-b border-[#3a3a3a]" key={item.label}>
+              <li
+                className="border-b border-[#3a3a3a] last:border-b-0"
+                key={item.label}
+              >
                 <Link
                   className="flex h-[94px] items-center pl-6 text-2xl font-medium text-[#fcfcfc]"
                   onClick={onClose}
