@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 
 import { ApiError } from "@/shared/api";
@@ -84,14 +84,5 @@ describe("GroovePlaylistPage", () => {
     renderPage();
 
     expect(screen.getByText("플레이리스트를 불러오지 못했어요.")).toBeInTheDocument();
-  });
-
-  it("goes to the home route from the back button", () => {
-    mockPlaylist({ data: [] });
-    renderPage();
-
-    fireEvent.click(screen.getByRole("button", { name: "뒤로 가기" }));
-
-    expect(screen.getByText("home route")).toBeInTheDocument();
   });
 });

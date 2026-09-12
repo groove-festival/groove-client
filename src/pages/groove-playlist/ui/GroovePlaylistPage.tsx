@@ -1,14 +1,8 @@
-import { useNavigate } from "react-router";
-
-import { FestivalHeader } from "@/widgets/festival-header";
-
 import { isNotPublishedYet, useFinalPlaylist } from "../api/getFinalPlaylist";
-import backIcon from "../playlist-visuals/back.svg";
 import { PlaylistEntry } from "./PlaylistEntry";
 
 // 축제 기간에 최종 선정 곡을 보여주는 전용 페이지. Figma 805:12036.
 export default function GroovePlaylistPage() {
-  const navigate = useNavigate();
   const { data: playlist, isPending, isError, error } = useFinalPlaylist();
   const notPublishedYet = isError && isNotPublishedYet(error);
 
@@ -18,22 +12,9 @@ export default function GroovePlaylistPage() {
         className="font-pretendard relative h-[934px] w-full overflow-hidden bg-[#1c1c1c]"
         id="top"
       >
-        <FestivalHeader layout="canvas" />
-
-        <div className="absolute top-[100px] right-4 left-4 flex items-center justify-between gap-4">
-          <button
-            aria-label="뒤로 가기"
-            className="size-6 shrink-0"
-            onClick={() => navigate("/")}
-            type="button"
-          >
-            <img alt="" className="size-full rotate-90" src={backIcon} />
-          </button>
-          <h1 className="flex-1 text-center text-xl font-bold whitespace-nowrap">
-            GROOVE PLAYLIST
-          </h1>
-          <div aria-hidden="true" className="size-6 shrink-0" />
-        </div>
+        <h1 className="absolute top-[100px] right-4 left-4 text-center text-xl font-bold whitespace-nowrap">
+          GROOVE PLAYLIST
+        </h1>
 
         <h2 className="absolute top-[148px] left-4 text-2xl font-bold">PLAYLIST</h2>
 

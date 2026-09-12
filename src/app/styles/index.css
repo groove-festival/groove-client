@@ -22,6 +22,19 @@
   --font-pretendard: "Pretendard Variable", Pretendard, sans-serif;
   --font-slow-gothic: "SlowGothic", sans-serif;
   --font-roboto: "Roboto", sans-serif;
+
+  /* 히어로 하단 화살표 등 스크롤 유도 요소용 부드러운 상하 부유 효과. */
+  --animate-float: float 1.8s ease-in-out infinite;
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(6px);
+    }
+  }
 }
 
 @layer base {
