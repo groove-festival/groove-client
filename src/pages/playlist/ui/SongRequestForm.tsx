@@ -70,6 +70,9 @@ const submitErrorMessage = (error: unknown): string => {
     if (error.code === "PLST007") {
       return "곡 정보가 만료됐어요. 곡을 다시 검색해서 선택해 주세요.";
     }
+    if (error.code === "PLST010") {
+      return "이미 다른 사람이 신청한 곡입니다. 다른 곡을 선택해주세요.";
+    }
     if (error.code === "PLST001") {
       return "지금은 접수 기간이 아니에요.";
     }

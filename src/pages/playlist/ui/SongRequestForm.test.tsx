@@ -156,6 +156,22 @@ describe("SongRequestForm", () => {
     ).toBeInTheDocument();
   });
 
+  it("maps the taken-track error to a friendly message", async () => {
+    httpGet.mockResolvedValueOnce(envelope({ tracks: [track] }));
+    httpPost.mockRejectedValueOnce(errorResponse("PLST010", 409));
+    renderForm();
+    await searchAndSelect();
+    fillDetails("3025000004");
+
+    submit();
+
+    expect(
+      await screen.findByText(
+        "이미 다른 사람이 신청한 곡입니다. 다른 곡을 선택해주세요.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("closes the results dropdown when clicking outside it", async () => {
     httpGet.mockResolvedValueOnce(envelope({ tracks: [track] }));
     renderForm();
