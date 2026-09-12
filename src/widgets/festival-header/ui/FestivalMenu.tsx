@@ -8,28 +8,27 @@ interface FestivalMenuProps {
 }
 
 export const FestivalMenu = ({ isOpen, onClose }: FestivalMenuProps) => {
-  // 닫힘 상태에서도 마운트를 유지해 좌측 슬라이드 전환을 준다.
-  // 닫힘일 때는 aria-hidden + pointer-events-none으로 접근성/상호작용에서 제외한다.
   return (
     <div
       aria-hidden={!isOpen}
-      className={`fixed inset-0 z-[60] flex justify-center transition-colors duration-300 motion-reduce:transition-none ${
-        isOpen ? "bg-black/40" : "pointer-events-none bg-transparent"
+      aria-label="전체 메뉴"
+      aria-modal={isOpen ? "true" : undefined}
+      className={`fixed top-0 left-1/2 z-[60] h-dvh w-full max-w-[600px] -translate-x-1/2 overflow-hidden ${
+        isOpen ? "" : "pointer-events-none"
       }`}
+      role="dialog"
     >
       <div
-        aria-label="전체 메뉴"
-        aria-modal="true"
-        className={`relative h-full w-full max-w-[600px] overflow-y-auto bg-[#1c1c1c] transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none ${
+        className={`h-full w-full overflow-y-auto bg-[#1c1c1c] transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
-        role="dialog"
       >
         <div className="flex h-20 shrink-0 items-center px-4">
           <button
             aria-label="메뉴 닫기"
             className="flex size-8 items-center justify-center text-[#fcfcfc]"
             onClick={onClose}
+            tabIndex={isOpen ? undefined : -1}
             type="button"
           >
             <svg
@@ -54,6 +53,7 @@ export const FestivalMenu = ({ isOpen, onClose }: FestivalMenuProps) => {
                 <Link
                   className="flex h-[94px] items-center pl-6 text-2xl font-medium text-[#fcfcfc]"
                   onClick={onClose}
+                  tabIndex={isOpen ? undefined : -1}
                   to={item.to}
                 >
                   {item.label}

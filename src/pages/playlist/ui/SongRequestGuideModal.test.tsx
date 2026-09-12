@@ -33,6 +33,22 @@ describe("SongRequestGuideModal", () => {
     expect(handleClose).toHaveBeenCalledTimes(1);
   });
 
+  it("restores focus without scrolling after close", () => {
+    const previousButton = document.createElement("button");
+    document.body.appendChild(previousButton);
+    previousButton.focus();
+    const focus = vi.spyOn(previousButton, "focus");
+
+    const { rerender } = render(<SongRequestGuideModal open onClose={() => {}} />);
+
+    rerender(<SongRequestGuideModal open={false} onClose={() => {}} />);
+
+    expect(focus).toHaveBeenCalledWith({ preventScroll: true });
+
+    focus.mockRestore();
+    previousButton.remove();
+  });
+
   it("closes on Escape", () => {
     const handleClose = vi.fn();
     render(<SongRequestGuideModal open onClose={handleClose} />);
