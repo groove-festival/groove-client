@@ -33,6 +33,28 @@ describe("FestivalHeader", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  it("places the menu over the mobile app frame", () => {
+    renderHeader();
+
+    fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
+
+    expect(screen.getByRole("dialog", { name: "전체 메뉴" })).toHaveClass(
+      "left-1/2",
+      "max-w-[600px]",
+      "-translate-x-1/2",
+    );
+  });
+
+  it("slides the menu panel in smoothly", () => {
+    renderHeader();
+
+    fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
+
+    expect(
+      screen.getByRole("dialog", { name: "전체 메뉴" }).firstElementChild,
+    ).toHaveClass("transition-transform", "duration-300", "ease-out", "translate-x-0");
+  });
+
   it("links each menu item to its destination", () => {
     renderHeader();
     fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));

@@ -9,7 +9,7 @@ const guidelines = [
   "학번당 최대 한 곡만 신청 가능합니다.",
   "새로 신청할 경우 가장 최근에 신청하신 곡으로 갱신됩니다.",
   "신청된 곡 목록은 축제 기간에 확인 가능합니다.",
-  "신청 시에는 유튜브뮤직에서 실제로 존재하는 곡만 선택할 수 있습니다.",
+  "신청 시에는 실제 음원이 있는 곡만 검색해서 선택할 수 있습니다.",
 ] as const;
 
 interface SongRequestGuideModalProps {
@@ -57,7 +57,7 @@ export const SongRequestGuideModal = ({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = previousOverflow;
-      previouslyFocused?.focus();
+      previouslyFocused?.focus({ preventScroll: true });
     };
   }, [open, onClose]);
 

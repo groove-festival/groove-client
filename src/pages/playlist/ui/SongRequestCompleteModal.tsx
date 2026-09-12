@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 export interface CompletedSong {
   title: string;
   artist?: string | null;
+  albumCoverUrl?: string | null;
 }
 
 interface SongRequestCompleteModalProps {
@@ -112,13 +113,20 @@ export const SongRequestCompleteModal = ({
             </h2>
 
             <div className="flex w-60 flex-col items-center gap-4" id={descriptionId}>
-              {/* 곡 썸네일 자리. 유튜브 뮤직 연동 시 <img>로 교체한다. */}
-              <div className="size-[200px] rounded-full bg-[#fcfcfc]" />
+              {/* 앨범 커버. 없으면 디자인 placeholder 원을 유지한다. */}
+              {song.albumCoverUrl ? (
+                <img
+                  alt=""
+                  className="size-[200px] rounded-full object-cover"
+                  src={song.albumCoverUrl}
+                />
+              ) : (
+                <div className="size-[200px] rounded-full bg-[#fcfcfc]" />
+              )}
               <div className="flex flex-col items-center gap-2 text-center">
                 <p className="text-xl leading-6 font-semibold text-[#fcfcfc]">
                   {song.title}
                 </p>
-                {/* 가수는 유튜브 뮤직 연동 전까지 디자인 placeholder를 노출한다. */}
                 <p className="text-base leading-[19px] font-medium text-[#cfcfcf]">
                   {song.artist || "가수"}
                 </p>

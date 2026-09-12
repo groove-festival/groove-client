@@ -1,18 +1,18 @@
 import { render, screen } from "@testing-library/react";
 
+import type { FinalPlaylistSong } from "../api/getFinalPlaylist";
 import { PlaylistEntry } from "./PlaylistEntry";
 
-const entry = {
-  id: "1",
-  song: "Ditto",
+const entry: FinalPlaylistSong = {
+  title: "Ditto",
   artist: "NewJeans",
-  college: "IT",
   nickname: "밤샘코딩",
-  thumbnailUrl: null,
+  college: "NURSING",
+  updatedAt: "2026-10-01T09:00:00+09:00",
 };
 
 describe("PlaylistEntry", () => {
-  it("shows the song, artist, and the college / nickname meta", () => {
+  it("shows the song, artist, and the college label / nickname meta", () => {
     render(
       <ul>
         <PlaylistEntry entry={entry} />
@@ -21,6 +21,16 @@ describe("PlaylistEntry", () => {
 
     expect(screen.getByText("Ditto")).toBeInTheDocument();
     expect(screen.getByText("NewJeans")).toBeInTheDocument();
-    expect(screen.getByText("IT • 밤샘코딩")).toBeInTheDocument();
+    expect(screen.getByText("간호 • 밤샘코딩")).toBeInTheDocument();
+  });
+
+  it("renders the album cover when present", () => {
+    render(
+      <ul>
+        <PlaylistEntry entry={{ ...entry, albumCoverUrl: "https://x/cover" }} />
+      </ul>,
+    );
+
+    expect(document.querySelector('img[src="https://x/cover"]')).not.toBeNull();
   });
 });

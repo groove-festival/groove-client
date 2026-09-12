@@ -53,4 +53,19 @@ describe("useCountdown", () => {
       isElapsed: true,
     });
   });
+
+  it("stays at zero and is not elapsed when there is no target", () => {
+    const { result } = renderHook(() => useCountdown(null));
+
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+
+    expect(result.current).toMatchObject({
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      isElapsed: false,
+    });
+  });
 });

@@ -96,3 +96,23 @@
     radial-gradient(circle at 82% 18%, rgba(91, 121, 200, 0.12), transparent 24rem),
     var(--color-background, #ffffff);
 }
+
+/* 브랜드 퍼플 스크롤바. 다크 배경 위 스크롤 가능한 목록(예: 곡 검색 결과)에서
+   기본 회색 OS 스크롤바 대신 사용한다. */
+@utility themed-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #5d00ff transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #5d00ff;
+    border-radius: 9999px;
+  }
+}
