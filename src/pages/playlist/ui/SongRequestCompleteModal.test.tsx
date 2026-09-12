@@ -64,4 +64,19 @@ describe("SongRequestCompleteModal", () => {
 
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
+
+  it("renders the album cover when one is provided", () => {
+    render(
+      <SongRequestCompleteModal
+        open
+        song={{ title: "Ditto", artist: "NewJeans", albumCoverUrl: "https://x/1" }}
+        onChange={() => {}}
+        onConfirm={() => {}}
+      />,
+    );
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.querySelector('img[src="https://x/1"]')).not.toBeNull();
+    expect(screen.getByText("NewJeans")).toBeInTheDocument();
+  });
 });

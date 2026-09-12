@@ -1,18 +1,34 @@
-import { SONG_REQUEST_OPENS_AT } from "../model/playlistSchedule";
+import { useMemo } from "react";
+
 import { useCountdown } from "../model/useCountdown";
 import { PLAYLIST_BOTTOM_ANCHOR_ID } from "./FestivalHero";
 
-// 신청 전(오픈 전) 하단 섹션. Figma 804:4335.
+interface CountdownSectionProps {
+  // 접수 시작 시각(ISO). festival/status의 playlist.submissionStartAt.
+  // 아직 모르면 생략하고, 이때 타이머 자리에 placeholder를 보여준다.
+  targetIso?: string;
+}
+
+// 신청 전(BEFORE_OPEN) 하단 섹션. Figma 804:4335.
 // 각 텍스트는 Figma 텍스트 박스 높이(66/105/30)에 맞춘 박스 안에서 중앙 정렬해
-// 세로 위치를 원본과 맞춘다. 타이머는 신청 오픈 시각까지 1초 간격으로
+// 세로 위치를 원본과 맞춘다. 타이머는 접수 시작 시각까지 1초 간격으로
 // 카운트다운한다. 100시간을 넘어 시(hour)가 3자리 이상이 되면 좌우가 잘리지
 // 않도록 글자 크기를 줄인다.
-export const CountdownSection = () => {
-  const { hours, minutes, seconds } = useCountdown(SONG_REQUEST_OPENS_AT);
+export const CountdownSection = ({ targetIso }: CountdownSectionProps) => {
+  const target = useMemo(() => {
+    if (!targetIso) {
+      return null;
+    }
+    const parsed = new Date(targetIso);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }, [targetIso]);
+
+  const { hours, minutes, seconds } = useCountdown(target);
   const hh = String(hours).padStart(2, "0");
   const mm = String(minutes).padStart(2, "0");
   const ss = String(seconds).padStart(2, "0");
   const timerSizeClass = hh.length > 2 ? "text-[72px]" : "text-[90px]";
+  const timerText = target ? `${hh}:${mm}:${ss}` : "--:--:--";
 
   return (
     <section
@@ -27,10 +43,14 @@ export const CountdownSection = () => {
 
       <div className="absolute top-[375px] left-0 flex h-[105px] w-full items-center justify-center px-4">
         <p
-          aria-label={`신청 시작까지 ${hours}시간 ${minutes}분 ${seconds}초 남음`}
+          aria-label={
+            target
+              ? `신청 시작까지 ${hours}시간 ${minutes}분 ${seconds}초 남음`
+              : "신청 시작 시각을 불러오는 중"
+          }
           className={`font-roboto leading-none font-bold whitespace-nowrap text-[#00ffff] tabular-nums ${timerSizeClass}`}
         >
-          {hh}:{mm}:{ss}
+          {timerText}
         </p>
       </div>
 
