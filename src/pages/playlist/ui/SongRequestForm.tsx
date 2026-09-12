@@ -20,6 +20,12 @@ import {
 } from "./SongRequestCompleteModal";
 import { SongRequestGuideModal } from "./SongRequestGuideModal";
 
+interface SongRequestFormProps {
+  guideOpen?: boolean;
+  onGuideClose?: () => void;
+  onGuideSectionEnter?: () => void;
+}
+
 interface FormInputProps extends ComponentPropsWithRef<"input"> {
   label: string;
   error?: string;
@@ -83,16 +89,29 @@ const submitErrorMessage = (error: unknown): string => {
 // 신청 중(SUBMISSION) 하단 섹션. Figma 555:2321.
 // 곡은 PLST-2 검색 결과에서 고른 trackId로만 신청한다(PLST-3). 학번당 최종 1곡이고
 // 같은 학번의 재신청은 서버가 새 곡으로 덮어쓴다.
-export const SongRequestForm = () => {
-  const [isGuideOpen, setIsGuideOpen] = useState(false);
+export const SongRequestForm = ({
+  guideOpen,
+  onGuideClose,
+  onGuideSectionEnter,
+}: SongRequestFormProps) => {
+  const [isInternalGuideOpen, setIsInternalGuideOpen] = useState(false);
   const [completedSong, setCompletedSong] = useState<CompletedSong | null>(null);
   const [keyword, setKeyword] = useState("");
   const [selectedTrack, setSelectedTrack] = useState<SongTrack | null>(null);
   const [isResultsClosed, setIsResultsClosed] = useState(false);
   const resultsRef = useRef<HTMLUListElement>(null);
+  const isGuideOpen = guideOpen ?? isInternalGuideOpen;
+  const closeGuide = onGuideClose ?? (() => setIsInternalGuideOpen(false));
   const sectionRef = useSectionInView<HTMLElement>({
     threshold: 0.4,
-    onEnterView: () => setIsGuideOpen(true),
+    onEnterView: () => {
+      if (onGuideSectionEnter) {
+        onGuideSectionEnter();
+        return;
+      }
+
+      setIsInternalGuideOpen(true);
+    },
   });
 
   const {
@@ -364,6 +383,9 @@ export const SongRequestForm = () => {
             label="닉네임"
             {...register("nickname")}
           />
+          <p className="-mt-4 text-[10px] leading-3 text-[#a2a2a2]">
+            * 닉네임은 플레이리스트에서 신청자명 대신 보여질 이름입니다.
+          </p>
 
           {firstErrorMessage && (
             <p className="text-xs leading-[15px] text-[#ff5b5b]">{firstErrorMessage}</p>
@@ -388,7 +410,7 @@ export const SongRequestForm = () => {
         자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요.
       </p>
 
-      <SongRequestGuideModal onClose={() => setIsGuideOpen(false)} open={isGuideOpen} />
+      <SongRequestGuideModal onClose={closeGuide} open={isGuideOpen} />
 
       <SongRequestCompleteModal
         onChange={closeCompleteModal}

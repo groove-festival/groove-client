@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 
 import {
@@ -58,8 +58,32 @@ const renderPage = (path = "/") => {
   );
 };
 
+const mockScrollIntoView = () => {
+  const scrollIntoView = vi.fn();
+
+  Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+    configurable: true,
+    value: scrollIntoView,
+  });
+
+  return scrollIntoView;
+};
+
+let scrollTo: ReturnType<typeof vi.fn>;
+
+beforeEach(() => {
+  scrollTo = vi.fn();
+  Object.defineProperty(window, "scrollTo", {
+    configurable: true,
+    value: scrollTo,
+  });
+  window.history.scrollRestoration = "auto";
+});
+
 afterEach(() => {
+  vi.useRealTimers();
   vi.clearAllMocks();
+  window.history.replaceState(null, "", "/");
 });
 
 describe("PlaylistPage", () => {
@@ -88,6 +112,51 @@ describe("PlaylistPage", () => {
 
     expect(screen.getByRole("heading", { name: "노래 신청하기" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "신청하기" })).toBeInTheDocument();
+  });
+
+  it("opens the guide modal after the smooth scroll from the hero arrow settles", () => {
+    vi.useFakeTimers();
+    const scrollIntoView = mockScrollIntoView();
+    mockStatus({ data: buildStatus("SUBMISSION") });
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "아래로 이동" }));
+
+    expect(scrollIntoView).toHaveBeenCalledWith({
+      behavior: "smooth",
+      block: "start",
+    });
+    expect(window.location.hash).toBe("");
+    expect(
+      screen.queryByRole("dialog", { name: /신청 유의 사항/ }),
+    ).not.toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+
+    expect(screen.getByRole("dialog", { name: /신청 유의 사항/ })).toBeInTheDocument();
+  });
+
+  it("resets the stale bottom hash on refresh-style entry", () => {
+    window.history.replaceState(null, "", "/groove/#playlist-bottom");
+    mockStatus({ data: buildStatus("SUBMISSION") });
+
+    renderPage();
+
+    expect(window.location.hash).toBe("");
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0, left: 0, behavior: "auto" });
+  });
+
+  it("resets the browser-restored scroll position on refresh-style entry", () => {
+    window.history.replaceState(null, "", "/groove/");
+    mockStatus({ data: buildStatus("SUBMISSION") });
+
+    renderPage();
+
+    expect(window.location.hash).toBe("");
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0, left: 0, behavior: "auto" });
+    expect(window.history.scrollRestoration).toBe("manual");
   });
 
   it("shows the closed notice during SELECTION", () => {

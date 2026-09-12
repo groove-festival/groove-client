@@ -57,7 +57,7 @@ export const SongRequestGuideModal = ({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = previousOverflow;
-      previouslyFocused?.focus();
+      previouslyFocused?.focus({ preventScroll: true });
     };
   }, [open, onClose]);
 

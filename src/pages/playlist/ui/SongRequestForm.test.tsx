@@ -79,6 +79,14 @@ describe("SongRequestForm", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  it("explains how the nickname is displayed", () => {
+    renderForm();
+
+    expect(
+      screen.getByText("* 닉네임은 플레이리스트에서 신청자명 대신 보여질 이름입니다."),
+    ).toBeInTheDocument();
+  });
+
   it("shows a search-service message when the search request fails", async () => {
     httpGet.mockRejectedValueOnce(errorResponse("PLST005", 502));
     renderForm();

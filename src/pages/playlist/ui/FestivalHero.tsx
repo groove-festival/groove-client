@@ -9,7 +9,11 @@ import sparkle from "../festival-visuals/sparkle.svg";
 // Figma 555:2362 / 555:2292 / 555:2445에서 이 영역의 좌표는 동일하다.
 export const PLAYLIST_BOTTOM_ANCHOR_ID = "playlist-bottom";
 
-export const FestivalHero = () => {
+interface FestivalHeroProps {
+  onBottomArrowClick: () => void;
+}
+
+export const FestivalHero = ({ onBottomArrowClick }: FestivalHeroProps) => {
   return (
     <>
       <div
@@ -102,17 +106,18 @@ export const FestivalHero = () => {
       </div>
 
       <div className="pointer-events-none absolute top-0 left-0 z-50 aspect-[393/850] w-full">
-        <a
+        <button
           aria-label="아래로 이동"
-          className="pointer-events-auto absolute top-[95.41%] left-1/2 block size-8 -translate-x-1/2"
-          href={`#${PLAYLIST_BOTTOM_ANCHOR_ID}`}
+          className="pointer-events-auto absolute top-[95.41%] left-1/2 block size-8 -translate-x-1/2 border-0 bg-transparent p-0"
+          onClick={onBottomArrowClick}
+          type="button"
         >
           <img
             alt=""
             className="animate-float size-full motion-reduce:animate-none"
             src={chevronDown}
           />
-        </a>
+        </button>
       </div>
 
       <div
