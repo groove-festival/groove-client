@@ -291,7 +291,7 @@ export const SongRequestForm = ({
               )}
             </div>
             <p className="mt-1 text-[10px] leading-3 text-[#a2a2a2]">
-              *실제 음원이 있는 곡만 검색·선택할 수 있습니다.
+              * 실제 음원이 있는 곡만 검색·선택할 수 있습니다.
             </p>
 
             {selectedTrack ? (
