@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router";
 
-import lockIllustration from "../festival-visuals/lock.png";
+import { lockIllustration } from "@/shared/ui";
+
 import { PLAYLIST_BOTTOM_ANCHOR_ID } from "./FestivalHero";
 
 interface ClosedSectionProps {
