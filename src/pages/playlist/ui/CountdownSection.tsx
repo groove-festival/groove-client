@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 import { useCountdown } from "../model/useCountdown";
 import { PLAYLIST_BOTTOM_ANCHOR_ID } from "./FestivalHero";
+import { PlaylistLegalFooter } from "./PlaylistLegalFooter";
 
 interface CountdownSectionProps {
   // 접수 시작 시각(ISO). festival/status의 playlist.submissionStartAt.
@@ -60,9 +61,7 @@ export const CountdownSection = ({ targetIso }: CountdownSectionProps) => {
         </p>
       </div>
 
-      <p className="absolute bottom-[37px] left-1/2 -translate-x-1/2 text-[10px] leading-3 whitespace-nowrap text-[#a2a2a2]">
-        자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요.
-      </p>
+      <PlaylistLegalFooter />
     </section>
   );
 };

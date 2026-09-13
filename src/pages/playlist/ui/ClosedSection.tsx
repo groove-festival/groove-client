@@ -2,6 +2,7 @@ import { useNavigate } from "react-router";
 
 import lockIllustration from "../festival-visuals/lock.png";
 import { PLAYLIST_BOTTOM_ANCHOR_ID } from "./FestivalHero";
+import { PlaylistLegalFooter } from "./PlaylistLegalFooter";
 
 interface ClosedSectionProps {
   // selection: 신청 마감 · 홍보팀 선정 중 · 최종 목록 비공개 (PLST 단계 SELECTION)
@@ -46,9 +47,7 @@ export const ClosedSection = ({ variant }: ClosedSectionProps) => {
         </p>
       )}
 
-      <p className="absolute bottom-[40px] left-1/2 -translate-x-1/2 text-[10px] leading-3 whitespace-nowrap text-[#a2a2a2]">
-        자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요.
-      </p>
+      <PlaylistLegalFooter />
     </section>
   );
 };

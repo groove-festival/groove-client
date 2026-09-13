@@ -63,6 +63,19 @@ const fillDetails = (studentId: string) => {
   fireEvent.change(screen.getByLabelText("닉네임"), { target: { value: "gv" } });
 };
 
+const agreeToRequiredPolicies = () => {
+  fireEvent.click(
+    screen.getByRole("checkbox", {
+      name: /GROOVE 웹서비스 이용약관에 동의합니다/,
+    }),
+  );
+  fireEvent.click(
+    screen.getByRole("checkbox", {
+      name: /개인정보 수집 및 이용에 동의합니다/,
+    }),
+  );
+};
+
 const submit = () => fireEvent.click(screen.getByRole("button", { name: "신청하기" }));
 
 afterEach(() => {
@@ -72,6 +85,7 @@ afterEach(() => {
 describe("SongRequestForm", () => {
   it("blocks submission and asks to pick a track when nothing is selected", async () => {
     renderForm();
+    agreeToRequiredPolicies();
 
     submit();
 
@@ -85,6 +99,51 @@ describe("SongRequestForm", () => {
     expect(
       screen.getByText("* 닉네임은 플레이리스트에서 신청자명 대신 보여질 이름입니다."),
     ).toBeInTheDocument();
+  });
+
+  it("shows the required agreement links and enables submission only after both are checked", () => {
+    renderForm();
+
+    const submitButton = screen.getByRole("button", { name: "신청하기" });
+    const terms = screen.getByRole("checkbox", {
+      name: /GROOVE 웹서비스 이용약관에 동의합니다/,
+    });
+    const personalInfoCollection = screen.getByRole("checkbox", {
+      name: /개인정보 수집 및 이용에 동의합니다/,
+    });
+
+    expect(submitButton).toBeDisabled();
+    expect(screen.getByRole("link", { name: "약관 전문 보기" })).toHaveAttribute(
+      "href",
+      "https://knu-cse-sysdev.notion.site/festival-terms-of-services",
+    );
+    expect(screen.getByRole("link", { name: "동의서 전문 보기" })).toHaveAttribute(
+      "href",
+      "https://knu-cse-sysdev.notion.site/festival-personal-information-collection-and-use-consent",
+    );
+
+    fireEvent.click(terms);
+    expect(submitButton).toBeDisabled();
+
+    fireEvent.click(personalInfoCollection);
+    expect(submitButton).toBeEnabled();
+  });
+
+  it("shows the playlist footer policy links", () => {
+    renderForm();
+
+    expect(screen.getByRole("link", { name: "개인정보처리방침" })).toHaveAttribute(
+      "href",
+      "https://knu-cse-sysdev.notion.site/festival-personal-info-processing-policy",
+    );
+    expect(screen.getByRole("link", { name: "서비스 이용약관" })).toHaveAttribute(
+      "href",
+      "https://knu-cse-sysdev.notion.site/festival-terms-of-services",
+    );
+    expect(screen.getByRole("link", { name: "이메일무단수집거부" })).toHaveAttribute(
+      "href",
+      "https://knu-cse-sysdev.notion.site/email-address-harvesting-prohibited",
+    );
   });
 
   it("shows a search-service message when the search request fails", async () => {
@@ -134,6 +193,7 @@ describe("SongRequestForm", () => {
     renderForm();
     await searchAndSelect();
     fillDetails("202500");
+    agreeToRequiredPolicies();
 
     submit();
 
@@ -162,6 +222,7 @@ describe("SongRequestForm", () => {
     renderForm();
     await searchAndSelect();
     fillDetails("3025000001");
+    agreeToRequiredPolicies();
 
     submit();
 
@@ -187,6 +248,7 @@ describe("SongRequestForm", () => {
     renderForm();
     await searchAndSelect();
     fillDetails("3025000005");
+    agreeToRequiredPolicies();
 
     submit();
 
@@ -223,6 +285,7 @@ describe("SongRequestForm", () => {
     renderForm();
     await searchAndSelect();
     fillDetails("3025000002");
+    agreeToRequiredPolicies();
 
     submit();
 
@@ -239,6 +302,7 @@ describe("SongRequestForm", () => {
     renderForm();
     await searchAndSelect();
     fillDetails("3025000004");
+    agreeToRequiredPolicies();
 
     submit();
 
@@ -282,6 +346,7 @@ describe("SongRequestForm", () => {
     renderForm();
     await searchAndSelect();
     fillDetails("3025000003");
+    agreeToRequiredPolicies();
     submit();
     await screen.findByRole("dialog");
 

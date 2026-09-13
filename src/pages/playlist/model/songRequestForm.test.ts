@@ -7,6 +7,8 @@ const validValues = {
   department: "컴퓨터학부",
   name: "김그루브",
   nickname: "gv",
+  termsAgreed: true,
+  personalInfoCollectionAgreed: true,
 };
 
 describe("songRequestSchema", () => {
@@ -46,6 +48,14 @@ describe("songRequestSchema", () => {
   it("rejects missing text fields", () => {
     for (const key of ["department", "name", "nickname"] as const) {
       const result = songRequestSchema.safeParse({ ...validValues, [key]: "" });
+
+      expect(result.success).toBe(false);
+    }
+  });
+
+  it("rejects missing required policy agreements", () => {
+    for (const key of ["termsAgreed", "personalInfoCollectionAgreed"] as const) {
+      const result = songRequestSchema.safeParse({ ...validValues, [key]: false });
 
       expect(result.success).toBe(false);
     }
