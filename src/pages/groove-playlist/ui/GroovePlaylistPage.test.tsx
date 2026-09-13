@@ -77,13 +77,14 @@ describe("GroovePlaylistPage", () => {
     expect(screen.getByText("IT • 밤샘코딩")).toBeInTheDocument();
   });
 
-  it("shows a not-published-yet notice for PLST006", () => {
+  it("shows the locked screen for a not-published-yet playlist (PLST006)", () => {
     mockPlaylist({ isError: true, error: new ApiError("PLST006", "not yet", 403) });
     renderPage();
 
     expect(
-      screen.getByText("아직 공개 전이에요. 축제 기간에 다시 확인해 주세요."),
+      screen.getByRole("heading", { name: "아직 공개 전이에요" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("축제 기간에 다시 확인해주세요")).toBeInTheDocument();
   });
 
   it("shows the network fallback for other failures", () => {
