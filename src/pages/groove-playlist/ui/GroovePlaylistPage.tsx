@@ -1,10 +1,26 @@
+import { LoadingFallback, NetworkErrorFallback } from "@/shared/ui";
+
 import { isNotPublishedYet, useFinalPlaylist } from "../api/getFinalPlaylist";
 import { PlaylistEntry } from "./PlaylistEntry";
+import { PlaylistLockedScreen } from "./PlaylistLockedScreen";
 
 // 축제 기간에 최종 선정 곡을 보여주는 전용 페이지. Figma 805:12036.
 export default function GroovePlaylistPage() {
   const { data: playlist, isPending, isError, error } = useFinalPlaylist();
   const notPublishedYet = isError && isNotPublishedYet(error);
+
+  if (isError && !notPublishedYet) {
+    return <NetworkErrorFallback />;
+  }
+
+  if (isPending) {
+    return <LoadingFallback />;
+  }
+
+  // 아직 공개 전 → 목록 대신 전용 잠금 화면. Figma 7:29.
+  if (notPublishedYet) {
+    return <PlaylistLockedScreen />;
+  }
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#1c1c1c] text-[#fcfcfc]">
@@ -20,26 +36,6 @@ export default function GroovePlaylistPage() {
 
         <div className="absolute top-[201px] right-4 left-4 h-[602px]">
           <ul className="flex h-full flex-col gap-4 overflow-y-auto [mask-image:linear-gradient(to_bottom,transparent,#000_3px,#000_93%,transparent)]">
-            {isPending &&
-              Array.from({ length: 7 }, (_, index) => (
-                <li className="flex items-center gap-4" key={index}>
-                  <div className="aspect-square w-14 shrink-0 animate-pulse rounded-lg bg-[#323232]" />
-                  <div className="h-10 flex-1 animate-pulse rounded bg-[#323232]" />
-                </li>
-              ))}
-
-            {notPublishedYet && (
-              <li className="text-sm text-[#a2a2a2]">
-                아직 공개 전이에요. 축제 기간에 다시 확인해 주세요.
-              </li>
-            )}
-
-            {isError && !notPublishedYet && (
-              <li className="text-sm text-[#a2a2a2]">
-                플레이리스트를 불러오지 못했어요.
-              </li>
-            )}
-
             {playlist?.length === 0 && (
               <li className="text-sm text-[#a2a2a2]">아직 공개된 곡이 없어요.</li>
             )}

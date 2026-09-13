@@ -3,13 +3,51 @@ import { createPortal } from "react-dom";
 
 import warningIcon from "../festival-visuals/warning.svg";
 
+const guidelineEmphasisClassName = "font-black text-[#20f0f0]";
+
 // 유의사항 안내 문구. Figma 805:10865의 순서를 그대로 따른다.
 const guidelines = [
-  "곡 신청은 사전 접수 기간에만 열립니다.",
-  "학번당 최대 한 곡만 신청 가능합니다.",
-  "새로 신청할 경우 가장 최근에 신청하신 곡으로 갱신됩니다.",
-  "신청된 곡 목록은 축제 기간에 확인 가능합니다.",
-  "신청 시에는 실제 음원이 있는 곡만 검색해서 선택할 수 있습니다.",
+  {
+    id: "request-period",
+    content: (
+      <>
+        곡 신청은 <span className={guidelineEmphasisClassName}>사전 접수 기간</span>에만
+        열립니다.
+      </>
+    ),
+  },
+  {
+    id: "student-limit",
+    content: (
+      <>
+        <span className={guidelineEmphasisClassName}>학번</span>당 최대{" "}
+        <span className={guidelineEmphasisClassName}>한 곡</span>만 신청 가능합니다.
+      </>
+    ),
+  },
+  {
+    id: "latest-request",
+    content: "새로 신청할 경우 가장 최근에 신청하신 곡으로 갱신됩니다.",
+  },
+  {
+    id: "festival-period",
+    content: (
+      <>
+        신청된 곡 목록은 <span className={guidelineEmphasisClassName}>축제 기간</span>에
+        확인 가능합니다.
+      </>
+    ),
+  },
+  {
+    id: "searchable-track",
+    content: (
+      <>
+        신청 시에는{" "}
+        <span className={guidelineEmphasisClassName}>실제 음원이 있는 곡</span>만
+        검색해서 선택할 수 있습니다.
+      </>
+    ),
+  },
 ] as const;
 
 interface SongRequestGuideModalProps {
@@ -98,8 +136,8 @@ export const SongRequestGuideModal = ({
               className="w-[244px] list-disc space-y-[15px] ps-[18px] text-xs leading-[15px] break-keep text-[#fcfcfc]"
               id={descriptionId}
             >
-              {guidelines.map((guideline) => (
-                <li key={guideline}>{guideline}</li>
+              {guidelines.map(({ content, id }) => (
+                <li key={id}>{content}</li>
               ))}
             </ul>
           </div>

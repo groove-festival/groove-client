@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { AxiosError, AxiosHeaders } from "axios";
 import type { ReactNode } from "react";
 
@@ -63,6 +63,19 @@ const fillDetails = (studentId: string) => {
   fireEvent.change(screen.getByLabelText("닉네임"), { target: { value: "gv" } });
 };
 
+const agreeToRequiredPolicies = () => {
+  fireEvent.click(
+    screen.getByRole("checkbox", {
+      name: /GROOVE 웹서비스 이용약관에 동의합니다/,
+    }),
+  );
+  fireEvent.click(
+    screen.getByRole("checkbox", {
+      name: /개인정보 수집 및 이용에 동의합니다/,
+    }),
+  );
+};
+
 const submit = () => fireEvent.click(screen.getByRole("button", { name: "신청하기" }));
 
 afterEach(() => {
@@ -72,6 +85,7 @@ afterEach(() => {
 describe("SongRequestForm", () => {
   it("blocks submission and asks to pick a track when nothing is selected", async () => {
     renderForm();
+    agreeToRequiredPolicies();
 
     submit();
 
@@ -85,6 +99,51 @@ describe("SongRequestForm", () => {
     expect(
       screen.getByText("* 닉네임은 플레이리스트에서 신청자명 대신 보여질 이름입니다."),
     ).toBeInTheDocument();
+  });
+
+  it("shows the required agreement links and enables submission only after both are checked", () => {
+    renderForm();
+
+    const submitButton = screen.getByRole("button", { name: "신청하기" });
+    const terms = screen.getByRole("checkbox", {
+      name: /GROOVE 웹서비스 이용약관에 동의합니다/,
+    });
+    const personalInfoCollection = screen.getByRole("checkbox", {
+      name: /개인정보 수집 및 이용에 동의합니다/,
+    });
+
+    expect(submitButton).toBeDisabled();
+    expect(screen.getByRole("link", { name: "약관 전문 보기" })).toHaveAttribute(
+      "href",
+      "https://knu-cse-sysdev.notion.site/festival-terms-of-services",
+    );
+    expect(screen.getByRole("link", { name: "동의서 전문 보기" })).toHaveAttribute(
+      "href",
+      "https://knu-cse-sysdev.notion.site/festival-personal-information-collection-and-use-consent",
+    );
+
+    fireEvent.click(terms);
+    expect(submitButton).toBeDisabled();
+
+    fireEvent.click(personalInfoCollection);
+    expect(submitButton).toBeEnabled();
+  });
+
+  it("shows the playlist footer policy links", () => {
+    renderForm();
+
+    expect(screen.getByRole("link", { name: "개인정보처리방침" })).toHaveAttribute(
+      "href",
+      "https://knu-cse-sysdev.notion.site/festival-personal-info-processing-policy",
+    );
+    expect(screen.getByRole("link", { name: "서비스 이용약관" })).toHaveAttribute(
+      "href",
+      "https://knu-cse-sysdev.notion.site/festival-terms-of-services",
+    );
+    expect(screen.getByRole("link", { name: "이메일무단수집거부" })).toHaveAttribute(
+      "href",
+      "https://knu-cse-sysdev.notion.site/email-address-harvesting-prohibited",
+    );
   });
 
   it("shows a search-service message when the search request fails", async () => {
@@ -101,11 +160,40 @@ describe("SongRequestForm", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps the search label and shows the interaction overlay while searching", async () => {
+    let resolveSearch!: (value: ReturnType<typeof envelope>) => void;
+    httpGet.mockReturnValueOnce(
+      new Promise<ReturnType<typeof envelope>>((resolve) => {
+        resolveSearch = resolve;
+      }),
+    );
+    renderForm();
+
+    fireEvent.change(screen.getByLabelText(/음악 검색/), { target: { value: "x" } });
+    fireEvent.click(screen.getByRole("button", { name: "검색" }));
+
+    expect(screen.getByRole("button", { name: "검색" })).toBeDisabled();
+    expect(
+      await screen.findByRole("status", { name: "곡을 검색하는 중입니다" }),
+    ).toBeInTheDocument();
+
+    await act(async () => {
+      resolveSearch(envelope({ tracks: [] }));
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("status", { name: "곡을 검색하는 중입니다" }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   it("shows the student-id message when the id is not 10 digits", async () => {
     httpGet.mockResolvedValueOnce(envelope({ tracks: [track] }));
     renderForm();
     await searchAndSelect();
     fillDetails("202500");
+    agreeToRequiredPolicies();
 
     submit();
 
@@ -134,6 +222,7 @@ describe("SongRequestForm", () => {
     renderForm();
     await searchAndSelect();
     fillDetails("3025000001");
+    agreeToRequiredPolicies();
 
     submit();
 
@@ -148,12 +237,55 @@ describe("SongRequestForm", () => {
     expect(config.headers?.["Idempotency-Key"]).toEqual(expect.any(String));
   });
 
+  it("shows the interaction overlay while submitting the selected track", async () => {
+    let resolveSubmit!: (value: ReturnType<typeof envelope>) => void;
+    httpGet.mockResolvedValueOnce(envelope({ tracks: [track] }));
+    httpPost.mockReturnValueOnce(
+      new Promise<ReturnType<typeof envelope>>((resolve) => {
+        resolveSubmit = resolve;
+      }),
+    );
+    renderForm();
+    await searchAndSelect();
+    fillDetails("3025000005");
+    agreeToRequiredPolicies();
+
+    submit();
+
+    expect(
+      await screen.findByRole("status", { name: "신청을 처리하는 중입니다" }),
+    ).toBeInTheDocument();
+
+    await act(async () => {
+      resolveSubmit(
+        envelope({
+          songRequestId: 7,
+          trackId: track.trackId,
+          title: "Ditto",
+          artist: "NewJeans",
+          college: "IT",
+          department: "컴퓨터학부",
+          nickname: "gv",
+          requestedAt: "2026-09-12T10:00:00+09:00",
+          updatedAt: "2026-09-12T10:00:00+09:00",
+        }),
+      );
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("status", { name: "신청을 처리하는 중입니다" }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   it("maps the rate-limit error to a friendly message", async () => {
     httpGet.mockResolvedValueOnce(envelope({ tracks: [track] }));
     httpPost.mockRejectedValueOnce(errorResponse("PLST009", 429));
     renderForm();
     await searchAndSelect();
     fillDetails("3025000002");
+    agreeToRequiredPolicies();
 
     submit();
 
@@ -170,6 +302,7 @@ describe("SongRequestForm", () => {
     renderForm();
     await searchAndSelect();
     fillDetails("3025000004");
+    agreeToRequiredPolicies();
 
     submit();
 
@@ -213,6 +346,7 @@ describe("SongRequestForm", () => {
     renderForm();
     await searchAndSelect();
     fillDetails("3025000003");
+    agreeToRequiredPolicies();
     submit();
     await screen.findByRole("dialog");
 

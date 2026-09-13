@@ -52,6 +52,13 @@ describe("GroovePlaylistPage", () => {
     expect(screen.getByRole("heading", { name: "PLAYLIST" })).toBeInTheDocument();
   });
 
+  it("shows the loading fallback while the playlist is pending", () => {
+    mockPlaylist({ isPending: true });
+    renderPage();
+
+    expect(screen.getByRole("status")).toHaveTextContent("잠시만 기다려주세요");
+  });
+
   it("renders the fetched playlist entries in order", () => {
     mockPlaylist({
       data: [
@@ -70,19 +77,25 @@ describe("GroovePlaylistPage", () => {
     expect(screen.getByText("IT • 밤샘코딩")).toBeInTheDocument();
   });
 
-  it("shows a not-published-yet notice for PLST006", () => {
+  it("shows the locked screen for a not-published-yet playlist (PLST006)", () => {
     mockPlaylist({ isError: true, error: new ApiError("PLST006", "not yet", 403) });
     renderPage();
 
     expect(
-      screen.getByText("아직 공개 전이에요. 축제 기간에 다시 확인해 주세요."),
+      screen.getByRole("heading", { name: "아직 공개 전이에요" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("축제 기간에 다시 확인해주세요")).toBeInTheDocument();
   });
 
-  it("shows a generic error notice for other failures", () => {
+  it("shows the network fallback for other failures", () => {
     mockPlaylist({ isError: true, error: new ApiError("NETWORK", "boom") });
     renderPage();
 
-    expect(screen.getByText("플레이리스트를 불러오지 못했어요.")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "네트워크 연결 상태를 확인 후 다시 시도해 주세요",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "페이지 새로고침" })).toBeInTheDocument();
   });
 });

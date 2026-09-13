@@ -1,11 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type ComponentPropsWithRef, useEffect, useRef, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 
 import { ApiError } from "@/shared/api";
+import { InteractionLoadingOverlay } from "@/shared/ui";
 
 import { type SongTrack, useSearchSongs } from "../api/searchSongs";
 import { toSubmitSongBody, useSubmitSong } from "../api/submitSong";
+import { songRequestAgreementLinks } from "../model/legalLinks";
 import {
   colleges,
   songRequestFormDefaults,
@@ -19,6 +21,7 @@ import {
   SongRequestCompleteModal,
 } from "./SongRequestCompleteModal";
 import { SongRequestGuideModal } from "./SongRequestGuideModal";
+import { PlaylistLegalFooter } from "./PlaylistLegalFooter";
 
 interface SongRequestFormProps {
   guideOpen?: boolean;
@@ -29,6 +32,13 @@ interface SongRequestFormProps {
 interface FormInputProps extends ComponentPropsWithRef<"input"> {
   label: string;
   error?: string;
+}
+
+interface AgreementCheckboxProps extends ComponentPropsWithRef<"input"> {
+  inputId: string;
+  label: string;
+  linkHref: string;
+  linkLabel: string;
 }
 
 const FormInput = ({ label, error, ...inputProps }: FormInputProps) => {
@@ -47,6 +57,41 @@ const FormInput = ({ label, error, ...inputProps }: FormInputProps) => {
       <span className="pointer-events-none absolute top-[18px] left-[23px] text-sm leading-[normal] font-medium text-[#a2a2a2] opacity-0 peer-placeholder-shown:opacity-100">
         {label} <span className="text-[#00ffff]">*</span>
       </span>
+    </div>
+  );
+};
+
+const AgreementCheckbox = ({
+  inputId,
+  label,
+  linkHref,
+  linkLabel,
+  ...inputProps
+}: AgreementCheckboxProps) => {
+  return (
+    <div className="flex flex-col gap-1">
+      <label
+        className="flex items-start gap-3 text-sm leading-[18px] font-semibold text-[#fcfcfc]"
+        htmlFor={inputId}
+      >
+        <input
+          {...inputProps}
+          className="mt-0.5 size-5 shrink-0 rounded border border-[#cfcfcf] bg-transparent accent-[#5d00ff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00ffff]"
+          id={inputId}
+          type="checkbox"
+        />
+        <span>
+          <span className="text-[#00ffff]">(필수)</span> {label}
+        </span>
+      </label>
+      <a
+        className="ml-8 w-fit text-xs leading-[15px] font-medium text-[#a2a2a2] underline underline-offset-2"
+        href={linkHref}
+        rel="noreferrer"
+        target="_blank"
+      >
+        {linkLabel}
+      </a>
     </div>
   );
 };
@@ -181,6 +226,18 @@ export const SongRequestForm = ({
     submitCount > 0 ? Object.values(errors)[0]?.message : undefined;
   const searchResults = search.data ?? [];
   const showResults = !selectedTrack && !isResultsClosed && searchResults.length > 0;
+  const termsAgreed = useWatch({ control, name: "termsAgreed" });
+  const personalInfoCollectionAgreed = useWatch({
+    control,
+    name: "personalInfoCollectionAgreed",
+  });
+  const interactionLoadingLabel = search.isPending
+    ? "곡을 검색하는 중입니다"
+    : submit.isPending
+      ? "신청을 처리하는 중입니다"
+      : undefined;
+  const isSubmitDisabled =
+    submit.isPending || !termsAgreed || !personalInfoCollectionAgreed;
 
   // 결과 박스 바깥을 클릭하면 닫는다.
   useEffect(() => {
@@ -200,7 +257,7 @@ export const SongRequestForm = ({
 
   return (
     <section
-      className="absolute top-[2236px] left-0 h-[959px] w-full bg-[#1c1c1c]"
+      className="absolute top-[2236px] left-0 h-[1160px] w-full bg-[#1c1c1c]"
       id={PLAYLIST_BOTTOM_ANCHOR_ID}
       ref={sectionRef}
     >
@@ -243,7 +300,7 @@ export const SongRequestForm = ({
                 onClick={runSearch}
                 type="button"
               >
-                {search.isPending ? "검색 중" : "검색"}
+                검색
               </button>
 
               {/* 결과가 폼 높이를 밀어내지 않도록 입력창 바로 아래 오버레이로
@@ -285,7 +342,7 @@ export const SongRequestForm = ({
               )}
             </div>
             <p className="mt-1 text-[10px] leading-3 text-[#a2a2a2]">
-              *실제 음원이 있는 곡만 검색·선택할 수 있습니다.
+              * 실제 음원이 있는 곡만 검색·선택할 수 있습니다.
             </p>
 
             {selectedTrack ? (
@@ -387,6 +444,23 @@ export const SongRequestForm = ({
             * 닉네임은 플레이리스트에서 신청자명 대신 보여질 이름입니다.
           </p>
 
+          <div className="flex flex-col gap-3 rounded-2xl border border-[#3a3a3a] bg-[#232323] p-4">
+            <AgreementCheckbox
+              inputId="terms-agreed"
+              label="GROOVE 웹서비스 이용약관에 동의합니다."
+              linkHref={songRequestAgreementLinks.serviceTermsUrl}
+              linkLabel="약관 전문 보기"
+              {...register("termsAgreed")}
+            />
+            <AgreementCheckbox
+              inputId="personal-info-collection-agreed"
+              label="개인정보 수집 및 이용에 동의합니다."
+              linkHref={songRequestAgreementLinks.personalInfoCollectionUrl}
+              linkLabel="동의서 전문 보기"
+              {...register("personalInfoCollectionAgreed")}
+            />
+          </div>
+
           {firstErrorMessage && (
             <p className="text-xs leading-[15px] text-[#ff5b5b]">{firstErrorMessage}</p>
           )}
@@ -397,8 +471,12 @@ export const SongRequestForm = ({
           )}
 
           <button
-            className="h-14 rounded-2xl bg-[#5d00ff] text-base font-semibold disabled:opacity-60"
-            disabled={submit.isPending}
+            className={`h-14 rounded-2xl text-base font-semibold transition-colors disabled:cursor-not-allowed ${
+              isSubmitDisabled
+                ? "bg-[#cfcfcf] text-[#fcfcfc]"
+                : "bg-[#5d00ff] text-[#fcfcfc]"
+            }`}
+            disabled={isSubmitDisabled}
             type="submit"
           >
             신청하기
@@ -406,9 +484,7 @@ export const SongRequestForm = ({
         </form>
       </div>
 
-      <p className="absolute bottom-[39px] left-1/2 -translate-x-1/2 text-[10px] leading-3 whitespace-nowrap text-[#a2a2a2]">
-        자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요.
-      </p>
+      <PlaylistLegalFooter />
 
       <SongRequestGuideModal onClose={closeGuide} open={isGuideOpen} />
 
@@ -418,6 +494,10 @@ export const SongRequestForm = ({
         open={completedSong !== null}
         song={completedSong}
       />
+
+      {interactionLoadingLabel && (
+        <InteractionLoadingOverlay label={interactionLoadingLabel} />
+      )}
     </section>
   );
 };

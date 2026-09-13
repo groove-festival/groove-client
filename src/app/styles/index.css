@@ -25,6 +25,7 @@
 
   /* 히어로 하단 화살표 등 스크롤 유도 요소용 부드러운 상하 부유 효과. */
   --animate-float: float 1.8s ease-in-out infinite;
+  --animate-groove-dot-pulse: groove-dot-pulse 0.9s ease-in-out infinite;
 
   @keyframes float {
     0%,
@@ -33,6 +34,19 @@
     }
     50% {
       transform: translateY(6px);
+    }
+  }
+
+  @keyframes groove-dot-pulse {
+    0%,
+    80%,
+    100% {
+      opacity: 0.45;
+      transform: scale(0.72);
+    }
+    40% {
+      opacity: 1;
+      transform: scale(1);
     }
   }
 }
@@ -90,6 +104,67 @@
   }
 }
 
+/* 라우트 전환 모션 (react-router 내장 View Transitions API).
+   지원 브라우저(Chromium/Safari)에서만 동작하고, 미지원(Firefox 등)은
+   자동으로 즉시 전환으로 폴백한다. reduced-motion 사용자에겐 아래
+   미디어 쿼리로 애니메이션을 제거해 무모션 즉시 전환이 되게 한다. */
+
+/* 기본 root 스냅샷을 끈다. 이러면 이름 없는 요소(헤더·전체메뉴 등)는 캡처되지
+   않고 전환 중에도 라이브로 렌더된다 → fixed + backdrop-blur 헤더가 스냅샷으로
+   굳으며 생기던 깜빡임 제거. 전환은 아래 page-content(본문 래퍼)에만 적용된다. */
+:root {
+  view-transition-name: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* 본문마다 높이가 달라 전환 그룹이 리사이즈되며 가장자리가 튀는 것을 막기 위해
+     뷰포트 크기로 고정하고 상단 기준으로 정렬한다. 또한 상단 헤더(80px) 영역은
+     잘라내(clip) 스냅샷이 그 위에 그려지지 않게 한다 → 오버레이에 헤더 자리만큼
+     구멍이 생겨, 스냅샷되지 않은 라이브 헤더가 항상 선명하게 그대로 보인다.
+     (헤더를 캡처하면 backdrop-blur가 스냅샷으로 굳어 고해상도에서 뿌옇게 보임) */
+  ::view-transition-group(page-content) {
+    width: 100% !important;
+    height: 100vh !important;
+    clip-path: inset(5rem 0 0 0);
+  }
+
+  /* 크로스페이드 중 이전/다음이 모두 반투명이면 크기가 다른 가장자리로 배경이
+     비친다. 이전 본문은 불투명하게 그대로 두고(페이드아웃 취소) 새 본문만 그 위로
+     페이드인 → 항상 불투명 레이어가 덮어 배경이 드러나지 않는다. */
+  ::view-transition-old(page-content) {
+    animation: none !important;
+  }
+
+  ::view-transition-new(page-content) {
+    animation: vt-content-in 450ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    object-position: top left;
+  }
+
+  /* 아래에서 살짝 올라오며 페이드인. 이전 본문이 불투명하게 깔려 있어 밀려난
+     자리로는 흰 배경이 아닌 이전(어두운) 화면이 비쳐 자연스럽다. */
+  @keyframes vt-content-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* reduced-motion 사용자에겐 브라우저 기본 크로스페이드까지 모두 꺼서 즉시
+   전환되게 한다. (위 no-preference 블록은 애초에 적용되지 않으므로, 여기서는
+   UA 기본 애니메이션을 명시적으로 제거하는 것이 핵심이다.) */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
 @utility page-frame {
   background:
     radial-gradient(circle at 16% 12%, rgba(234, 81, 71, 0.12), transparent 28rem),

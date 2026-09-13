@@ -18,6 +18,8 @@ const formValues = {
   department: "간호학과",
   name: "김그루브",
   nickname: "gv",
+  termsAgreed: true,
+  personalInfoCollectionAgreed: true,
 };
 
 afterEach(() => {

@@ -127,7 +127,7 @@ export const FestivalHero = ({ onBottomArrowClick }: FestivalHeroProps) => {
         <img alt="" className="absolute -inset-2 size-10 max-w-none" src={sparkle} />
       </div>
       <p className="absolute top-[1541px] left-1/2 w-[196px] -translate-x-1/2 text-center text-base leading-6 text-[#fcfcfc] [text-shadow:0_0_8px_rgba(252,252,252,0.8)]">
-        차곡차곡 쌓아 만든 우리 시간이
+        차곡차곡 쌓아 만든 시간이
         <br />
         지금의 그루브가 되었으니까.
         <br />
