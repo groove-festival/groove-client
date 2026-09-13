@@ -40,6 +40,12 @@ export const songRequestSchema = z.object({
     .trim()
     .min(1, "닉네임을 입력해 주세요.")
     .max(30, "닉네임이 너무 길어요."),
+  termsAgreed: z
+    .boolean()
+    .refine((isAgreed) => isAgreed, "GROOVE 웹서비스 이용약관에 동의해 주세요."),
+  personalInfoCollectionAgreed: z
+    .boolean()
+    .refine((isAgreed) => isAgreed, "개인정보 수집 및 이용에 동의해 주세요."),
 });
 
 export type SongRequestFormValues = z.infer<typeof songRequestSchema>;
@@ -51,4 +57,6 @@ export const songRequestFormDefaults: SongRequestFormValues = {
   department: "",
   name: "",
   nickname: "",
+  termsAgreed: false,
+  personalInfoCollectionAgreed: false,
 };
