@@ -25,7 +25,7 @@ export const FallbackScreen = ({
             className="text-xl leading-6 font-semibold tracking-normal"
           >
             {content.messageLines.map((line) => (
-              <span className="block" key={line}>
+              <span className="block whitespace-nowrap" key={line}>
                 {line}
               </span>
             ))}
