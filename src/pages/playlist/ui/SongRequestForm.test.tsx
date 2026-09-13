@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { AxiosError, AxiosHeaders } from "axios";
 import type { ReactNode } from "react";
 
@@ -101,6 +101,34 @@ describe("SongRequestForm", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps the search label and shows the interaction overlay while searching", async () => {
+    let resolveSearch!: (value: ReturnType<typeof envelope>) => void;
+    httpGet.mockReturnValueOnce(
+      new Promise<ReturnType<typeof envelope>>((resolve) => {
+        resolveSearch = resolve;
+      }),
+    );
+    renderForm();
+
+    fireEvent.change(screen.getByLabelText(/음악 검색/), { target: { value: "x" } });
+    fireEvent.click(screen.getByRole("button", { name: "검색" }));
+
+    expect(screen.getByRole("button", { name: "검색" })).toBeDisabled();
+    expect(
+      await screen.findByRole("status", { name: "곡을 검색하는 중입니다" }),
+    ).toBeInTheDocument();
+
+    await act(async () => {
+      resolveSearch(envelope({ tracks: [] }));
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("status", { name: "곡을 검색하는 중입니다" }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   it("shows the student-id message when the id is not 10 digits", async () => {
     httpGet.mockResolvedValueOnce(envelope({ tracks: [track] }));
     renderForm();
@@ -146,6 +174,47 @@ describe("SongRequestForm", () => {
     ];
     expect(body).toMatchObject({ trackId: track.trackId, college: "IT" });
     expect(config.headers?.["Idempotency-Key"]).toEqual(expect.any(String));
+  });
+
+  it("shows the interaction overlay while submitting the selected track", async () => {
+    let resolveSubmit!: (value: ReturnType<typeof envelope>) => void;
+    httpGet.mockResolvedValueOnce(envelope({ tracks: [track] }));
+    httpPost.mockReturnValueOnce(
+      new Promise<ReturnType<typeof envelope>>((resolve) => {
+        resolveSubmit = resolve;
+      }),
+    );
+    renderForm();
+    await searchAndSelect();
+    fillDetails("3025000005");
+
+    submit();
+
+    expect(
+      await screen.findByRole("status", { name: "신청을 처리하는 중입니다" }),
+    ).toBeInTheDocument();
+
+    await act(async () => {
+      resolveSubmit(
+        envelope({
+          songRequestId: 7,
+          trackId: track.trackId,
+          title: "Ditto",
+          artist: "NewJeans",
+          college: "IT",
+          department: "컴퓨터학부",
+          nickname: "gv",
+          requestedAt: "2026-09-12T10:00:00+09:00",
+          updatedAt: "2026-09-12T10:00:00+09:00",
+        }),
+      );
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("status", { name: "신청을 처리하는 중입니다" }),
+      ).not.toBeInTheDocument();
+    });
   });
 
   it("maps the rate-limit error to a friendly message", async () => {

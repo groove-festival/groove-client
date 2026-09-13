@@ -52,6 +52,13 @@ describe("GroovePlaylistPage", () => {
     expect(screen.getByRole("heading", { name: "PLAYLIST" })).toBeInTheDocument();
   });
 
+  it("shows the loading fallback while the playlist is pending", () => {
+    mockPlaylist({ isPending: true });
+    renderPage();
+
+    expect(screen.getByRole("status")).toHaveTextContent("잠시만 기다려주세요");
+  });
+
   it("renders the fetched playlist entries in order", () => {
     mockPlaylist({
       data: [
@@ -79,10 +86,15 @@ describe("GroovePlaylistPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows a generic error notice for other failures", () => {
+  it("shows the network fallback for other failures", () => {
     mockPlaylist({ isError: true, error: new ApiError("NETWORK", "boom") });
     renderPage();
 
-    expect(screen.getByText("플레이리스트를 불러오지 못했어요.")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "네트워크 연결 상태를 확인 후 다시 시도해 주세요",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "페이지 새로고침" })).toBeInTheDocument();
   });
 });

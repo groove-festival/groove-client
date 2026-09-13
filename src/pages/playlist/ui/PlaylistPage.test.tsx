@@ -183,12 +183,23 @@ describe("PlaylistPage", () => {
     expect(screen.getByRole("heading", { name: "노래 신청하기" })).toBeInTheDocument();
   });
 
-  it("offers a retry when the status request fails", () => {
+  it("shows the network fallback when the status request fails", () => {
     mockStatus({ isError: true });
     renderPage();
 
-    expect(screen.getByText("축제 정보를 불러오지 못했어요")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "다시 시도" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "네트워크 연결 상태를 확인 후 다시 시도해 주세요",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "페이지 새로고침" })).toBeInTheDocument();
+  });
+
+  it("shows the loading fallback when the status phase is pending", () => {
+    mockStatus({ isPending: true });
+    renderPage();
+
+    expect(screen.getByRole("status")).toHaveTextContent("잠시만 기다려주세요");
   });
 
   it("offers a retry when status succeeds without playlist phase info", () => {

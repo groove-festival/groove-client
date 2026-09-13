@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 
 import { type PlaylistPhase, useFestivalStatus } from "@/entities/festival";
+import { LoadingFallback, NetworkErrorFallback } from "@/shared/ui";
 
 import { parsePlaylistPhaseOverride } from "../model/playlistPhase";
 import { useScheduledRefetch } from "../model/useScheduledRefetch";
@@ -39,7 +40,7 @@ export default function PlaylistPage() {
   const isGuideScrollPendingRef = useRef(false);
   const cancelScrollWaitRef = useRef<(() => void) | null>(null);
   const override = parsePlaylistPhaseOverride(searchParams.get("phase"));
-  const { data: status, isPending, refetch } = useFestivalStatus();
+  const { data: status, isError, isPending, refetch } = useFestivalStatus();
 
   const phase = override ?? status?.playlist?.phase;
   useScheduledRefetch(
@@ -170,6 +171,14 @@ export default function PlaylistPage() {
     };
   }, []);
 
+  if (!phase && isError) {
+    return <NetworkErrorFallback />;
+  }
+
+  if (!phase && isPending) {
+    return <LoadingFallback />;
+  }
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#1c1c1c] text-[#fcfcfc]">
       <div
@@ -193,12 +202,9 @@ export default function PlaylistPage() {
         {/* phase가 없으면 로딩 중이거나, 요청은 성공했어도 응답에 playlist 단계
             정보가 없는 경우(예: 계약 불일치)다. 어느 쪽이든 화면을 비워두지 않고
             안내한다. */}
-        {!phase && isPending && (
-          <p className="absolute top-[2600px] left-1/2 -translate-x-1/2 text-sm text-[#a2a2a2]">
-            축제 정보를 불러오는 중…
-          </p>
+        {!phase && !isPending && !isError && (
+          <PlaylistStatusError onRetry={() => void refetch()} />
         )}
-        {!phase && !isPending && <PlaylistStatusError onRetry={() => void refetch()} />}
       </div>
     </main>
   );
