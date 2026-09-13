@@ -1,25 +1,9 @@
-import { Route, Routes } from "react-router";
+import { createBrowserRouter, RouterProvider } from "react-router";
 
-import AdminPromoPage from "@/pages/admin-promo";
-import ComingSoonPage from "@/pages/coming-soon";
-import CreditsPage from "@/pages/credits";
-import GroovePlaylistPage from "@/pages/groove-playlist";
-import NotFoundPage from "@/pages/not-found";
-import PlaylistPage from "@/pages/playlist";
+import { appConfig } from "@/shared/config";
 
-import { RootLayout } from "./RootLayout";
+import { routes } from "./routeConfig";
 
-export const AppRouter = () => {
-  return (
-    <Routes>
-      <Route element={<RootLayout />}>
-        <Route index element={<PlaylistPage />} />
-        <Route path="playlist" element={<GroovePlaylistPage />} />
-        <Route path="admin" element={<AdminPromoPage />} />
-        <Route path="credits" element={<CreditsPage />} />
-        <Route path="coming-soon" element={<ComingSoonPage />} />
-      </Route>
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
-  );
-};
+const router = createBrowserRouter(routes, { basename: appConfig.basePath });
+
+export const AppRouter = () => <RouterProvider router={router} />;

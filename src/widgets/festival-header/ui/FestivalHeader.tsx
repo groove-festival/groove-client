@@ -34,6 +34,7 @@ export const FestivalHeader = ({ className = "" }: FestivalHeaderProps) => {
             aria-label="GROOVE 홈"
             className="relative block h-[70px] w-[72px] shrink-0 overflow-hidden"
             to="/"
+            viewTransition
           >
             <img
               alt=""
