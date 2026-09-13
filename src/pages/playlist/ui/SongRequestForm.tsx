@@ -3,6 +3,7 @@ import { type ComponentPropsWithRef, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import { ApiError } from "@/shared/api";
+import { InteractionLoadingOverlay } from "@/shared/ui";
 
 import { type SongTrack, useSearchSongs } from "../api/searchSongs";
 import { toSubmitSongBody, useSubmitSong } from "../api/submitSong";
@@ -181,6 +182,11 @@ export const SongRequestForm = ({
     submitCount > 0 ? Object.values(errors)[0]?.message : undefined;
   const searchResults = search.data ?? [];
   const showResults = !selectedTrack && !isResultsClosed && searchResults.length > 0;
+  const interactionLoadingLabel = search.isPending
+    ? "곡을 검색하는 중입니다"
+    : submit.isPending
+      ? "신청을 처리하는 중입니다"
+      : undefined;
 
   // 결과 박스 바깥을 클릭하면 닫는다.
   useEffect(() => {
@@ -243,7 +249,7 @@ export const SongRequestForm = ({
                 onClick={runSearch}
                 type="button"
               >
-                {search.isPending ? "검색 중" : "검색"}
+                검색
               </button>
 
               {/* 결과가 폼 높이를 밀어내지 않도록 입력창 바로 아래 오버레이로
@@ -418,6 +424,10 @@ export const SongRequestForm = ({
         open={completedSong !== null}
         song={completedSong}
       />
+
+      {interactionLoadingLabel && (
+        <InteractionLoadingOverlay label={interactionLoadingLabel} />
+      )}
     </section>
   );
 };

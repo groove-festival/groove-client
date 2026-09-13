@@ -25,6 +25,7 @@
 
   /* 히어로 하단 화살표 등 스크롤 유도 요소용 부드러운 상하 부유 효과. */
   --animate-float: float 1.8s ease-in-out infinite;
+  --animate-groove-dot-pulse: groove-dot-pulse 0.9s ease-in-out infinite;
 
   @keyframes float {
     0%,
@@ -33,6 +34,19 @@
     }
     50% {
       transform: translateY(6px);
+    }
+  }
+
+  @keyframes groove-dot-pulse {
+    0%,
+    80%,
+    100% {
+      opacity: 0.45;
+      transform: scale(0.72);
+    }
+    40% {
+      opacity: 1;
+      transform: scale(1);
     }
   }
 }
