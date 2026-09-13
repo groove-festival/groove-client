@@ -180,6 +180,21 @@ ui/
   `widgets/festival-header`처럼 경로가 아키텍처 역할을 나타내므로 컴포넌트는
   `FestivalHeader`처럼 제품 개념으로 이름 짓는다.
 
+### Loading UI
+
+- 라우트 진입, 초기 페이지 조회처럼 아직 보여줄 본문 맥락이 없으면
+  `shared/ui`의 `LoadingFallback`으로 페이지 단위 로딩을 처리한다.
+- 이미 페이지 본문이 있고 버튼·폼 제출·검색 같은 사용자 상호작용만 진행
+  중이면 버튼 문구를 `검색 중`, `저장 중`처럼 바꾸지 않는다. 기존 버튼 문구와
+  disabled 상태를 유지하고, `shared/ui`의 `InteractionLoadingOverlay`를 띄워
+  전체 화면을 살짝 어둡게/흐리게 덮는다.
+- 상호작용 overlay의 dot spinner 색상은 현재 원형 `LoadingFallback` spinner와
+  같은 `#5D00FF`에서 `#00FFFF`로 이어지는 그라데이션을 사용한다. 임의의 단색,
+  Figma red token, 화면별 다른 로딩 색상은 사용하지 않는다.
+- 목록·카드처럼 이미 화면 구조가 있고 로딩될 위치가 명확한 경우에는 skeleton을
+  우선 고려한다. 단, 서버 상태가 없어 페이지 자체 의미를 알 수 없으면
+  `LoadingFallback`을 사용한다.
+
 ### 모바일 앱 프레임과 Figma 캔버스
 
 - 앱 전체의 600px 모바일 프레임은 `AppComposition`의 전역 shell이 담당한다.
