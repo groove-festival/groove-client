@@ -85,9 +85,21 @@ Production environment variables:
 
 ```txt
 VITE_API_BASE_URL=https://chcse.knu.ac.kr/groove/api
-VITE_TELEMETRY_ENABLED=true
+VITE_TELEMETRY_ENABLED=false
 VITE_GA_MEASUREMENT_ID=G-RBVL7J63PJ
+VITE_SENTRY_DSN=
+VITE_CLARITY_PROJECT_ID=
+SENTRY_AUTH_TOKEN=
+SENTRY_ORG=
+SENTRY_PROJECT=
 ```
+
+`VITE_TELEMETRY_ENABLED`는 이용자 동의, Clarity 마스킹, 각 서비스 보존 기간과
+접근 권한을 확인한 뒤에만 `true`로 바꾼다. Sentry source map release에는 Vercel의
+`VERCEL_GIT_COMMIT_SHA`를 사용하므로 프로젝트 설정에서 **Automatically expose
+System Environment Variables**가 켜져 있어야 한다. Vercel 밖에서 빌드하면
+`SENTRY_RELEASE`에 해당 배포의 Git commit SHA를 지정한다. 자세한 이벤트와
+개인정보 경계는 [`OBSERVABILITY.md`](OBSERVABILITY.md)를 따른다.
 
 Preview environment variables can use the same API URL for live staging, or a
 separate staging backend if one exists.
@@ -141,6 +153,8 @@ No console CORS error
 Network request to /groove/api/... succeeds
 Network request to gtag/js?id=G-RBVL7J63PJ succeeds
 GA real-time report receives page_view
+Clarity recording masks form and selected-song content
+Sentry error shows the current release and original source location
 ```
 
 ## 7. When to Use GitHub Actions CD Instead

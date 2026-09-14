@@ -36,6 +36,11 @@ Frontend environment variables:
 | `VITE_SENTRY_DSN`         | Optional                        | Register only if Sentry is used             |
 | `VITE_CLARITY_PROJECT_ID` | Optional                        | Register only if Microsoft Clarity is used  |
 
+Sentry source map upload uses build-only `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`,
+`SENTRY_PROJECT`, and an automatically detected commit SHA. These values are not
+part of the browser-to-backend API contract; configure them according to
+[`OBSERVABILITY.md`](OBSERVABILITY.md).
+
 Local development can use:
 
 ```txt
