@@ -7,9 +7,20 @@ import { httpClient } from "@/shared/api";
 
 import { SongRequestForm } from "./SongRequestForm";
 
+const { trackPlaylistEventMock } = vi.hoisted(() => ({
+  trackPlaylistEventMock: vi.fn(),
+}));
+
 vi.mock("@/shared/api", async () => {
   const actual = await vi.importActual<Record<string, unknown>>("@/shared/api");
   return { ...actual, httpClient: { get: vi.fn(), post: vi.fn() } };
+});
+
+vi.mock("../model/playlistTelemetry", async () => {
+  const actual = await vi.importActual<Record<string, unknown>>(
+    "../model/playlistTelemetry",
+  );
+  return { ...actual, trackPlaylistEvent: trackPlaylistEventMock };
 });
 
 const httpGet = vi.mocked(httpClient.get);
@@ -158,6 +169,12 @@ describe("SongRequestForm", () => {
         "곡 검색 서비스에 문제가 생겼어요. 잠시 후 다시 시도해 주세요.",
       ),
     ).toBeInTheDocument();
+    expect(trackPlaylistEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error_code: "PLST005",
+        eventName: "song_search_failure",
+      }),
+    );
   });
 
   it("keeps the search label and shows the interaction overlay while searching", async () => {
@@ -201,6 +218,10 @@ describe("SongRequestForm", () => {
       await screen.findByText("학번을 숫자 10자리로 입력해 주세요."),
     ).toBeInTheDocument();
     expect(httpPost).not.toHaveBeenCalled();
+    expect(trackPlaylistEventMock).toHaveBeenCalledWith({
+      eventName: "playlist_form_validation_failure",
+      validation_field: "studentId",
+    });
   });
 
   it("submits the selected track and opens the completion popup", async () => {
@@ -235,6 +256,36 @@ describe("SongRequestForm", () => {
     ];
     expect(body).toMatchObject({ trackId: track.trackId, college: "IT" });
     expect(config.headers?.["Idempotency-Key"]).toEqual(expect.any(String));
+    expect(trackPlaylistEventMock).toHaveBeenCalledWith({
+      eventName: "playlist_form_view",
+    });
+    expect(trackPlaylistEventMock).toHaveBeenCalledWith({
+      eventName: "playlist_form_start",
+    });
+    expect(trackPlaylistEventMock).toHaveBeenCalledWith({
+      eventName: "song_search_attempt",
+    });
+    expect(trackPlaylistEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventName: "song_search_success",
+        result_count_bucket: "1_to_5",
+      }),
+    );
+    expect(trackPlaylistEventMock).toHaveBeenCalledWith({ eventName: "song_select" });
+    expect(trackPlaylistEventMock).toHaveBeenCalledWith({
+      eventName: "song_submit_attempt",
+    });
+    expect(trackPlaylistEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({ eventName: "song_submit_success" }),
+    );
+
+    const telemetryPayload = JSON.stringify(trackPlaylistEventMock.mock.calls);
+    expect(telemetryPayload).not.toContain("ditto");
+    expect(telemetryPayload).not.toContain("Ditto");
+    expect(telemetryPayload).not.toContain("NewJeans");
+    expect(telemetryPayload).not.toContain(track.trackId);
+    expect(telemetryPayload).not.toContain("3025000001");
+    expect(telemetryPayload).not.toContain("김그루브");
   });
 
   it("shows the interaction overlay while submitting the selected track", async () => {
@@ -294,6 +345,12 @@ describe("SongRequestForm", () => {
         "신청이 몰려 잠시 제한됐어요. 잠시 후 다시 시도해 주세요.",
       ),
     ).toBeInTheDocument();
+    expect(trackPlaylistEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error_code: "PLST009",
+        eventName: "song_submit_failure",
+      }),
+    );
   });
 
   it("maps the taken-track error to a friendly message", async () => {

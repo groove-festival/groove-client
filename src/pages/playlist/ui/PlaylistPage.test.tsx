@@ -9,9 +9,20 @@ import {
 
 import PlaylistPage from "./PlaylistPage";
 
+const { trackPlaylistEventMock } = vi.hoisted(() => ({
+  trackPlaylistEventMock: vi.fn(),
+}));
+
 vi.mock("@/entities/festival", async () => {
   const actual = await vi.importActual<Record<string, unknown>>("@/entities/festival");
   return { ...actual, useFestivalStatus: vi.fn() };
+});
+
+vi.mock("../model/playlistTelemetry", async () => {
+  const actual = await vi.importActual<Record<string, unknown>>(
+    "../model/playlistTelemetry",
+  );
+  return { ...actual, trackPlaylistEvent: trackPlaylistEventMock };
 });
 
 const useFestivalStatusMock = vi.mocked(useFestivalStatus);
@@ -112,6 +123,10 @@ describe("PlaylistPage", () => {
 
     expect(screen.getByRole("heading", { name: "노래 신청하기" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "신청하기" })).toBeInTheDocument();
+    expect(trackPlaylistEventMock).toHaveBeenCalledWith({
+      eventName: "playlist_view",
+      phase: "SUBMISSION",
+    });
   });
 
   it("opens the guide modal after the smooth scroll from the hero arrow settles", () => {
