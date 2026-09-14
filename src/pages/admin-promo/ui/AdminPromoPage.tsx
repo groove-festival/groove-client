@@ -24,7 +24,10 @@ export default function AdminPromoPage() {
   };
 
   return (
-    <main className="font-pretendard min-h-screen bg-[#1c1c1c] text-[#fcfcfc]">
+    <main
+      className="font-pretendard min-h-screen bg-[#1c1c1c] text-[#fcfcfc]"
+      data-clarity-mask="true"
+    >
       {auth.isPending && (
         <p className="px-4 pt-20 pb-16 text-sm text-[#a2a2a2]">
           로그인 상태를 확인하는 중…
