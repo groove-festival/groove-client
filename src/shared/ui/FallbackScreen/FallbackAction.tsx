@@ -12,7 +12,7 @@ const actionClassName =
 export const FallbackAction = ({ action }: FallbackActionProps) => {
   if (action.kind === "link") {
     return (
-      <Link className={actionClassName} to={action.to} viewTransition>
+      <Link className={actionClassName} to={action.to}>
         {action.label}
       </Link>
     );
