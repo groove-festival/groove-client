@@ -46,14 +46,24 @@ jobs:
               --build-arg VITE_API_BASE_URL=__VITE_API_BASE_URL__ \
               --build-arg VITE_GA_MEASUREMENT_ID=__VITE_GA_MEASUREMENT_ID__ \
               --build-arg VITE_TELEMETRY_ENABLED=__VITE_TELEMETRY_ENABLED__ \
+              --build-arg VITE_CLARITY_PROJECT_ID=__VITE_CLARITY_PROJECT_ID__ \
+              --build-arg VITE_SENTRY_DSN=__VITE_SENTRY_DSN__ \
+              --build-arg SENTRY_AUTH_TOKEN=__SENTRY_AUTH_TOKEN__ \
+              --build-arg SENTRY_ORG=__SENTRY_ORG__ \
+              --build-arg SENTRY_PROJECT=__SENTRY_PROJECT__ \
               -t $REGISTRY/$ORG_LC/$IMAGE_NAME:latest \
               -t $REGISTRY/$ORG_LC/$IMAGE_NAME:$BUILD_DATE \
               .
           else
             docker build \
-            --build-arg VITE_API_BASE_URL=__VITE_API_BASE_URL__ \
-            --build-arg VITE_GA_MEASUREMENT_ID=__VITE_GA_MEASUREMENT_ID__ \
-            --build-arg VITE_TELEMETRY_ENABLED=__VITE_TELEMETRY_ENABLED__ \
+              --build-arg VITE_API_BASE_URL=__VITE_API_BASE_URL__ \
+              --build-arg VITE_GA_MEASUREMENT_ID=__VITE_GA_MEASUREMENT_ID__ \
+              --build-arg VITE_TELEMETRY_ENABLED=__VITE_TELEMETRY_ENABLED__ \
+              --build-arg VITE_CLARITY_PROJECT_ID=__VITE_CLARITY_PROJECT_ID__ \
+              --build-arg VITE_SENTRY_DSN=__VITE_SENTRY_DSN__ \
+              --build-arg SENTRY_AUTH_TOKEN=__SENTRY_AUTH_TOKEN__ \
+              --build-arg SENTRY_ORG=__SENTRY_ORG__ \
+              --build-arg SENTRY_PROJECT=__SENTRY_PROJECT__ \
             -t $REGISTRY/$ORG_LC/$IMAGE_NAME:dev \
             .
           fi
