@@ -20,3 +20,20 @@ export function parsePlaylistPhaseOverride(value: string | null): PlaylistPhase 
 
   return overrideAliases[value.trim().toLowerCase()] ?? null;
 }
+
+// 열어 둔 페이지가 다음 단계로 넘어갈 때 status를 다시 조회할 시각.
+export function nextPlaylistBoundaryAt(
+  phase: PlaylistPhase | undefined,
+  playlist: { submissionStartAt: string; submissionEndAt: string; publishAt: string },
+): string | undefined {
+  if (phase === "BEFORE_OPEN") {
+    return playlist.submissionStartAt;
+  }
+  if (phase === "SUBMISSION") {
+    return playlist.submissionEndAt;
+  }
+  if (phase === "SELECTION") {
+    return playlist.publishAt;
+  }
+  return undefined;
+}

@@ -7,7 +7,6 @@ import sparkle from "../festival-visuals/sparkle.svg";
 
 // 세 상태(신청 전/중/후) 화면이 공유하는 상단 히어로와 중간 다크 섹션.
 // Figma 555:2362 / 555:2292 / 555:2445에서 이 영역의 좌표는 동일하다.
-export const PLAYLIST_BOTTOM_ANCHOR_ID = "playlist-bottom";
 
 interface FestivalHeroProps {
   onBottomArrowClick: () => void;
