@@ -1,11 +1,7 @@
 import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 
-export interface CompletedSong {
-  title: string;
-  artist?: string | null;
-  albumCoverUrl?: string | null;
-}
+import type { CompletedSong } from "../model/songRequestForm";
 
 interface SongRequestCompleteModalProps {
   open: boolean;
