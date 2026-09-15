@@ -134,5 +134,5 @@ GA·Sentry·Clarity는 `VITE_TELEMETRY_ENABLED=true`이고 각 서비스 식별�
 - [Codex 진입점](AGENTS.md)
 - [Claude Code 진입점](CLAUDE.md)
 
-현재 `src/`는 공식 FSD 권장에 따라 `app`, `pages`, `shared`만 사용합니다.
-`widgets`, `features`, `entities`는 실제 재사용 책임이 생길 때 추가합니다.
+현재 `src/`는 `app`, `pages`, `widgets`, `entities`, `shared`를 사용합니다.
+`features`는 여러 화면에서 재사용되는 사용자 행동이 생길 때 추가합니다.
