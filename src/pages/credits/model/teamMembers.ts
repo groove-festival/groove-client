@@ -53,7 +53,7 @@ export const creditSections: CreditSection[] = [
       },
       {
         name: "배성민",
-        affiliation: "심화컴퓨터공학전공 24학번",
+        affiliation: "심화컴퓨터공학전공 21학번",
         instagram: "bewarmin",
         github: "BaeSeong-min",
       },

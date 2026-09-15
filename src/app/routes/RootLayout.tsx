@@ -18,12 +18,7 @@ export const RootLayout = () => {
   return (
     <>
       <FestivalHeader />
-      {/* 라우트 전환 모션은 이 본문 래퍼(page-content)에만 건다. 헤더는 밖에
-          두어 스냅샷 대상에서 제외 → 전환 중에도 라이브로 렌더돼 깜빡이지 않는다.
-          (헤더가 fixed + backdrop-blur라 스냅샷으로 굳으면 뒤 배경과 어긋나 깜빡임) */}
-      <div className="[view-transition-name:page-content]">
-        <Outlet />
-      </div>
+      <Outlet />
     </>
   );
 };
