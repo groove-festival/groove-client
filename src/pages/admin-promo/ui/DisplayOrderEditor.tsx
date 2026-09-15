@@ -1,63 +1,9 @@
-import { useMemo, useState } from "react";
-
-import { ApiError } from "@/shared/api";
-
-import { useChangeDisplayOrder } from "../api/changeDisplayOrder";
-import { useSongRequests } from "../api/getSongRequests";
-import { moveByOffset, sortByDisplayOrder } from "../model/displayOrder";
-
-const saveErrorMessage = (error: unknown): string => {
-  if (error instanceof ApiError && error.code === "PLST008") {
-    return "선정된 곡 전체가 순서에 포함돼야 해요. 목록을 새로고침한 뒤 다시 시도해 주세요.";
-  }
-  if (error instanceof ApiError && (error.code === "C003" || error.code === "C004")) {
-    return "권한이 없어요. 다시 로그인해 주세요.";
-  }
-  return "순서 저장에 실패했어요. 잠시 후 다시 시도해 주세요.";
-};
-
-const sameOrder = (a: readonly number[], b: readonly number[]): boolean =>
-  a.length === b.length && a.every((id, index) => id === b[index]);
+import { displayOrderErrorMessage } from "../model/adminErrorMessages";
+import { useDisplayOrderDraft } from "../model/useDisplayOrderDraft";
 
 export const DisplayOrderEditor = () => {
-  const { data, refetch } = useSongRequests();
-  const save = useChangeDisplayOrder();
-  const [localIds, setLocalIds] = useState<number[] | null>(null);
-
-  const selectedSongs = useMemo(
-    () =>
-      data
-        ? data.groups.flatMap((group) => group.songs).filter((song) => song.selected)
-        : [],
-    [data],
-  );
-  const sortedIds = useMemo(
-    () => sortByDisplayOrder(selectedSongs).map((song) => song.songRequestId),
-    [selectedSongs],
-  );
-  const byId = useMemo(
-    () => new Map(selectedSongs.map((song) => [song.songRequestId, song])),
-    [selectedSongs],
-  );
-
-  // 선정이 바뀌면(개수·구성 불일치) 로컬 편집은 버린다.
-  const localUsable =
-    localIds != null &&
-    localIds.length === sortedIds.length &&
-    localIds.every((id) => byId.has(id));
-  const workingIds = localUsable ? localIds : sortedIds;
-  const dirty = localUsable && !sameOrder(localIds, sortedIds);
-
-  const move = (index: number, delta: number) => {
-    setLocalIds(moveByOffset(workingIds, index, delta));
-  };
-
-  const onSave = () => {
-    save.mutate(workingIds, {
-      onSuccess: () => setLocalIds(null),
-      onError: () => void refetch(),
-    });
-  };
+  const { data, isSaving, saveError, didSave, workingIds, byId, dirty, move, onSave } =
+    useDisplayOrderDraft();
 
   if (!data) {
     return null;
@@ -91,7 +37,7 @@ export const DisplayOrderEditor = () => {
                 <button
                   aria-label="위로"
                   className="size-7 shrink-0 rounded-md bg-[#3a3a3a] text-xs text-[#fcfcfc] disabled:opacity-40"
-                  disabled={index === 0 || save.isPending}
+                  disabled={index === 0 || isSaving}
                   onClick={() => move(index, -1)}
                   type="button"
                 >
@@ -100,7 +46,7 @@ export const DisplayOrderEditor = () => {
                 <button
                   aria-label="아래로"
                   className="size-7 shrink-0 rounded-md bg-[#3a3a3a] text-xs text-[#fcfcfc] disabled:opacity-40"
-                  disabled={index === workingIds.length - 1 || save.isPending}
+                  disabled={index === workingIds.length - 1 || isSaving}
                   onClick={() => move(index, 1)}
                   type="button"
                 >
@@ -112,16 +58,16 @@ export const DisplayOrderEditor = () => {
         </ol>
       )}
 
-      {save.isError && (
-        <p className="text-xs text-[#ff5b5b]">{saveErrorMessage(save.error)}</p>
+      {saveError && (
+        <p className="text-xs text-[#ff5b5b]">{displayOrderErrorMessage(saveError)}</p>
       )}
-      {save.isSuccess && !dirty && (
+      {didSave && !dirty && (
         <p className="text-xs text-[#00ffff]">순서를 저장했어요.</p>
       )}
 
       <button
         className="h-10 rounded-lg bg-[#5d00ff] text-xs font-semibold text-[#fcfcfc] disabled:opacity-50"
-        disabled={!dirty || save.isPending || workingIds.length === 0}
+        disabled={!dirty || isSaving || workingIds.length === 0}
         onClick={onSave}
         type="button"
       >
