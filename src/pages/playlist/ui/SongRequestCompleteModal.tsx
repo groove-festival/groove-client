@@ -112,7 +112,11 @@ export const SongRequestCompleteModal = ({
               신청이 완료되었어요!
             </h2>
 
-            <div className="flex w-60 flex-col items-center gap-4" id={descriptionId}>
+            <div
+              className="flex w-60 flex-col items-center gap-4"
+              data-clarity-mask="true"
+              id={descriptionId}
+            >
               {/* 앨범 커버. 없으면 디자인 placeholder 원을 유지한다. */}
               {song.albumCoverUrl ? (
                 <img

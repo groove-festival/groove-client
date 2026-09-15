@@ -2,6 +2,8 @@ import * as Sentry from "@sentry/react";
 
 import { appConfig } from "@/shared/config";
 
+import { shouldInitializeClarity } from "./clarityPrivacy";
+
 type ClarityCommand = ((...args: unknown[]) => void) & {
   queue?: unknown[][];
 };
@@ -96,6 +98,7 @@ function initializeSentry(dsn: string) {
     dsn,
     enabled: true,
     environment: appConfig.environment,
+    release: appConfig.telemetry.sentryRelease,
     sendDefaultPii: false,
     beforeBreadcrumb(breadcrumb) {
       if (breadcrumb.data?.url) {
@@ -153,7 +156,10 @@ export function initializeAnalytics() {
     initializeGoogleAnalytics(appConfig.telemetry.googleAnalyticsMeasurementId);
   }
 
-  if (appConfig.telemetry.clarityProjectId) {
+  if (
+    appConfig.telemetry.clarityProjectId &&
+    shouldInitializeClarity(window.location.pathname, appConfig.basePath)
+  ) {
     initializeClarity(appConfig.telemetry.clarityProjectId);
   }
 

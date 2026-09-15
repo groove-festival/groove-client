@@ -5,6 +5,7 @@ import { type PlaylistPhase, useFestivalStatus } from "@/entities/festival";
 import { LoadingFallback, NetworkErrorFallback } from "@/shared/ui";
 
 import { parsePlaylistPhaseOverride } from "../model/playlistPhase";
+import { trackPlaylistEvent } from "../model/playlistTelemetry";
 import { useScheduledRefetch } from "../model/useScheduledRefetch";
 import { ClosedSection } from "./ClosedSection";
 import { CountdownSection } from "./CountdownSection";
@@ -47,6 +48,12 @@ export default function PlaylistPage() {
     override || !status?.playlist ? undefined : nextBoundaryAt(phase, status.playlist),
     refetch,
   );
+
+  useEffect(() => {
+    if (phase) {
+      trackPlaylistEvent({ eventName: "playlist_view", phase });
+    }
+  }, [phase]);
 
   // BEFORE_OPEN은 카운트다운 높이(3121px), SUBMISSION은 약관 동의와 footer까지
   // 포함한 신청 폼 높이(3396px), 마감/공개 단계는 기존 안내 섹션 높이(3195px).

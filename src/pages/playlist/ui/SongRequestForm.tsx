@@ -1,6 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type ComponentPropsWithRef, useEffect, useRef, useState } from "react";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import {
+  type ComponentPropsWithRef,
+  type FormEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { Controller, type FieldErrors, useForm, useWatch } from "react-hook-form";
 
 import { ApiError } from "@/shared/api";
 import { InteractionLoadingOverlay } from "@/shared/ui";
@@ -14,6 +20,12 @@ import {
   songRequestSchema,
   type SongRequestFormValues,
 } from "../model/songRequestForm";
+import {
+  toDurationBucket,
+  toResultCountBucket,
+  toSafeErrorCode,
+  trackPlaylistEvent,
+} from "../model/playlistTelemetry";
 import { useSectionInView } from "../model/useSectionInView";
 import { PLAYLIST_BOTTOM_ANCHOR_ID } from "./FestivalHero";
 import {
@@ -144,6 +156,7 @@ export const SongRequestForm = ({
   const [keyword, setKeyword] = useState("");
   const [selectedTrack, setSelectedTrack] = useState<SongTrack | null>(null);
   const [isResultsClosed, setIsResultsClosed] = useState(false);
+  const hasStartedFormRef = useRef(false);
   const resultsRef = useRef<HTMLUListElement>(null);
   const isGuideOpen = guideOpen ?? isInternalGuideOpen;
   const closeGuide = onGuideClose ?? (() => setIsInternalGuideOpen(false));
@@ -180,12 +193,41 @@ export const SongRequestForm = ({
     }
     submit.reset();
     setIsResultsClosed(false);
-    search.mutate(trimmed);
+    const startedAt = performance.now();
+    trackPlaylistEvent({ eventName: "song_search_attempt" });
+    search.mutate(trimmed, {
+      onError: (error) => {
+        trackPlaylistEvent({
+          duration_bucket: toDurationBucket(performance.now() - startedAt),
+          error_code: toSafeErrorCode(error),
+          eventName: "song_search_failure",
+        });
+      },
+      onSuccess: (tracks) => {
+        const durationBucket = toDurationBucket(performance.now() - startedAt);
+        const resultCountBucket = toResultCountBucket(tracks.length);
+
+        if (resultCountBucket === "0") {
+          trackPlaylistEvent({
+            duration_bucket: durationBucket,
+            eventName: "song_search_empty",
+          });
+          return;
+        }
+
+        trackPlaylistEvent({
+          duration_bucket: durationBucket,
+          eventName: "song_search_success",
+          result_count_bucket: resultCountBucket,
+        });
+      },
+    });
   };
 
   const pickTrack = (track: SongTrack) => {
     setSelectedTrack(track);
     setValue("trackId", track.trackId, { shouldValidate: submitCount > 0 });
+    trackPlaylistEvent({ eventName: "song_select" });
   };
 
   const clearTrack = () => {
@@ -193,19 +235,54 @@ export const SongRequestForm = ({
     setValue("trackId", "", { shouldValidate: submitCount > 0 });
   };
 
-  const onValid = (values: SongRequestFormValues) => {
+  const onValid = (values: SongRequestFormValues, startedAt: number) => {
+    trackPlaylistEvent({ eventName: "song_submit_attempt" });
     submit.mutate(
       { body: toSubmitSongBody(values), idempotencyKey: crypto.randomUUID() },
       {
         onSuccess: (result) => {
+          trackPlaylistEvent({
+            duration_bucket: toDurationBucket(performance.now() - startedAt),
+            eventName: "song_submit_success",
+          });
           setCompletedSong({
             title: result.title,
             artist: result.artist,
             albumCoverUrl: result.albumCoverUrl,
           });
         },
+        onError: (error) => {
+          trackPlaylistEvent({
+            duration_bucket: toDurationBucket(performance.now() - startedAt),
+            error_code: toSafeErrorCode(error),
+            eventName: "song_submit_failure",
+          });
+        },
       },
     );
+  };
+
+  const onInvalid = (validationErrors: FieldErrors<SongRequestFormValues>) => {
+    const field = Object.keys(validationErrors)[0] as
+      keyof SongRequestFormValues | undefined;
+    trackPlaylistEvent({
+      eventName: "playlist_form_validation_failure",
+      validation_field: field ?? "unknown",
+    });
+  };
+
+  const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const startedAt = performance.now();
+    void handleSubmit((values) => onValid(values, startedAt), onInvalid)(event);
+  };
+
+  const markFormStarted = () => {
+    if (hasStartedFormRef.current) {
+      return;
+    }
+
+    hasStartedFormRef.current = true;
+    trackPlaylistEvent({ eventName: "playlist_form_start" });
   };
 
   const closeCompleteModal = () => {
@@ -241,6 +318,10 @@ export const SongRequestForm = ({
 
   // 결과 박스 바깥을 클릭하면 닫는다.
   useEffect(() => {
+    trackPlaylistEvent({ eventName: "playlist_form_view" });
+  }, []);
+
+  useEffect(() => {
     if (!showResults) {
       return;
     }
@@ -269,7 +350,11 @@ export const SongRequestForm = ({
           </p>
         </div>
 
-        <form className="mt-6 flex flex-col gap-5" onSubmit={handleSubmit(onValid)}>
+        <form
+          className="mt-6 flex flex-col gap-5"
+          onChange={markFormStarted}
+          onSubmit={handleFormSubmit}
+        >
           <input type="hidden" {...register("trackId")} />
 
           <div>
@@ -309,6 +394,7 @@ export const SongRequestForm = ({
               {showResults && (
                 <ul
                   className="themed-scrollbar absolute top-full right-0 left-0 z-20 mt-2 flex max-h-[200px] flex-col gap-2 overflow-y-auto rounded-2xl border border-[#5d5d5d] bg-[#1c1c1c] p-2 shadow-xl"
+                  data-clarity-mask="true"
                   ref={resultsRef}
                 >
                   {searchResults.map((track) => (
@@ -346,7 +432,10 @@ export const SongRequestForm = ({
             </p>
 
             {selectedTrack ? (
-              <div className="mt-3 flex items-center gap-3 rounded-2xl border border-[#00ffff] bg-[#323232] p-3">
+              <div
+                className="mt-3 flex items-center gap-3 rounded-2xl border border-[#00ffff] bg-[#323232] p-3"
+                data-clarity-mask="true"
+              >
                 {selectedTrack.albumCoverUrl ? (
                   <img
                     alt=""

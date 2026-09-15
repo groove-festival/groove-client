@@ -14,5 +14,6 @@ export const appConfig = Object.freeze({
     clarityProjectId: optionalEnv(import.meta.env.VITE_CLARITY_PROJECT_ID),
     googleAnalyticsMeasurementId: optionalEnv(import.meta.env.VITE_GA_MEASUREMENT_ID),
     sentryDsn: optionalEnv(import.meta.env.VITE_SENTRY_DSN),
+    sentryRelease: optionalEnv(import.meta.env.VITE_SENTRY_RELEASE),
   }),
 });
