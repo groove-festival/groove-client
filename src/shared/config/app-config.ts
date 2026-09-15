@@ -5,12 +5,14 @@ function optionalEnv(value: string | undefined) {
   return normalized ? normalized : undefined;
 }
 
+const telemetryEnabled = optionalEnv(import.meta.env.VITE_TELEMETRY_ENABLED);
+
 export const appConfig = Object.freeze({
   apiBaseUrl: optionalEnv(import.meta.env.VITE_API_BASE_URL),
   basePath: normalizeBasePath(import.meta.env.BASE_URL),
   environment: import.meta.env.MODE,
   telemetry: Object.freeze({
-    enabled: import.meta.env.PROD && import.meta.env.VITE_TELEMETRY_ENABLED === "true",
+    enabled: import.meta.env.PROD && telemetryEnabled === "true",
     clarityProjectId: optionalEnv(import.meta.env.VITE_CLARITY_PROJECT_ID),
     googleAnalyticsMeasurementId: optionalEnv(import.meta.env.VITE_GA_MEASUREMENT_ID),
     sentryDsn: optionalEnv(import.meta.env.VITE_SENTRY_DSN),
