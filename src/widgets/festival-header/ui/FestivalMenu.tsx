@@ -58,7 +58,6 @@ export const FestivalMenu = ({ isOpen, onClose }: FestivalMenuProps) => {
                   onClick={onClose}
                   tabIndex={isOpen ? undefined : -1}
                   to={item.to}
-                  viewTransition
                 >
                   {item.label}
                 </Link>

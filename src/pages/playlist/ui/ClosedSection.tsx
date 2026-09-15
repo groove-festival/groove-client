@@ -37,7 +37,7 @@ export const ClosedSection = ({ variant }: ClosedSectionProps) => {
       {isPublished ? (
         <button
           className="font-pretendard absolute top-[571px] left-1/2 h-14 w-[240px] -translate-x-1/2 rounded-2xl bg-[#5d00ff] text-base font-semibold text-[#fcfcfc]"
-          onClick={() => navigate("/playlist", { viewTransition: true })}
+          onClick={() => navigate("/playlist")}
           type="button"
         >
           GROOVE PLAYLIST 보러가기
