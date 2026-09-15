@@ -3,6 +3,10 @@ interface Orderable {
   requestedAt: string;
 }
 
+export function areOrdersEqual(a: readonly number[], b: readonly number[]): boolean {
+  return a.length === b.length && a.every((id, index) => id === b[index]);
+}
+
 // 선정된 곡을 공개(재생) 순서로 정렬한다. displayOrder가 있는 곡이 그 값 순서로
 // 먼저 오고, 아직 순서가 없는 곡은 신청 순(뒤쪽)에 붙는다.
 export function sortByDisplayOrder<T extends Orderable>(songs: readonly T[]): T[] {

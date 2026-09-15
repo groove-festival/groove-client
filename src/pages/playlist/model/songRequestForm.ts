@@ -50,6 +50,12 @@ export const songRequestSchema = z.object({
 
 export type SongRequestFormValues = z.infer<typeof songRequestSchema>;
 
+export interface CompletedSong {
+  title: string;
+  artist?: string | null;
+  albumCoverUrl?: string | null;
+}
+
 export const songRequestFormDefaults: SongRequestFormValues = {
   trackId: "",
   college: "IT",

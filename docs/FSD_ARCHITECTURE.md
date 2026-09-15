@@ -6,13 +6,15 @@
 
 ## 1. 기본 결정
 
-Feature-Sliced Design의 표준 레이어를 사용한다. 현재 필요한 레이어는
-`app`, `pages`, `shared`이며, 빈 디렉터리를 미리 만들지 않는다.
+Feature-Sliced Design의 표준 레이어를 사용한다. 현재 사용하는 레이어는
+`app`, `pages`, `widgets`, `entities`, `shared`이며, 빈 디렉터리를 미리 만들지 않는다.
 
 ```text
 src/
 ├─ app/       # 앱 조립, 라우팅, 전역 스타일, 분석 초기화, 진입점
 ├─ pages/     # 라우트 단위 화면 slice
+├─ widgets/   # 화면 간 재사용하는 독립 UI 블록
+├─ entities/  # 재사용하는 도메인 개념과 데이터
 └─ shared/    # 외부 연동, 환경 설정, 재사용 가능한 기반 코드
 ```
 
@@ -71,6 +73,14 @@ import HomePage from "@/pages/home/ui/HomePage";
 | 여러 화면에서 재사용되는 사용자 행동 | `features/<feature-slice>`          |
 | 도메인 개념과 표현                   | `entities/<entity-slice>`           |
 | 크고 독립적인 재사용 UI 블록         | `widgets/<widget-slice>`            |
+
+관심사 분리와 리팩터링 판단 기준은 [`CONVENTION.md`](../CONVENTION.md)의
+「관심사 분리와 리팩터링」을 따른다. 추출한 Hook·순수 계산·상수·표현
+컴포넌트는 사용하는 slice 또는 segment에 먼저 둔다. 상태 전이·부수효과는
+`model`, UI 표현은 `ui`, 설정은 `config`처럼 책임에 맞춰 배치한다. 코드 종류가
+같다는 이유만으로 별도 레이어나 범용 segment를 만들거나 `shared`로 옮기지
+않는다. 다른 slice에서 실제로 사용할 때만 재사용 경계를 검토하고 public API로
+공개한다.
 
 React Hook Form, Zod, TanStack Query를 사용한다는 이유만으로 전역 wrapper나
 별도 레이어를 만들지 않는다. 폼 스키마와 요청은 해당 기능 slice에 두고,

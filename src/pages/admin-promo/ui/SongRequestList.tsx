@@ -1,23 +1,10 @@
 import { useState } from "react";
 
-import { ApiError } from "@/shared/api";
-
 import { useChangeSelection } from "../api/changeSelection";
 import { useDeleteSongRequest } from "../api/deleteSongRequest";
 import { type AdminSongRequest, useSongRequests } from "../api/getSongRequests";
+import { songRequestMutationErrorMessage } from "../model/adminErrorMessages";
 import { ConfirmDialog } from "./ConfirmDialog";
-
-const mutationErrorMessage = (error: unknown): string => {
-  if (error instanceof ApiError) {
-    if (error.code === "PLST002") {
-      return "이미 삭제된 신청이에요. 목록을 새로고침해 주세요.";
-    }
-    if (error.code === "C003" || error.code === "C004") {
-      return "권한이 없어요. 다시 로그인해 주세요.";
-    }
-  }
-  return "처리에 실패했어요. 잠시 후 다시 시도해 주세요.";
-};
 
 interface SongRequestRowProps {
   song: AdminSongRequest;
@@ -134,7 +121,9 @@ export const SongRequestList = () => {
       </div>
 
       {(changeSelection.isError || deleteSong.isError) && (
-        <p className="text-xs text-[#ff5b5b]">{mutationErrorMessage(mutationError)}</p>
+        <p className="text-xs text-[#ff5b5b]">
+          {songRequestMutationErrorMessage(mutationError)}
+        </p>
       )}
 
       {data.groups.map((group) => (

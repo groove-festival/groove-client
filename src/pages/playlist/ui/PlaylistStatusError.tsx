@@ -1,4 +1,4 @@
-import { PLAYLIST_BOTTOM_ANCHOR_ID } from "./FestivalHero";
+import { PLAYLIST_BOTTOM_ANCHOR_ID } from "../model/playlistAnchors";
 
 interface PlaylistStatusErrorProps {
   onRetry: () => void;
