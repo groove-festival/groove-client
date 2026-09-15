@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { mockSubmissionFestivalStatus } from "./mockFestivalStatus";
+
 const screenshotOptions = {
   animations: "disabled",
   caret: "hide",
@@ -29,6 +31,7 @@ async function waitForStableVisuals(page: Page) {
 test("detects a controlled visual mismatch and returns to the same capture", async ({
   page,
 }, testInfo) => {
+  await mockSubmissionFestivalStatus(page);
   await page.goto("./");
   await waitForStableVisuals(page);
 
