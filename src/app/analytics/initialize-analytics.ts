@@ -5,7 +5,7 @@ import { appConfig } from "@/shared/config";
 import { shouldInitializeClarity } from "./clarityPrivacy";
 
 type ClarityCommand = ((...args: unknown[]) => void) & {
-  queue?: unknown[][];
+  q?: unknown[][];
 };
 
 declare global {
@@ -77,8 +77,8 @@ function initializeClarity(projectId: string) {
 
   if (!window.clarity) {
     const clarity: ClarityCommand = (...args: unknown[]) => {
-      clarity.queue ??= [];
-      clarity.queue.push(args);
+      clarity.q ??= [];
+      clarity.q.push(args);
     };
     window.clarity = clarity;
   }
