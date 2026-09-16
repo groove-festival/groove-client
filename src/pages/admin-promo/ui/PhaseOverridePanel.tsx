@@ -5,9 +5,8 @@ import {
   playlistPhases,
   useFestivalStatus,
 } from "@/entities/festival";
-import { ApiError } from "@/shared/api";
-
 import { useChangePhaseOverride } from "../api/changePhaseOverride";
+import { phaseOverrideErrorMessage } from "../model/adminErrorMessages";
 import { ConfirmDialog } from "./ConfirmDialog";
 
 const phaseLabels: Record<PlaylistPhase, string> = {
@@ -15,18 +14,6 @@ const phaseLabels: Record<PlaylistPhase, string> = {
   SUBMISSION: "접수 중",
   SELECTION: "선정 중",
   PUBLISHED: "공개",
-};
-
-const overrideErrorMessage = (error: unknown): string => {
-  if (error instanceof ApiError) {
-    if (error.code === "C001") {
-      return "단계 값이 올바르지 않아요.";
-    }
-    if (error.code === "C003" || error.code === "C004") {
-      return "권한이 없어요. 다시 로그인해 주세요.";
-    }
-  }
-  return "단계 변경에 실패했어요. 잠시 후 다시 시도해 주세요.";
 };
 
 // null = 자동 판정으로 되돌리기.
@@ -104,7 +91,9 @@ export const PhaseOverridePanel = () => {
       </button>
 
       {override.isError && (
-        <p className="text-xs text-[#ff5b5b]">{overrideErrorMessage(override.error)}</p>
+        <p className="text-xs text-[#ff5b5b]">
+          {phaseOverrideErrorMessage(override.error)}
+        </p>
       )}
 
       <ConfirmDialog

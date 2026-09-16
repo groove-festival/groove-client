@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 
 import { useCountdown } from "../model/useCountdown";
-import { PLAYLIST_BOTTOM_ANCHOR_ID } from "./FestivalHero";
+import { PLAYLIST_BOTTOM_ANCHOR_ID } from "../model/playlistAnchors";
 import { PlaylistLegalFooter } from "./PlaylistLegalFooter";
 
 interface CountdownSectionProps {

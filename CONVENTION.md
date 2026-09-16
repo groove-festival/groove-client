@@ -35,6 +35,36 @@
 - API 키, 토큰, 비밀번호, 개인정보, 원본 사용자 데이터와 비공개 운영 데이터는
   코드·로그·문서·AI 입력에 포함하지 않는다.
 
+### 관심사 분리와 리팩터링
+
+리팩터링은 요청 범위 안에서 기존 동작과 계약을 유지하며, 코드를 변경 이유별로
+읽고 고칠 수 있게 만드는 작업이다. 파일 길이나 함수 줄 수만으로 분리하지 않는다.
+
+- 한 컴포넌트가 화면 조립, 서버 요청, 폼 검증, 사용자 행동 측정, 브라우저
+  부수효과를 함께 맡으면 각 책임의 소유자를 정한다. 화면은 필요한 상태와 동작을
+  조립하고, 독립적인 흐름은 가까운 model 또는 UI 모듈로 옮긴다.
+- 함수와 변수는 역할이 드러나는 이름을 쓴다. 조건·변환이 여러 곳에서 반복되거나
+  독립적으로 설명할 수 있으면 입력과 출력이 명확한 함수로 추출한다. 순수 계산은
+  React 상태나 Effect 밖에 두고, 계산 가능한 값을 state에 중복 저장하지 않는다.
+- 여러 곳에서 같은 의미로 쓰는 도메인 값, 앵커 ID, 오류 문구는 이름 있는 상수나
+  목적별 매핑으로 모은다. 한 번 쓰는 값까지 모두 상수로 빼거나, 특정 화면의
+  상수를 근거 없이 `shared`로 올리지 않는다. 알 수 없는 오류 값의 기본 처리도
+  함께 정의한다.
+- 관련 상태 전이와 요청·브라우저 부수효과를 한 흐름으로 관리해야 할 때 custom
+  Hook으로 추출한다. Hook은 화면이 사용할 상태와 동작을 반환하고 Effect의
+  의존성·정리 작업을 책임진다. 단순 JSX나 일회성 지역 state를 분리하기 위해
+  Hook을 만들지 않는다.
+- 반복되는 표현 또는 독립적인 화면 책임이 있으면 UI 컴포넌트로 추출한다.
+  같은 이유로 변경되는 작은 JSX는 부모와 함께 두어 파일 수만 늘리지 않는다.
+  중복도 코드 모양이 아니라 의미와 변경 이유가 같을 때 공통화한다.
+- 추출 전후에 public API, 오류·loading·empty 상태, 접근성, 관측 데이터의
+  마스킹과 사용자 흐름을 확인한다. 동작 변경이 필요하면 별도 요구사항과
+  검증으로 다루고, 구조 개선을 이유로 테스트를 약화하지 않는다.
+
+리뷰에서는 각 파일과 함수가 무엇을 소유하는지, 이름만으로 의도가 읽히는지,
+상수·Hook·컴포넌트 추출이 실제 변경 이유를 분리했는지 확인한다. 코드 크기나
+추출 횟수 자체를 목표로 삼지 않는다.
+
 ## 2. 기술 기준
 
 - 패키지 관리: pnpm 10
@@ -56,8 +86,8 @@ slice, segment, public API를 결정한다.
 app → pages → widgets → features → entities → shared
 ```
 
-- 현재 필요한 `app`, `pages`, `shared`만 유지한다. `widgets`, `features`,
-  `entities`는 실제 책임과 재사용 경계가 생길 때 추가하며 빈 레이어를 미리
+- 현재 사용하는 `app`, `pages`, `widgets`, `entities`, `shared`를 유지한다.
+  `features`는 실제 책임과 재사용 경계가 생길 때 추가하며 빈 레이어를 미리
   만들지 않는다.
 - 코드는 자신보다 아래 레이어만 import한다. 같은 레이어의 다른 slice를 직접
   import하지 않는다.
@@ -463,16 +493,16 @@ commit을 실행하지 않는다.
 
 규칙은 강제 가능성과 의미 판단 필요 여부를 구분한다.
 
-| 범위                                           | 검사 수단                       |
-| ---------------------------------------------- | ------------------------------- |
-| 공백, 따옴표, 줄바꿈, Tailwind class 정렬      | Prettier                        |
-| object type의 interface 사용, type-only import | ESLint                          |
-| `React.FC` 금지, page 외 default export 금지   | ESLint                          |
-| Hook 규칙과 Fast Refresh export 안전성         | ESLint                          |
-| FSD 레이어, slice, public API, import 방향     | Steiger `pnpm check:fsd`        |
-| 타입 계약                                      | TypeScript `pnpm typecheck`     |
-| 이름의 업무 의미, 컴포넌트 분리, API 응집도    | 작성자 자체 확인과 PR 검토      |
-| 사용자 동작, 접근성, loading·empty·error 상태  | 관련 테스트와 필요 시 수동 확인 |
+| 범위                                                    | 검사 수단                       |
+| ------------------------------------------------------- | ------------------------------- |
+| 공백, 따옴표, 줄바꿈, Tailwind class 정렬               | Prettier                        |
+| object type의 interface 사용, type-only import          | ESLint                          |
+| `React.FC` 금지, page 외 default export 금지            | ESLint                          |
+| Hook 규칙과 Fast Refresh export 안전성                  | ESLint                          |
+| FSD 레이어, slice, public API, import 방향              | Steiger `pnpm check:fsd`        |
+| 타입 계약                                               | TypeScript `pnpm typecheck`     |
+| 이름의 업무 의미, 책임 분리, 상수·Hook 추출, API 응집도 | 작성자 자체 확인과 PR 검토      |
+| 사용자 동작, 접근성, loading·empty·error 상태           | 관련 테스트와 필요 시 수동 확인 |
 
 ESLint 통과만으로 이름과 책임이 적절하다고 판단하지 않는다. 새 코드가 이 문서의
 예외를 필요로 하면 inline disable로 숨기기 전에 이유와 범위를 PR에 적고, 반복될
@@ -481,6 +511,7 @@ ESLint 통과만으로 이름과 책임이 적절하다고 판단하지 않는�
 ## 13. 종료 체크리스트
 
 - 요청 범위와 완료 기준을 충족했는가?
+- 파일·함수의 책임과 변경 이유가 분명하고 추출이 불필요한 복잡성을 만들지 않았는가?
 - FSD 레이어, slice, segment, public API와 import 방향이 맞는가?
 - `pnpm check:fsd`를 마지막 변경 뒤 실행했는가?
 - 관련 타입, 테스트, error/loading/empty 상태를 확인했는가?

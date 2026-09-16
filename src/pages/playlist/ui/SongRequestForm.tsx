@@ -1,147 +1,33 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  type ComponentPropsWithRef,
-  type FormEvent,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import { Controller, type FieldErrors, useForm, useWatch } from "react-hook-form";
+import { useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 
-import { ApiError } from "@/shared/api";
 import { InteractionLoadingOverlay } from "@/shared/ui";
 
-import { type SongTrack, useSearchSongs } from "../api/searchSongs";
-import { toSubmitSongBody, useSubmitSong } from "../api/submitSong";
 import { songRequestAgreementLinks } from "../model/legalLinks";
+import { PLAYLIST_BOTTOM_ANCHOR_ID } from "../model/playlistAnchors";
+import { submitErrorMessage } from "../model/songRequestErrorMessages";
 import {
   colleges,
   songRequestFormDefaults,
   songRequestSchema,
   type SongRequestFormValues,
 } from "../model/songRequestForm";
-import {
-  toDurationBucket,
-  toResultCountBucket,
-  toSafeErrorCode,
-  trackPlaylistEvent,
-} from "../model/playlistTelemetry";
 import { useSectionInView } from "../model/useSectionInView";
-import { PLAYLIST_BOTTOM_ANCHOR_ID } from "./FestivalHero";
-import {
-  type CompletedSong,
-  SongRequestCompleteModal,
-} from "./SongRequestCompleteModal";
+import { useSongRequestSubmission } from "../model/useSongRequestSubmission";
+import { useSongTrackPicker } from "../model/useSongTrackPicker";
+import { AgreementCheckbox } from "./AgreementCheckbox";
+import { FormInput } from "./FormInput";
+import { SongRequestCompleteModal } from "./SongRequestCompleteModal";
 import { SongRequestGuideModal } from "./SongRequestGuideModal";
 import { PlaylistLegalFooter } from "./PlaylistLegalFooter";
+import { SongTrackPicker } from "./SongTrackPicker";
 
 interface SongRequestFormProps {
   guideOpen?: boolean;
   onGuideClose?: () => void;
   onGuideSectionEnter?: () => void;
 }
-
-interface FormInputProps extends ComponentPropsWithRef<"input"> {
-  label: string;
-  error?: string;
-}
-
-interface AgreementCheckboxProps extends ComponentPropsWithRef<"input"> {
-  inputId: string;
-  label: string;
-  linkHref: string;
-  linkLabel: string;
-}
-
-const FormInput = ({ label, error, ...inputProps }: FormInputProps) => {
-  return (
-    <div className="relative h-[55px] w-full">
-      <input
-        {...inputProps}
-        aria-invalid={error ? true : undefined}
-        aria-label={label}
-        className={`peer size-full rounded-2xl border bg-[#323232] px-[22px] text-sm font-medium text-[#fcfcfc] outline-none placeholder:text-transparent focus:border-[#00ffff] ${
-          error ? "border-[#ff5b5b]" : "border-[#fcfcfc]"
-        }`}
-        placeholder=" "
-        type="text"
-      />
-      <span className="pointer-events-none absolute top-[18px] left-[23px] text-sm leading-[normal] font-medium text-[#a2a2a2] opacity-0 peer-placeholder-shown:opacity-100">
-        {label} <span className="text-[#00ffff]">*</span>
-      </span>
-    </div>
-  );
-};
-
-const AgreementCheckbox = ({
-  inputId,
-  label,
-  linkHref,
-  linkLabel,
-  ...inputProps
-}: AgreementCheckboxProps) => {
-  return (
-    <div className="flex flex-col gap-1">
-      <label
-        className="flex items-start gap-3 text-sm leading-[18px] font-semibold text-[#fcfcfc]"
-        htmlFor={inputId}
-      >
-        <input
-          {...inputProps}
-          className="mt-0.5 size-5 shrink-0 rounded border border-[#cfcfcf] bg-transparent accent-[#5d00ff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00ffff]"
-          id={inputId}
-          type="checkbox"
-        />
-        <span>
-          <span className="text-[#00ffff]">(필수)</span> {label}
-        </span>
-      </label>
-      <a
-        className="ml-8 w-fit text-xs leading-[15px] font-medium text-[#a2a2a2] underline underline-offset-2"
-        href={linkHref}
-        rel="noreferrer"
-        target="_blank"
-      >
-        {linkLabel}
-      </a>
-    </div>
-  );
-};
-
-// 곡 검색 실패 코드를 사용자 문구로 옮긴다.
-const searchErrorMessage = (error: unknown): string => {
-  if (error instanceof ApiError) {
-    if (error.code === "PLST005") {
-      return "곡 검색 서비스에 문제가 생겼어요. 잠시 후 다시 시도해 주세요.";
-    }
-    if (error.code === "PLST001") {
-      return "지금은 접수 기간이 아니에요.";
-    }
-    if (error.code === "C001") {
-      return "검색어를 확인해 주세요.";
-    }
-  }
-  return "검색에 실패했어요. 잠시 후 다시 시도해 주세요.";
-};
-
-// 신청 실패 코드를 사용자 문구로 옮긴다.
-const submitErrorMessage = (error: unknown): string => {
-  if (error instanceof ApiError) {
-    if (error.code === "PLST009") {
-      return "신청이 몰려 잠시 제한됐어요. 잠시 후 다시 시도해 주세요.";
-    }
-    if (error.code === "PLST007") {
-      return "곡 정보가 만료됐어요. 곡을 다시 검색해서 선택해 주세요.";
-    }
-    if (error.code === "PLST010") {
-      return "이미 다른 사람이 신청한 곡입니다. 다른 곡을 선택해주세요.";
-    }
-    if (error.code === "PLST001") {
-      return "지금은 접수 기간이 아니에요.";
-    }
-  }
-  return "신청에 실패했어요. 잠시 후 다시 시도해 주세요.";
-};
 
 // 신청 중(SUBMISSION) 하단 섹션. Figma 555:2321.
 // 곡은 PLST-2 검색 결과에서 고른 trackId로만 신청한다(PLST-3). 학번당 최종 1곡이고
@@ -152,12 +38,6 @@ export const SongRequestForm = ({
   onGuideSectionEnter,
 }: SongRequestFormProps) => {
   const [isInternalGuideOpen, setIsInternalGuideOpen] = useState(false);
-  const [completedSong, setCompletedSong] = useState<CompletedSong | null>(null);
-  const [keyword, setKeyword] = useState("");
-  const [selectedTrack, setSelectedTrack] = useState<SongTrack | null>(null);
-  const [isResultsClosed, setIsResultsClosed] = useState(false);
-  const hasStartedFormRef = useRef(false);
-  const resultsRef = useRef<HTMLUListElement>(null);
   const isGuideOpen = guideOpen ?? isInternalGuideOpen;
   const closeGuide = onGuideClose ?? (() => setIsInternalGuideOpen(false));
   const sectionRef = useSectionInView<HTMLElement>({
@@ -183,158 +63,42 @@ export const SongRequestForm = ({
     resolver: zodResolver(songRequestSchema),
     defaultValues: songRequestFormDefaults,
   });
-  const search = useSearchSongs();
-  const submit = useSubmitSong();
-
-  const runSearch = () => {
-    const trimmed = keyword.trim();
-    if (!trimmed) {
-      return;
-    }
-    submit.reset();
-    setIsResultsClosed(false);
-    const startedAt = performance.now();
-    trackPlaylistEvent({ eventName: "song_search_attempt" });
-    search.mutate(trimmed, {
-      onError: (error) => {
-        trackPlaylistEvent({
-          duration_bucket: toDurationBucket(performance.now() - startedAt),
-          error_code: toSafeErrorCode(error),
-          eventName: "song_search_failure",
-        });
-      },
-      onSuccess: (tracks) => {
-        const durationBucket = toDurationBucket(performance.now() - startedAt);
-        const resultCountBucket = toResultCountBucket(tracks.length);
-
-        if (resultCountBucket === "0") {
-          trackPlaylistEvent({
-            duration_bucket: durationBucket,
-            eventName: "song_search_empty",
-          });
-          return;
-        }
-
-        trackPlaylistEvent({
-          duration_bucket: durationBucket,
-          eventName: "song_search_success",
-          result_count_bucket: resultCountBucket,
-        });
-      },
-    });
-  };
-
-  const pickTrack = (track: SongTrack) => {
-    setSelectedTrack(track);
-    setValue("trackId", track.trackId, { shouldValidate: submitCount > 0 });
-    trackPlaylistEvent({ eventName: "song_select" });
-  };
-
-  const clearTrack = () => {
-    setSelectedTrack(null);
-    setValue("trackId", "", { shouldValidate: submitCount > 0 });
-  };
-
-  const onValid = (values: SongRequestFormValues, startedAt: number) => {
-    trackPlaylistEvent({ eventName: "song_submit_attempt" });
-    submit.mutate(
-      { body: toSubmitSongBody(values), idempotencyKey: crypto.randomUUID() },
-      {
-        onSuccess: (result) => {
-          trackPlaylistEvent({
-            duration_bucket: toDurationBucket(performance.now() - startedAt),
-            eventName: "song_submit_success",
-          });
-          setCompletedSong({
-            title: result.title,
-            artist: result.artist,
-            albumCoverUrl: result.albumCoverUrl,
-          });
-        },
-        onError: (error) => {
-          trackPlaylistEvent({
-            duration_bucket: toDurationBucket(performance.now() - startedAt),
-            error_code: toSafeErrorCode(error),
-            eventName: "song_submit_failure",
-          });
-        },
-      },
-    );
-  };
-
-  const onInvalid = (validationErrors: FieldErrors<SongRequestFormValues>) => {
-    const field = Object.keys(validationErrors)[0] as
-      keyof SongRequestFormValues | undefined;
-    trackPlaylistEvent({
-      eventName: "playlist_form_validation_failure",
-      validation_field: field ?? "unknown",
-    });
-  };
-
-  const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
-    const startedAt = performance.now();
-    void handleSubmit((values) => onValid(values, startedAt), onInvalid)(event);
-  };
-
-  const markFormStarted = () => {
-    if (hasStartedFormRef.current) {
-      return;
-    }
-
-    hasStartedFormRef.current = true;
-    trackPlaylistEvent({ eventName: "playlist_form_start" });
-  };
-
-  const closeCompleteModal = () => {
-    setCompletedSong(null);
-    submit.reset();
-  };
-
+  const {
+    completedSong,
+    isSubmitting,
+    isSubmitError,
+    submitError,
+    resetSubmit,
+    handleFormSubmit,
+    markFormStarted,
+    closeCompleteModal,
+  } = useSongRequestSubmission(handleSubmit);
+  const picker = useSongTrackPicker({
+    onSearchStart: resetSubmit,
+    onTrackChange: (trackId) =>
+      setValue("trackId", trackId, { shouldValidate: submitCount > 0 }),
+  });
   const resetForm = () => {
     closeCompleteModal();
     reset(songRequestFormDefaults);
-    setKeyword("");
-    setSelectedTrack(null);
-    search.reset();
+    picker.resetPicker();
   };
 
   // 제출 후 첫 번째 검증 오류 메시지를 그대로 노출한다.
   const firstErrorMessage =
     submitCount > 0 ? Object.values(errors)[0]?.message : undefined;
-  const searchResults = search.data ?? [];
-  const showResults = !selectedTrack && !isResultsClosed && searchResults.length > 0;
   const termsAgreed = useWatch({ control, name: "termsAgreed" });
   const personalInfoCollectionAgreed = useWatch({
     control,
     name: "personalInfoCollectionAgreed",
   });
-  const interactionLoadingLabel = search.isPending
+  const interactionLoadingLabel = picker.isSearching
     ? "곡을 검색하는 중입니다"
-    : submit.isPending
+    : isSubmitting
       ? "신청을 처리하는 중입니다"
       : undefined;
   const isSubmitDisabled =
-    submit.isPending || !termsAgreed || !personalInfoCollectionAgreed;
-
-  // 결과 박스 바깥을 클릭하면 닫는다.
-  useEffect(() => {
-    trackPlaylistEvent({ eventName: "playlist_form_view" });
-  }, []);
-
-  useEffect(() => {
-    if (!showResults) {
-      return;
-    }
-
-    const handlePointerDown = (event: MouseEvent) => {
-      if (!resultsRef.current?.contains(event.target as Node)) {
-        setIsResultsClosed(true);
-      }
-    };
-    document.addEventListener("mousedown", handlePointerDown);
-
-    return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, [showResults]);
+    isSubmitting || !termsAgreed || !personalInfoCollectionAgreed;
 
   return (
     <section
@@ -357,125 +121,7 @@ export const SongRequestForm = ({
         >
           <input type="hidden" {...register("trackId")} />
 
-          <div>
-            <label
-              className="block text-sm leading-[17px] font-medium"
-              htmlFor="song-search"
-            >
-              음악 검색 <span className="text-[#00ffff]">*</span>
-            </label>
-            <div className="relative mt-3 flex gap-3">
-              <input
-                className="h-[55px] min-w-0 flex-1 rounded-2xl border border-[#fcfcfc] bg-[#323232] px-[22px] text-sm font-medium text-[#fcfcfc] outline-none placeholder:text-[#a2a2a2] focus:border-[#00ffff]"
-                id="song-search"
-                onChange={(event) => setKeyword(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    runSearch();
-                  }
-                }}
-                placeholder="곡 제목 또는 아티스트 검색"
-                type="search"
-                value={keyword}
-              />
-              <button
-                className="h-[57px] w-[111px] shrink-0 rounded-2xl bg-[#5d00ff] text-sm font-semibold disabled:opacity-60"
-                disabled={search.isPending || keyword.trim().length === 0}
-                onClick={runSearch}
-                type="button"
-              >
-                검색
-              </button>
-
-              {/* 결과가 폼 높이를 밀어내지 않도록 입력창 바로 아래 오버레이로
-                  띄운다. 선택하면 사라지고 아래 선택된 곡 카드로 바뀐다. 박스
-                  바깥을 클릭하면 닫힌다. */}
-              {showResults && (
-                <ul
-                  className="themed-scrollbar absolute top-full right-0 left-0 z-20 mt-2 flex max-h-[200px] flex-col gap-2 overflow-y-auto rounded-2xl border border-[#5d5d5d] bg-[#1c1c1c] p-2 shadow-xl"
-                  data-clarity-mask="true"
-                  ref={resultsRef}
-                >
-                  {searchResults.map((track) => (
-                    <li key={track.trackId}>
-                      <button
-                        className="flex w-full items-center gap-3 rounded-2xl border border-[#5d5d5d] bg-[#323232] p-3 text-left"
-                        onClick={() => pickTrack(track)}
-                        type="button"
-                      >
-                        {track.albumCoverUrl ? (
-                          <img
-                            alt=""
-                            className="size-12 shrink-0 rounded-lg object-cover"
-                            src={track.albumCoverUrl}
-                          />
-                        ) : (
-                          <div className="size-12 shrink-0 rounded-lg bg-[#5d5d5d]" />
-                        )}
-                        <div className="flex min-w-0 flex-1 flex-col">
-                          <p className="truncate text-sm font-semibold text-[#fcfcfc]">
-                            {track.title}
-                          </p>
-                          <p className="truncate text-xs text-[#a2a2a2]">
-                            {track.artist}
-                          </p>
-                        </div>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            <p className="mt-1 text-[10px] leading-3 text-[#a2a2a2]">
-              * 실제 음원이 있는 곡만 검색·선택할 수 있습니다.
-            </p>
-
-            {selectedTrack ? (
-              <div
-                className="mt-3 flex items-center gap-3 rounded-2xl border border-[#00ffff] bg-[#323232] p-3"
-                data-clarity-mask="true"
-              >
-                {selectedTrack.albumCoverUrl ? (
-                  <img
-                    alt=""
-                    className="size-12 shrink-0 rounded-lg object-cover"
-                    src={selectedTrack.albumCoverUrl}
-                  />
-                ) : (
-                  <div className="size-12 shrink-0 rounded-lg bg-[#5d5d5d]" />
-                )}
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <p className="truncate text-sm font-semibold text-[#fcfcfc]">
-                    {selectedTrack.title}
-                  </p>
-                  <p className="truncate text-xs text-[#a2a2a2]">
-                    {selectedTrack.artist}
-                  </p>
-                </div>
-                <button
-                  className="shrink-0 text-xs font-semibold text-[#00ffff] underline"
-                  onClick={clearTrack}
-                  type="button"
-                >
-                  변경
-                </button>
-              </div>
-            ) : (
-              <>
-                {search.isError && (
-                  <p className="mt-2 text-xs leading-[15px] text-[#ff5b5b]">
-                    {searchErrorMessage(search.error)}
-                  </p>
-                )}
-                {search.isSuccess && searchResults.length === 0 && (
-                  <p className="mt-2 text-xs leading-[15px] text-[#a2a2a2]">
-                    검색 결과가 없어요. 다른 검색어로 시도해 주세요.
-                  </p>
-                )}
-              </>
-            )}
-          </div>
+          <SongTrackPicker picker={picker} />
 
           <fieldset>
             <legend className="text-sm leading-[17px] font-medium">
@@ -553,9 +199,9 @@ export const SongRequestForm = ({
           {firstErrorMessage && (
             <p className="text-xs leading-[15px] text-[#ff5b5b]">{firstErrorMessage}</p>
           )}
-          {submit.isError && (
+          {isSubmitError && (
             <p className="text-xs leading-[15px] text-[#ff5b5b]">
-              {submitErrorMessage(submit.error)}
+              {submitErrorMessage(submitError)}
             </p>
           )}
 
