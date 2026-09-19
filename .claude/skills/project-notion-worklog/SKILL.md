@@ -1,27 +1,31 @@
 ---
 name: project-notion-worklog
-description: Publish a purpose-shaped, single-page Notion record from actual development conversation and repository evidence when the user requests documentation or after commit before push. Use only with the checkout owner's configured personal subpage; on-demand records never satisfy the push guard.
+description: Create and publish a personal development thought record from accessible AI conversation and verified repository evidence when the user asks for a record or reflection, or after commit before push. Use only with the checkout owner's configured Notion subpage; on-demand records never satisfy the push guard.
 ---
 
 # Project Notion Worklog
 
-Publish one durable, readable work record below the checkout owner's configured
-personal page. Shape the record around why someone would return to it, not around
-the commit format or a fixed questionnaire. Never copy the chat transcript or
-invent a command, result, decision, Issue, PR, or lesson.
+Publish one personal development record below the checkout owner's configured
+Notion page. Write for the author's future self. Preserve how the question,
+judgment, learning, and current understanding changed during the work instead of
+presenting a polished success story or a transcript.
 
-## Separate publication mode from record purpose
+Use the accessible AI conversation as narrative evidence and the repository as
+verification evidence. Never invent a thought, command, result, decision,
+Issue, PR, or lesson. Do not claim private chain-of-thought.
 
-Choose the publication mode first. It controls guard state, not the writing
-shape.
+## Separate publication mode from writing shape
 
-### On-demand note
+Choose the publication mode first. It controls guard state, not whether the
+record deserves a reflective narrative.
 
-Use when the user explicitly asks to document or organize current work,
-troubleshooting, a decision, research, or a project discussion in Notion. The
-request authorizes one record below the configured personal target only.
+### On-demand record
 
-An on-demand note may describe uncommitted or concept-only work. It must not run
+Use when the user explicitly asks to record or organize current work, a
+question, troubleshooting, a decision, learning, or a project discussion in
+Notion. The request authorizes one record below the configured personal target.
+
+An on-demand record may cover uncommitted or concept-only work. It must not run
 `pnpm notion:mark`, claim commit synchronization, or unblock `pre-push`.
 
 ### Guarded push record
@@ -33,7 +37,7 @@ verified record may be marked as synchronized.
 ## Confirm the destination and evidence
 
 1. Run `pnpm notion:status`. Confirm that the checkout is enabled and its
-   personal target is configured. Ignore commit state for an on-demand note; in
+   personal target is configured. Ignore commit state for an on-demand record;
    guarded mode require the current commit to be pending.
 2. Confirm that a Notion MCP server is callable in the current Agent session.
    Tracked configuration alone is not proof that the tool is available.
@@ -42,12 +46,14 @@ verified record may be marked as synchronized.
 4. In guarded mode, confirm that the intended batch is committed and complete.
    Leave a failed or incomplete batch pending and do not push it.
 
-Gather only the evidence needed for the work unit:
+Gather only the evidence needed for one coherent work unit:
 
-- Read the accessible conversation as narrative evidence, including the initial
-  expectation, corrections, failed approaches, decisions, and user direction.
+- Read the accessible conversation, including the initial request, corrections,
+  objections, failed approaches, decisions, and user direction.
 - Cross-check claims against relevant diffs, commits, files, command output, and
-  observed errors. Do not treat a suggestion as an implemented result.
+  observed errors. A suggestion is not an implemented result.
+- Treat the current accessible session as the default conversation scope. Use
+  another session only when it is accessible and the user places it in scope.
 - In guarded mode, inspect commits not yet on the configured upstream. If there
   is no upstream, inspect the current commit. Do not include uncommitted changes
   in the covered batch.
@@ -57,57 +63,49 @@ Gather only the evidence needed for the work unit:
   evidence gap instead of reconstructing missing history.
 - Exclude secrets, personal data, raw user data, and private operations data.
 
-A work unit is one coherent problem, decision, investigation, or outcome. It is
-not automatically one chat, one commit, or every topic mentioned in a long
-conversation.
+A work unit is one coherent question, decision, investigation, implementation,
+or change in understanding. It is not automatically one chat or one commit.
 
-## Choose the record purpose
+## Choose depth without a score
 
-Classify from the complete work unit and repository evidence, not from the last
-message or a keyword. Choose the purpose that best explains why the reader would
-find the page again:
+Use a reflective record when the work contains a question worth remembering,
+a change of direction, a failed attempt, a meaningful choice, a newly learned
+fact, or a changed mental model. One such thread is enough when it matters to
+the author. Do not require a fixed number of qualifying conditions.
 
-1. **Troubleshooting** when an unexpected behavior was diagnosed through
-   evidence, hypotheses, or failed attempts.
-2. **Decision** when the durable value is a choice among meaningful options and
-   its tradeoffs.
-3. **Research and learning** when the work primarily changed understanding or
-   compared approaches without implementation being the main result.
-4. **Operations and configuration** when environment, tooling, compatibility,
-   rollout, recovery, or repository automation is central.
-5. **Implementation** as the default for a feature, refactor, or focused code or
-   documentation change.
+Use a compact work record only when the work was routine and the durable value
+is limited to what changed and how it was checked. When uncertain, preserve the
+smallest honest reasoning thread instead of inflating the work into a lesson.
 
-For mixed work, choose one dominant purpose and embed only the useful secondary
-material as a subsection or toggle. Do not concatenate several full templates.
-Split another page only when it is an independent work unit with its own future
-retrieval purpose.
+Use troubleshooting, decision, research, configuration, and implementation as
+optional lenses. They are not mandatory templates. Choose the lens that best
+reveals how the author's understanding moved.
 
 ## Draft and publish one page
 
 Read [references/notion-entry.md](references/notion-entry.md) after selecting the
-purpose. Use its matching narrative spine and single-page design rules.
+publication mode and evidence scope. Follow its prose, learning, and visual
+rules.
 
 1. Read the configured personal target and preserve its content and children.
 2. In guarded mode, search below the target for the current full commit hash and
    update an unambiguous existing record; otherwise create one page. In on-demand
    mode, update only when title and subject clearly identify the same requested
    record.
-3. Draft one page with a useful title, short opening, purpose-shaped narrative,
-   grounded learning, actual validation, and only the detailed evidence worth
-   preserving.
-4. Keep supporting detail in native toggles on the same page. Do not create
-   child pages by default. A child page is allowed only when the user asks for
-   it or the content is a separately maintained source of truth with a distinct
-   audience or lifecycle.
+3. Draft one page around the observed question, movement in judgment, what was
+   learned, and the author's current understanding. Prefer connected Korean
+   prose over labeled fields and bullet inventories.
+4. Keep commands, concise errors, file lists, validation, and administrative
+   metadata in non-empty native toggles at the bottom. Do not create child pages
+   by default.
 5. In guarded mode, list every covered full commit hash. In on-demand mode,
    state clearly when no commit is covered.
-6. Re-fetch the page and verify its title, narrative coherence, record purpose,
-   commit scope, validation wording, rendered toggles, and absence of sensitive
-   or invented information.
-7. When rendered-page inspection is available and layout matters, inspect the
-   first viewport and one detail-heavy section. Semantic read-back is sufficient
-   only when visual QA was not requested or is unavailable.
+6. Re-fetch the page and verify the title, narrative coherence, evidence
+   boundaries, commit scope, validation wording, native rendering, and absence
+   of sensitive or invented information.
+7. When rendered-page inspection is available, inspect the first viewport and
+   one detail-heavy toggle. If it is unavailable, report that visual inspection
+   was not performed.
 8. Only in guarded mode, after successful read-back, run
    `pnpm notion:mark -- "<created-or-updated-page-url>"`.
 
@@ -118,8 +116,7 @@ merely because the Notion record succeeded.
 
 ## Handoff
 
-Report the publication mode, selected record purpose, target member page label
-when visible, record URL, covered commit hashes or `없음`, read-back and visual
-check results, and anything that prevented publication. Mention a child page
-only when one was exceptionally created and why. For on-demand notes, state that
-push synchronization was not marked.
+Report the publication mode, target member page label when visible, record URL,
+covered commit hashes or `없음`, read-back result, visual-check result, and any
+publication blocker. For an on-demand record, state that push synchronization
+was not marked.
