@@ -130,6 +130,7 @@ GA·Sentry·Clarity는 `VITE_TELEMETRY_ENABLED=true`이고 각 서비스 식별�
 - [백엔드 API 연동 메모](docs/BACKEND_API.md)
 - [배포 워크플로](docs/DEPLOYMENT.md)
 - [사용자 관측 운영 가이드](docs/OBSERVABILITY.md)
+- [개발 사고 기록과 회고 스킬 사용지침서](docs/THOUGHT_RECORD_SKILL.md)
 - [FSD 아키텍처 규칙](docs/FSD_ARCHITECTURE.md)
 - [Codex 진입점](AGENTS.md)
 - [Claude Code 진입점](CLAUDE.md)
