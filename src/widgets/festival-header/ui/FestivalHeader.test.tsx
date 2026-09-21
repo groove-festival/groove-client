@@ -68,9 +68,6 @@ describe("FestivalHeader", () => {
       "href",
       "/credits",
     );
-    expect(screen.getByRole("link", { name: "BOOTH" })).toHaveAttribute(
-      "href",
-      "/coming-soon",
-    );
+    expect(screen.getByRole("link", { name: "BOOTH" })).toHaveAttribute("href", "/pub");
   });
 });
