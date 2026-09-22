@@ -6,6 +6,7 @@ import BoothListPage from "@/pages/booth-list";
 import BoothOrderPage from "@/pages/booth-order";
 import ComingSoonPage from "@/pages/coming-soon";
 import CreditsPage from "@/pages/credits";
+import EventPage from "@/pages/event";
 import GroovePlaylistPage from "@/pages/groove-playlist";
 import HomePage from "@/pages/home";
 import NotFoundPage from "@/pages/not-found";
@@ -28,6 +29,7 @@ export const routes: RouteObject[] = [
           { path: "pub/:boothId", element: <BoothDetailPage /> },
           { path: "playlist", element: <GroovePlaylistPage /> },
           { path: "contest", element: <SongContestPage /> },
+          { path: "event", element: <EventPage /> },
           { path: "admin", element: <AdminPromoPage /> },
           { path: "credits", element: <CreditsPage /> },
           { path: "coming-soon", element: <ComingSoonPage /> },

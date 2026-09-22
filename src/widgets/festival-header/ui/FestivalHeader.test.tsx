@@ -98,6 +98,11 @@ describe("FestivalHeader", () => {
       "href",
       "/contest",
     );
+    expect(screen.getByRole("link", { name: "EVENT" })).toHaveAttribute(
+      "href",
+      "/event",
+    );
+    expect(screen.queryByRole("link", { name: "PROGRAM" })).not.toBeInTheDocument();
   });
 
   it("shows the story badge only in the open preview state", () => {

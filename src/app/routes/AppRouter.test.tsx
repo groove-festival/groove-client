@@ -38,4 +38,12 @@ describe("AppRouter", () => {
     expect(screen.getByRole("heading", { name: "축제 전체 지도" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "메뉴 열기" })).toBeInTheDocument();
   });
+
+  it("renders the event page inside the shared layout", () => {
+    const router = createMemoryRouter(routes, { initialEntries: ["/event"] });
+    render(<RouterProvider router={router} />);
+
+    expect(screen.getByRole("heading", { name: "GRO-OVE ZONE" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "메뉴 열기" })).toBeInTheDocument();
+  });
 });

@@ -92,7 +92,7 @@ describe("HomePage", () => {
     );
     expect(shortcuts.getByRole("link", { name: /이벤트 바로가기/ })).toHaveAttribute(
       "href",
-      "/coming-soon",
+      "/event",
     );
     expect(shortcuts.getByRole("link", { name: /GROOVE PLAYLIST/ })).toHaveAttribute(
       "href",
