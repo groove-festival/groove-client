@@ -1,4 +1,4 @@
-import { type BoothOrderDetail } from "@/entities/booth";
+import { type BoothMenuItem, type BoothOrderDetail } from "@/entities/booth";
 
 import {
   buildOrderLines,
@@ -9,29 +9,50 @@ import {
   hasSelectedMenu,
 } from "./orderCart";
 
-const separateChargeItem = {
-  id: "fee",
-  name: "상차림비",
+const createMenuItem = (
+  item: Pick<BoothMenuItem, "id" | "name" | "price"> & Partial<BoothMenuItem>,
+): BoothMenuItem => ({
+  category: "MAIN",
   description: "",
+  imageUrl: null,
+  isSoldOut: false,
+  separateCharge: false,
+  ...item,
+});
+
+const separateChargeItem = createMenuItem({
+  category: "SIDE",
+  id: 14,
+  name: "상차림비",
   price: 2_000,
   separateCharge: true,
-};
-const chicken = { id: "chicken", name: "닭발", description: "", price: 15_000 };
-const cider = { id: "cider", name: "사이다", description: "", price: 2_000 };
-const soldOut = {
-  id: "sold-out",
-  name: "계란말이",
-  description: "",
-  price: 6_500,
+});
+const chicken = createMenuItem({ id: 4, name: "닭발", price: 15_000 });
+const cider = createMenuItem({
+  category: "DRINK",
+  id: 12,
+  name: "사이다",
+  price: 2_000,
+});
+const soldOut = createMenuItem({
+  category: "SIDE",
+  id: 8,
   isSoldOut: true,
-};
+  name: "계란말이",
+  price: 6_500,
+});
 
 const booth: BoothOrderDetail = {
-  id: "booth",
+  area: null,
+  boothCode: "booth",
+  colleges: ["IT"],
+  departments: ["테스트학과"],
   name: "주막 이름",
   description: "",
-  collegeAndDepartment: "",
-  menuImageUrl: null,
+  status: "OPEN",
+  xRatio: null,
+  yRatio: null,
+  menuBoardImageUrl: null,
   menuSections: [
     { id: "main", title: "메인 메뉴", items: [chicken, soldOut] },
     { id: "beverage", title: "음료", items: [cider] },

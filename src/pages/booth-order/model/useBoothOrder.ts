@@ -21,7 +21,7 @@ const createOrderId = () =>
 // 장바구니와 주문 상태 전이를 한 흐름으로 관리한다. API 연동 전까지는 주문을
 // localStorage 목에 저장해, 결제를 끝내지 않고 나갔다 와도 복구할 수 있게 한다.
 export const useBoothOrder = (booth: BoothOrderDetail, tableCode: string) => {
-  const storageKey = getOrderStorageKey(booth.id, tableCode);
+  const storageKey = getOrderStorageKey(booth.boothCode, tableCode);
   const [cart, setCart] = useState<OrderCart>(() => createInitialCart(booth));
   const [order, setOrder] = useState<PlacedOrder | null>(() =>
     readStoredOrder(storageKey),

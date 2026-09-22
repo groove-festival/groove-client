@@ -1,39 +1,108 @@
-import { type BoothMenuSection, type BoothOrderDetail } from "./boothDetail";
-import { getBoothDetailFixture } from "./boothDetailFixtures";
+import menuBoard from "../festival-visuals/menu-board.png";
+import {
+  type BoothMenuSection,
+  type BoothOrderDetail,
+  type MenuCategory,
+} from "./boothDetail";
 
-// 주문 API(PUB-3·PUB-4) 연동 전까지 쓰는 목데이터. 상세 화면의 메뉴 목데이터는
-// 가격이 비어 있어 합계를 계산할 수 없으므로, 같은 메뉴 구성에 섹션별 가격만
-// 채운다.
-const sectionPrices: Record<string, number> = {
-  set: 25_000,
-  main: 15_000,
-  side: 6_500,
-  beverage: 2_000,
-};
+// PUB-3~PUB-7 연동 전 QR 주문 데모가 지원하던 주막 코드만 유지한다. 목록과
+// 일반 상세 화면은 이 fixture를 사용하지 않고 PUB-1·PUB-2 응답을 사용한다.
+const boothOrderFixtureCodes = new Set([
+  "electronics-eh",
+  "electronics-b-design",
+  "autonomy",
+  "electronics-a-music",
+  "mobile-welfare",
+  "electrical-sociology",
+  "electronics-cd",
+  "home-korean-education",
+  "education-chemistry",
+  "german-geography-education",
+  "biology-math-education",
+  "english-physical-education",
+  "geography-library",
+  "electronics-f",
+  "nursing",
+  "fine-art",
+  "physics",
+  "geology",
+  "oceanography",
+  "biotechnology",
+  "psychology",
+  "computer-science",
+]);
 
-const withSectionPrices = (sections: BoothMenuSection[]): BoothMenuSection[] =>
-  sections.map((section) => ({
-    ...section,
-    items: section.items.map((item) => ({
-      ...item,
-      price: sectionPrices[section.id] ?? item.price,
-    })),
+const createMenuItems = ({
+  category,
+  count,
+  firstId,
+  price,
+}: {
+  category: MenuCategory;
+  count: number;
+  firstId: number;
+  price: number;
+}) =>
+  Array.from({ length: count }, (_, index) => ({
+    category,
+    description: "메뉴설명",
+    id: firstId + index,
+    imageUrl: null,
+    isSoldOut: false,
+    name: "메뉴명",
+    price,
+    separateCharge: false,
   }));
 
-export const getBoothOrderFixture = (boothId: string): BoothOrderDetail | undefined => {
-  const booth = getBoothDetailFixture(boothId);
+const menuSectionFixture: BoothMenuSection[] = [
+  {
+    id: "set",
+    title: "세트 메뉴",
+    items: createMenuItems({ category: "SET", count: 3, firstId: 1, price: 25_000 }),
+  },
+  {
+    id: "main",
+    title: "메인 메뉴",
+    items: createMenuItems({ category: "MAIN", count: 4, firstId: 4, price: 15_000 }),
+  },
+  {
+    id: "side",
+    title: "사이드 메뉴",
+    items: createMenuItems({ category: "SIDE", count: 4, firstId: 8, price: 6_500 }),
+  },
+  {
+    id: "beverage",
+    title: "음료",
+    items: createMenuItems({ category: "DRINK", count: 2, firstId: 12, price: 2_000 }),
+  },
+];
 
-  if (!booth) {
+export const getBoothOrderFixture = (
+  boothCode: string,
+): BoothOrderDetail | undefined => {
+  if (!boothOrderFixtureCodes.has(boothCode)) {
     return undefined;
   }
 
   return {
-    ...booth,
-    menuSections: withSectionPrices(booth.menuSections),
+    area: null,
+    boothCode,
+    colleges: ["IT"],
+    departments: ["단대", "학과"],
+    description: "부스 설명",
+    menuBoardImageUrl: boothCode === "electronics-eh" ? menuBoard : null,
+    menuSections: menuSectionFixture,
+    name: "주막 이름",
+    status: "OPEN",
+    xRatio: null,
+    yRatio: null,
     separateChargeItem: {
-      id: "separate-charge",
-      name: "상차림비",
+      category: "SIDE",
       description: "",
+      id: 14,
+      imageUrl: null,
+      isSoldOut: false,
+      name: "상차림비",
       price: 2_000,
       separateCharge: true,
     },

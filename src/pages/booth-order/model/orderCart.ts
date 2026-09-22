@@ -53,7 +53,7 @@ export const buildOrderLines = (
       return [];
     }
 
-    return [{ menuId: item.id, name: item.name, price: item.price, quantity }];
+    return [{ menuId: String(item.id), name: item.name, price: item.price, quantity }];
   });
 
 export const getOrderTotal = (lines: OrderLine[]) =>

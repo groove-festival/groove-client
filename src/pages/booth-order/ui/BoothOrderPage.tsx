@@ -205,7 +205,7 @@ export default function BoothOrderPage() {
   return (
     <BoothOrderContent
       booth={booth}
-      key={`${booth.id}:${tableCode}`}
+      key={`${booth.boothCode}:${tableCode}`}
       tableCode={tableCode}
     />
   );

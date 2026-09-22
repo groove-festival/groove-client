@@ -5,7 +5,9 @@ import {
   boothFilterOptions,
   getBoothsByFilter,
   type BoothFilter,
+  useBooths,
 } from "@/entities/booth";
+import { LoadingFallback, NetworkErrorFallback } from "@/shared/ui";
 
 import boothMap from "../festival-visuals/booth-map.png";
 import filterChevron from "../festival-visuals/filter-chevron.svg";
@@ -109,10 +111,19 @@ const BoothFilterMenu = ({
 const BoothListPage = () => {
   const [selectedFilter, setSelectedFilter] = useState<BoothFilter>("all");
   const [isNoticeOpen, setIsNoticeOpen] = useState(() => !hasDismissedNotice());
+  const boothsQuery = useBooths();
   const filteredBooths = useMemo(
-    () => getBoothsByFilter(selectedFilter),
-    [selectedFilter],
+    () => getBoothsByFilter(boothsQuery.data ?? [], selectedFilter),
+    [boothsQuery.data, selectedFilter],
   );
+
+  if (boothsQuery.isPending) {
+    return <LoadingFallback />;
+  }
+
+  if (boothsQuery.isError) {
+    return <NetworkErrorFallback onReload={() => void boothsQuery.refetch()} />;
+  }
 
   const dismissNoticePermanently = () => {
     try {
@@ -144,15 +155,20 @@ const BoothListPage = () => {
         aria-label={`${boothFilterOptions.find(({ id }) => id === selectedFilter)?.label} 주막 목록`}
         className="mt-4 flex flex-col gap-4"
       >
+        {filteredBooths.length === 0 && (
+          <li className="py-10 text-center text-sm text-[#a2a2a2]">
+            등록된 주막이 아직 없어요.
+          </li>
+        )}
         {filteredBooths.map((booth) => (
-          <li key={booth.id}>
-            <BoothCard booth={booth} to={`/pub/${booth.id}`} />
+          <li key={booth.boothCode}>
+            <BoothCard booth={booth} to={`/pub/${booth.boothCode}`} />
           </li>
         ))}
       </ul>
 
       <p
-        className={`${selectedFilter === "nursing" ? "mt-[164px]" : "mt-40"} pb-[74px] text-center text-[10px] leading-3 text-[#a2a2a2]`}
+        className={`${selectedFilter === "NURSING" ? "mt-[164px]" : "mt-40"} pb-[74px] text-center text-[10px] leading-3 text-[#a2a2a2]`}
       >
         자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요.
       </p>
