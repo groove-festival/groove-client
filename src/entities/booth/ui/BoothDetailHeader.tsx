@@ -1,4 +1,4 @@
-import { type BoothDetail } from "@/entities/booth";
+import { type BoothDetail } from "../model/boothDetail";
 
 export const BoothDetailHeader = ({
   booth,

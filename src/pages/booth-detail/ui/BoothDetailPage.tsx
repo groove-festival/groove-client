@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Navigate, useParams } from "react-router";
 
-import { getBoothDetailFixture } from "../model/boothDetailFixtures";
-import { BoothDetailHeader } from "./BoothDetailHeader";
+import { BoothDetailHeader, getBoothDetailFixture } from "@/entities/booth";
+
 import { BoothMenuSection } from "./BoothMenuSection";
 import { QrOrderNoticeDialog } from "./QrOrderNoticeDialog";
 
