@@ -18,6 +18,14 @@ pnpm dev
 않습니다. `pnpm hooks:install`은 현재 checkout의 `core.hooksPath`를
 `.githooks`로 설정해 커밋 메시지 형식을 검사합니다.
 
+### 가요제 사연 모집 UI 미리보기
+
+`/groove/contest`는 모집 전 화면을 표시합니다. 디자인 상태는
+`/groove/contest?phase=open`(모집 중)과
+`/groove/contest?phase=closed`(모집 종료)에서 확인할 수 있습니다.
+모집 중 화면의 안내·작성·완료 전환은 UI 미리보기이며 Google 로그인,
+사연 목록, 실제 접수, 운영 시각 판정은 아직 연결되지 않았습니다.
+
 ### 문서 저장소
 
 통합 문서는 `groove-docs/` Git submodule에서 관리합니다. 저장소를 처음 받을

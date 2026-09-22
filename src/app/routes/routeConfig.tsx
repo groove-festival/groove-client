@@ -8,6 +8,7 @@ import CreditsPage from "@/pages/credits";
 import GroovePlaylistPage from "@/pages/groove-playlist";
 import NotFoundPage from "@/pages/not-found";
 import PlaylistPage from "@/pages/playlist";
+import SongContestPage from "@/pages/song-contest";
 
 import { RootBoundary } from "./RootBoundary";
 import { RootLayout } from "./RootLayout";
@@ -25,6 +26,7 @@ export const routes: RouteObject[] = [
           { path: "pub", element: <BoothListPage /> },
           { path: "pub/:boothId", element: <BoothDetailPage /> },
           { path: "playlist", element: <GroovePlaylistPage /> },
+          { path: "contest", element: <SongContestPage /> },
           { path: "admin", element: <AdminPromoPage /> },
           { path: "credits", element: <CreditsPage /> },
           { path: "coming-soon", element: <ComingSoonPage /> },

@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 
 import { navItems } from "../model/navItems";
 
@@ -8,6 +8,10 @@ interface FestivalMenuProps {
 }
 
 export const FestivalMenu = ({ isOpen, onClose }: FestivalMenuProps) => {
+  const location = useLocation();
+  const previewBadge =
+    location.pathname === "/contest" &&
+    new URLSearchParams(location.search).get("phase") === "open";
   return (
     <div
       aria-hidden={!isOpen}
@@ -54,12 +58,17 @@ export const FestivalMenu = ({ isOpen, onClose }: FestivalMenuProps) => {
                 key={item.label}
               >
                 <Link
-                  className="flex h-[94px] items-center pl-6 text-2xl font-medium text-[#fcfcfc]"
+                  className="flex h-[94px] items-center gap-3 pl-6 text-2xl font-medium text-[#fcfcfc]"
                   onClick={onClose}
                   tabIndex={isOpen ? undefined : -1}
                   to={item.to}
                 >
                   {item.label}
+                  {item.to === "/contest" && previewBadge && (
+                    <span className="rounded-full bg-[#ff0080] px-3 py-1 text-xs font-semibold whitespace-nowrap">
+                      사연 모집중
+                    </span>
+                  )}
                 </Link>
               </li>
             ))}
