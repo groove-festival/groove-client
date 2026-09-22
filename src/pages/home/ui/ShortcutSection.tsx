@@ -20,7 +20,7 @@ interface Shortcut {
   icon: string;
 }
 
-// 가요제·이벤트의 실제 목적지는 후속 이슈에서 연결한다.
+// 가요제의 실제 목적지는 후속 이슈에서 연결한다.
 const shortcuts: Shortcut[] = [
   {
     id: "pub",
@@ -40,7 +40,7 @@ const shortcuts: Shortcut[] = [
     id: "event",
     title: "이벤트 바로가기",
     description: "체험존 안내 & 단대 순위(라이벌스)",
-    to: "/coming-soon",
+    to: "/event",
     icon: shortcutEvent,
   },
   {

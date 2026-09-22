@@ -1,11 +1,10 @@
 import { useState } from "react";
 
+import { MapZoomControls } from "@/shared/ui";
+
 import mapAll from "../festival-visuals/map-all.png";
 import mapEvent from "../festival-visuals/map-event.png";
 import mapPub from "../festival-visuals/map-pub.png";
-import zoomIn from "../festival-visuals/zoom-in.svg";
-import zoomOut from "../festival-visuals/zoom-out.svg";
-import zoomReset from "../festival-visuals/zoom-reset.svg";
 
 type MapFilter = "all" | "pub" | "event";
 
@@ -24,14 +23,6 @@ const mapFilters: { id: MapFilter; label: string; image: string; alt: string }[]
     image: mapEvent,
     alt: "이벤트 부스 위치가 표시된 축제 지도",
   },
-];
-
-// 확대 동작은 실제 지도 도입 때 연결한다. 지금은 Figma 배치만 맞춘다.
-// 버튼 배경은 Figma GLASS(흐림 80)를 festival-glass와 강한 backdrop-blur로 근사한다.
-const zoomControls = [
-  { label: "지도 확대", icon: zoomIn },
-  { label: "지도 축소", icon: zoomOut },
-  { label: "지도 원래 크기로 보기", icon: zoomReset },
 ];
 
 export const FestivalMapSection = () => {
@@ -73,18 +64,7 @@ export const FestivalMapSection = () => {
           className="size-full object-cover"
           src={selectedMap.image}
         />
-        <div className="absolute right-2 bottom-[11px] flex flex-col gap-3">
-          {zoomControls.map(({ label, icon }) => (
-            <button
-              aria-label={label}
-              className="festival-glass size-10 rounded-full backdrop-blur-[40px] transition-transform duration-150 ease-out active:scale-95 motion-reduce:transition-none"
-              key={label}
-              type="button"
-            >
-              <img alt="" className="size-10" src={icon} />
-            </button>
-          ))}
-        </div>
+        <MapZoomControls className="absolute right-2 bottom-[11px] gap-3" />
       </div>
     </div>
   );
