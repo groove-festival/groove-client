@@ -1,7 +1,11 @@
 import { Link } from "react-router";
 
 import cardChevron from "../festival-visuals/card-chevron.svg";
-import { type Booth } from "../model/booths";
+import {
+  formatBoothDepartments,
+  getBoothDisplayName,
+  type Booth,
+} from "../model/booths";
 import { CollegeBadge } from "./CollegeBadge";
 
 interface BoothCardProps {
@@ -27,6 +31,9 @@ const BoothCollegeBadge = ({ colleges }: Pick<Booth, "colleges">) => {
 };
 
 export const BoothCard = ({ booth, to }: BoothCardProps) => {
+  const departments = formatBoothDepartments(booth.departments);
+  const displayName = getBoothDisplayName(booth);
+
   return (
     <Link
       className="flex h-[98px] w-full items-center justify-between rounded-3xl border border-[#fcfcfc] bg-[#767676] px-6 py-5 text-[#fcfcfc]"
@@ -36,8 +43,10 @@ export const BoothCard = ({ booth, to }: BoothCardProps) => {
       <div className="flex min-w-0 items-center gap-4">
         <BoothCollegeBadge colleges={booth.colleges} />
         <div className="min-w-0 leading-none font-semibold">
-          <p className="truncate text-xl">{booth.name}</p>
-          <p className="mt-1 truncate text-base">{booth.departments}</p>
+          <p className="truncate text-xl">{displayName}</p>
+          {displayName !== departments && (
+            <p className="mt-1 truncate text-base">{departments}</p>
+          )}
         </div>
       </div>
       <img alt="" className="ml-3 h-4 w-2 shrink-0" src={cardChevron} />
