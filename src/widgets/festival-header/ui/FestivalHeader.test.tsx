@@ -55,6 +55,31 @@ describe("FestivalHeader", () => {
     ).toHaveClass("transition-transform", "duration-300", "ease-out", "translate-x-0");
   });
 
+  it("keeps the menu button, home link and top position by default", () => {
+    renderHeader();
+
+    expect(screen.getByRole("button", { name: "메뉴 열기" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "GROOVE 홈" })).toHaveAttribute(
+      "href",
+      "/",
+    );
+    expect(screen.getByRole("banner").style.top).toBe("");
+  });
+
+  it("hides the menu button and home link and offsets below a banner", () => {
+    render(
+      <MemoryRouter>
+        <FestivalHeader isLogoLinked={false} showMenuButton={false} topOffset={46} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByRole("button", { name: "메뉴 열기" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { hidden: true })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "GROOVE" })).toBeInTheDocument();
+    expect(screen.getByRole("banner")).toHaveStyle({ top: "46px" });
+  });
+
   it("links each menu item to its destination", () => {
     renderHeader();
     fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
