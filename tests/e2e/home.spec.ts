@@ -7,6 +7,6 @@ test("serves the application from the /groove base path", async ({ page }) => {
   await page.goto("./");
 
   await expect(page.getByRole("heading", { name: "GROOVE FESTIVAL" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "노래 신청하기" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "축제 전체 지도" })).toBeAttached();
   await expect(page).toHaveURL(/\/groove\/$/);
 });
