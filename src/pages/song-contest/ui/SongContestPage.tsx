@@ -33,13 +33,13 @@ function ContestOverview({
   onTabChange: (tab: Tab) => void;
 }) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const [canScrollDown, setCanScrollDown] = useState(true);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   const handleTabChange = (nextTab: Tab) => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = 0;
     }
-    setCanScrollDown(nextTab === "timetable");
+    setScrollProgress(0);
     onTabChange(nextTab);
   };
 
@@ -47,8 +47,11 @@ function ContestOverview({
     const scrollArea = scrollAreaRef.current;
     if (!scrollArea) return;
 
-    setCanScrollDown(
-      scrollArea.scrollTop + scrollArea.clientHeight < scrollArea.scrollHeight - 4,
+    const scrollableDistance = scrollArea.scrollHeight - scrollArea.clientHeight;
+    setScrollProgress(
+      scrollableDistance > 0
+        ? Math.min(Math.max(scrollArea.scrollTop / scrollableDistance, 0), 1)
+        : 0,
     );
   };
 
@@ -104,23 +107,16 @@ function ContestOverview({
           )}
         </div>
 
-        {tab === "timetable" && canScrollDown && (
+        {tab === "timetable" && (
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-0 flex h-14 flex-col items-center justify-end bg-gradient-to-t from-[#333] via-[rgba(51,51,51,0.86)] to-transparent pb-1 text-[#fcfcfc]"
+            className="pointer-events-none absolute top-1 right-0 bottom-1 w-1 rounded-full bg-[#fcfcfc]/10"
           >
-            <span className="text-[10px] font-medium">아래로 밀어 일정 보기</span>
-            <svg
-              className="mt-0.5 size-4 motion-safe:animate-bounce"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="1.8"
-              viewBox="0 0 16 16"
-            >
-              <path d="m3.5 6 4.5 4 4.5-4" />
-            </svg>
+            <span
+              className={`block h-[60px] w-1 rounded-full bg-[#fcfcfc]/70 ${scrollProgress === 0 ? "motion-safe:[animation:contest-scroll-nudge_1.8s_ease-in-out_infinite]" : ""}`}
+              data-testid="contest-scroll-thumb"
+              style={{ transform: `translateY(${scrollProgress * 224}px)` }}
+            />
           </div>
         )}
       </div>

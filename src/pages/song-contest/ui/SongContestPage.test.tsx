@@ -30,24 +30,31 @@ describe("SongContestPage preview", () => {
     expect(screen.getByText("가요제 오프닝")).toBeInTheDocument();
   });
 
-  it("hides the native scrollbar and removes the scroll hint at the end", () => {
+  it("hides the native scrollbar and moves the custom indicator with the list", () => {
     renderPage("/contest");
     const scrollArea = screen.getByRole("tabpanel", { name: "가요제 타임테이블" });
+    const scrollThumb = screen.getByTestId("contest-scroll-thumb");
 
     expect(scrollArea).toHaveClass(
       "[scrollbar-width:none]",
       "[&::-webkit-scrollbar]:hidden",
     );
-    expect(screen.getByText("아래로 밀어 일정 보기")).toBeInTheDocument();
+    expect(scrollThumb).toHaveClass(
+      "motion-safe:[animation:contest-scroll-nudge_1.8s_ease-in-out_infinite]",
+    );
+    expect(scrollThumb).toHaveStyle({ transform: "translateY(0px)" });
 
     Object.defineProperties(scrollArea, {
       clientHeight: { configurable: true, value: 292 },
       scrollHeight: { configurable: true, value: 700 },
-      scrollTop: { configurable: true, value: 408, writable: true },
+      scrollTop: { configurable: true, value: 204, writable: true },
     });
     fireEvent.scroll(scrollArea);
 
-    expect(screen.queryByText("아래로 밀어 일정 보기")).not.toBeInTheDocument();
+    expect(scrollThumb).not.toHaveClass(
+      "motion-safe:[animation:contest-scroll-nudge_1.8s_ease-in-out_infinite]",
+    );
+    expect(scrollThumb).toHaveStyle({ transform: "translateY(112px)" });
   });
 
   it("validates the form and labels completion as a preview", async () => {
