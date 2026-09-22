@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 
 import { lockIllustration } from "@/shared/ui";
@@ -32,6 +32,26 @@ function ContestOverview({
   tab: Tab;
   onTabChange: (tab: Tab) => void;
 }) {
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [canScrollDown, setCanScrollDown] = useState(true);
+
+  const handleTabChange = (nextTab: Tab) => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = 0;
+    }
+    setCanScrollDown(nextTab === "timetable");
+    onTabChange(nextTab);
+  };
+
+  const handleScroll = () => {
+    const scrollArea = scrollAreaRef.current;
+    if (!scrollArea) return;
+
+    setCanScrollDown(
+      scrollArea.scrollTop + scrollArea.clientHeight < scrollArea.scrollHeight - 4,
+    );
+  };
+
   return (
     <section
       aria-label="가요제 일정과 경연"
@@ -44,7 +64,7 @@ function ContestOverview({
             aria-selected={tab === item}
             className={`min-w-0 flex-1 rounded-full text-base font-semibold ${tab === item ? "bg-[rgba(255,0,128,0.8)] text-[#fcfcfc]" : "text-[#a2a2a2]"}`}
             key={item}
-            onClick={() => onTabChange(item)}
+            onClick={() => handleTabChange(item)}
             role="tab"
             type="button"
           >
@@ -52,29 +72,56 @@ function ContestOverview({
           </button>
         ))}
       </div>
-      <div
-        className="mt-5 h-[292px] overflow-y-auto"
-        id="contest-panel"
-        role="tabpanel"
-      >
-        {tab === "timetable" ? (
-          <ol className="relative ml-2 space-y-3 border-l-2 border-[#a2a2a2] pb-1 pl-[22px]">
-            {timetable.map((item, index) => (
-              <li className="relative" key={`${item.time}-${item.title}`}>
-                <span
-                  className={`absolute top-[21px] -left-[31px] size-4 rounded-full border border-[#fcfcfc] ${index === 0 ? "bg-[#ff0080]" : "bg-[#767676]"}`}
-                />
-                <div
-                  className={`flex min-h-[61px] items-center justify-between gap-2 rounded-2xl border p-4 ${index === 0 ? "border-[#ff0080] bg-[rgba(255,0,128,0.8)]" : "border-[#fcfcfc] bg-[#767676] text-[#cfcfcf]"}`}
-                >
-                  <span className="text-sm font-semibold">{item.title}</span>
-                  <time className="shrink-0 text-sm font-semibold">{item.time}</time>
-                </div>
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <p className="pt-32 text-center text-base">경연 목록은 연동 후 표시됩니다</p>
+      <div className="relative mt-5 h-[292px]">
+        <div
+          aria-label={tab === "timetable" ? "가요제 타임테이블" : "경연 목록"}
+          className="h-full touch-pan-y [scrollbar-width:none] overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:hidden"
+          id="contest-panel"
+          onScroll={handleScroll}
+          ref={scrollAreaRef}
+          role="tabpanel"
+        >
+          {tab === "timetable" ? (
+            <ol className="relative ml-2 space-y-3 border-l-2 border-[#a2a2a2] pb-12 pl-[22px]">
+              {timetable.map((item, index) => (
+                <li className="relative" key={`${item.time}-${item.title}`}>
+                  <span
+                    className={`absolute top-[21px] -left-[31px] size-4 rounded-full border border-[#fcfcfc] ${index === 0 ? "bg-[#ff0080]" : "bg-[#767676]"}`}
+                  />
+                  <div
+                    className={`flex min-h-[61px] items-center justify-between gap-2 rounded-2xl border p-4 ${index === 0 ? "border-[#ff0080] bg-[rgba(255,0,128,0.8)]" : "border-[#fcfcfc] bg-[#767676] text-[#cfcfcf]"}`}
+                  >
+                    <span className="text-sm font-semibold">{item.title}</span>
+                    <time className="shrink-0 text-sm font-semibold">{item.time}</time>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="pt-32 text-center text-base">
+              경연 목록은 연동 후 표시됩니다
+            </p>
+          )}
+        </div>
+
+        {tab === "timetable" && canScrollDown && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 flex h-14 flex-col items-center justify-end bg-gradient-to-t from-[#333] via-[rgba(51,51,51,0.86)] to-transparent pb-1 text-[#fcfcfc]"
+          >
+            <span className="text-[10px] font-medium">아래로 밀어 일정 보기</span>
+            <svg
+              className="mt-0.5 size-4 motion-safe:animate-bounce"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.8"
+              viewBox="0 0 16 16"
+            >
+              <path d="m3.5 6 4.5 4 4.5-4" />
+            </svg>
+          </div>
         )}
       </div>
     </section>

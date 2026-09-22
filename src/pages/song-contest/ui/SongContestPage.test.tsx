@@ -30,6 +30,26 @@ describe("SongContestPage preview", () => {
     expect(screen.getByText("가요제 오프닝")).toBeInTheDocument();
   });
 
+  it("hides the native scrollbar and removes the scroll hint at the end", () => {
+    renderPage("/contest");
+    const scrollArea = screen.getByRole("tabpanel", { name: "가요제 타임테이블" });
+
+    expect(scrollArea).toHaveClass(
+      "[scrollbar-width:none]",
+      "[&::-webkit-scrollbar]:hidden",
+    );
+    expect(screen.getByText("아래로 밀어 일정 보기")).toBeInTheDocument();
+
+    Object.defineProperties(scrollArea, {
+      clientHeight: { configurable: true, value: 292 },
+      scrollHeight: { configurable: true, value: 700 },
+      scrollTop: { configurable: true, value: 408, writable: true },
+    });
+    fireEvent.scroll(scrollArea);
+
+    expect(screen.queryByText("아래로 밀어 일정 보기")).not.toBeInTheDocument();
+  });
+
   it("validates the form and labels completion as a preview", async () => {
     vi.spyOn(window, "scrollTo").mockImplementation(() => {});
     renderPage("/contest?phase=open");
