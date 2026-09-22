@@ -115,7 +115,9 @@ function ContestOverview({
                       className={`flex min-h-[61px] items-center justify-between gap-2 rounded-2xl border p-4 ${index === 0 ? "border-[#ff0080] bg-[rgba(255,0,128,0.8)]" : "border-[#fcfcfc] bg-[#767676] text-[#cfcfcf]"}`}
                     >
                       <span className="text-sm font-semibold">{item.title}</span>
-                      <time className="shrink-0 text-sm font-semibold">{item.time}</time>
+                      <time className="shrink-0 text-sm font-semibold">
+                        {item.time}
+                      </time>
                     </div>
                   </li>
                 ))}
