@@ -130,3 +130,16 @@
     border-radius: 9999px;
   }
 }
+
+@keyframes contest-scroll-nudge {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: translateY(28px);
+    opacity: 1;
+  }
+}

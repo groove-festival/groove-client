@@ -3,9 +3,9 @@ import { MemoryRouter } from "react-router";
 
 import { FestivalHeader } from "./FestivalHeader";
 
-const renderHeader = () =>
+const renderHeader = (path = "/") =>
   render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[path]}>
       <FestivalHeader />
     </MemoryRouter>,
   );
@@ -69,5 +69,20 @@ describe("FestivalHeader", () => {
       "/credits",
     );
     expect(screen.getByRole("link", { name: "BOOTH" })).toHaveAttribute("href", "/pub");
+    expect(screen.getByRole("link", { name: "SONG CONTEST" })).toHaveAttribute(
+      "href",
+      "/contest",
+    );
+  });
+
+  it("shows the story badge only in the open preview state", () => {
+    const open = renderHeader("/contest?phase=open");
+    fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
+    expect(screen.getByText("사연 모집중")).toBeInTheDocument();
+    open.unmount();
+
+    renderHeader("/contest?phase=closed");
+    fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
+    expect(screen.queryByText("사연 모집중")).not.toBeInTheDocument();
   });
 });
