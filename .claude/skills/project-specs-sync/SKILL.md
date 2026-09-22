@@ -5,8 +5,11 @@ description: Keep product behavior, API, data, event, configuration, defaults, e
 
 # Project Specs Sync
 
-Treat `docs/PRD.md` as the saved product requirements source, not as automatic
-authorization to implement every next step it contains. Identify other
+Use `groove-docs/README.md` to locate the current product requirements and API
+specifications. Treat the PRD as a requirements source, not as automatic
+authorization to implement every next step it contains. `docs/PRD.md` is a
+legacy copy, not the source of truth. If the submodule is unavailable, report
+that rather than silently relying on the legacy copy. Identify other
 authoritative specifications from the repository before editing them.
 
 ## Detect affected contracts

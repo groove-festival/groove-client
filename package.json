@@ -15,6 +15,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "hooks:install": "node scripts/install-git-hooks.mjs",
+    "docs:update": "node scripts/update-groove-docs.mjs",
     "notion:setup": "node scripts/notion-worklog-state.mjs setup",
     "notion:status": "node scripts/notion-worklog-state.mjs status",
     "notion:mark": "node scripts/notion-worklog-state.mjs mark",

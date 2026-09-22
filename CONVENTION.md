@@ -482,7 +482,9 @@ commit을 실행하지 않는다.
   `문서 작업` Form 중 목적에 맞는 항목을 사용한다.
 - PR은 `.github/pull_request_template.md`의 관련 이슈, 작업 내용, 작업 방식의
   이유와 실제 검증을 간결하게 작성한다.
-- 제품 동작과 사용자 흐름은 `docs/PRD.md`, 구조는
+- 제품 동작과 사용자 흐름은 `groove-docs/README.md`가 가리키는 현재 PRD를
+  기준으로 하고, API 계약은 같은 문서 저장소의 현재 API 명세를 확인한다.
+  `docs/PRD.md`는 보관용이며, 프론트엔드 구조는
   `docs/FSD_ARCHITECTURE.md`에서 관리한다.
 - 실제 Issue, PR, Discussion이 없으면 링크를 만들지 않는다.
 - 존재하지 않는 회의, 결정, 기여, 검토, 승인, 테스트 결과를 만들지 않는다.

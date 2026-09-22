@@ -18,6 +18,46 @@ pnpm dev
 않습니다. `pnpm hooks:install`은 현재 checkout의 `core.hooksPath`를
 `.githooks`로 설정해 커밋 메시지 형식을 검사합니다.
 
+### 문서 저장소
+
+통합 문서는 `groove-docs/` Git submodule에서 관리합니다. 저장소를 처음 받을
+때는 submodule을 함께 복제합니다.
+
+```sh
+git clone --recurse-submodules https://github.com/groove-festival/groove-client.git
+```
+
+이미 `groove-client`를 복제했다면 다음 명령으로 문서 저장소를 초기화합니다.
+
+```sh
+git submodule update --init --recursive
+```
+
+제품 요구사항과 API 명세는 `groove-docs/README.md`가 가리키는 현재 문서를
+기준으로 합니다. 기존 `docs/PRD.md`는 보관용이며 최신 요구사항이 아닙니다.
+일반 `git pull`은 `groove-client`가 기록한 submodule 커밋을 가져올 뿐,
+`groove-docs`의 최신 `main`까지 자동으로 따라가지는 않습니다. 문서의 최신
+내용이 필요할 때만 아래 명령으로 수동 갱신합니다. Windows PowerShell과 macOS
+터미널에서 같은 명령을 사용하며, 새 커밋이 없어도 정상 종료합니다. 이후 작업은 로컬
+`groove-docs`에 실제로 체크아웃된 버전을 기준으로 진행합니다.
+
+```sh
+pnpm docs:update
+```
+
+이 명령은 처음 실행할 때 submodule을 초기화하고, 로컬 변경이 없는 경우에만
+원격 `main`을 받아 fast-forward로 갱신합니다. 로컬 변경이나 갈라진 커밋이
+있으면 덮어쓰지 않고 실패합니다. 자동으로 실행되거나 커밋·푸시하지는 않습니다.
+갱신 후 현재 PRD와 API 명세의 파일 경로는 `groove-docs/README.md`에서 확인할
+수 있습니다.
+
+갱신한 문서 버전을 팀 전체의 기준으로 삼으려면 `groove-client`에서 변경된
+submodule 커밋 포인터를 별도로 커밋·푸시합니다. 반대로 다른 팀원이 그 포인터를
+받은 뒤 문서 폴더가 이전 버전으로 남아 있다면 위의
+`git submodule update --init --recursive`를 다시 실행해 상위 저장소가 기록한
+버전에 맞춥니다. 이 명령은 최신 `main`을 가져오는 명령이 아니며, 수동 갱신한
+문서를 기록된 버전으로 되돌릴 수 있으므로 용도에 맞게 사용하세요.
+
 ### 팀 Notion 문서화 설정
 
 저장소는 Codex와 Claude Code에서 공식 Notion 원격 MCP 설정을 공유하지만,
@@ -107,27 +147,28 @@ GA·Sentry·Clarity는 `VITE_TELEMETRY_ENABLED=true`이고 각 서비스 식별�
 
 ## 주요 명령
 
-| 명령                 | 용도                                    |
-| -------------------- | --------------------------------------- |
-| `pnpm dev`           | `/groove/` 개발 서버                    |
-| `pnpm hooks:install` | tracked Git hook 활성화                 |
-| `pnpm notion:setup`  | 현재 checkout의 개인 Notion 대상 설정   |
-| `pnpm notion:status` | commit·Notion 문서 연결 상태 확인       |
-| `pnpm notion:mark`   | 검증한 Notion 문서를 현재 commit에 연결 |
-| `pnpm build`         | TypeScript 검사 후 production build     |
-| `pnpm lint`          | ESLint                                  |
-| `pnpm typecheck`     | TypeScript project 검사                 |
-| `pnpm test`          | Vitest 단위·컴포넌트 테스트             |
-| `pnpm test:e2e`      | Playwright Chromium E2E                 |
-| `pnpm check:fsd`     | Steiger FSD 구조·import 검사            |
-| `pnpm check:fast`    | format, lint, typecheck, test, FSD 검사 |
-| `pnpm check:full`    | fast gate, build, E2E                   |
+| 명령                 | 용도                                       |
+| -------------------- | ------------------------------------------ |
+| `pnpm dev`           | `/groove/` 개발 서버                       |
+| `pnpm hooks:install` | tracked Git hook 활성화                    |
+| `pnpm notion:setup`  | 현재 checkout의 개인 Notion 대상 설정      |
+| `pnpm docs:update`   | 문서 submodule을 최신 `main`으로 수동 갱신 |
+| `pnpm notion:status` | commit·Notion 문서 연결 상태 확인          |
+| `pnpm notion:mark`   | 검증한 Notion 문서를 현재 commit에 연결    |
+| `pnpm build`         | TypeScript 검사 후 production build        |
+| `pnpm lint`          | ESLint                                     |
+| `pnpm typecheck`     | TypeScript project 검사                    |
+| `pnpm test`          | Vitest 단위·컴포넌트 테스트                |
+| `pnpm test:e2e`      | Playwright Chromium E2E                    |
+| `pnpm check:fsd`     | Steiger FSD 구조·import 검사               |
+| `pnpm check:fast`    | format, lint, typecheck, test, FSD 검사    |
+| `pnpm check:full`    | fast gate, build, E2E                      |
 
 ## 구조와 문서
 
+- [제품 요구사항·API 명세 기준](groove-docs/README.md) — Git submodule
 - [프론트엔드 프로젝트 컨벤션](CONVENTION.md)
-- [제품 요구사항](docs/PRD.md)
-- [백엔드 API 연동 메모](docs/BACKEND_API.md)
+- [백엔드 API 연동 메모](docs/BACKEND_API.md) — 이전 API 버전 기준
 - [배포 워크플로](docs/DEPLOYMENT.md)
 - [사용자 관측 운영 가이드](docs/OBSERVABILITY.md)
 - [개발 사고 기록과 회고 스킬 사용지침서](docs/THOUGHT_RECORD_SKILL.md)
