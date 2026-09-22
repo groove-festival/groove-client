@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router";
+import { Link, MemoryRouter, Route, Routes } from "react-router";
 
 import BoothListPage from "./BoothListPage";
 
@@ -13,6 +13,7 @@ const renderPage = () =>
 describe("BoothListPage", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.sessionStorage.clear();
   });
 
   it("renders all 22 confirmed booths with placeholder names", () => {
@@ -73,6 +74,35 @@ describe("BoothListPage", () => {
     fireEvent.click(screen.getByRole("option", { name: filterLabel }));
 
     expect(screen.getAllByTestId("booth-card")).toHaveLength(expectedCount);
+  });
+
+  it("pins the notice to the viewport so it stays visible at any scroll position", () => {
+    renderPage();
+
+    const overlay = screen
+      .getByRole("dialog", { name: "주막 이용 안내 사항" })
+      .closest(".fixed");
+    expect(overlay).toHaveClass("h-dvh", "overflow-y-auto");
+  });
+
+  it("does not reopen a confirmed notice when returning from a booth detail", () => {
+    render(
+      <MemoryRouter initialEntries={["/pub"]}>
+        <Routes>
+          <Route path="/pub" element={<BoothListPage />} />
+          <Route path="/pub/:boothId" element={<Link to="/pub">주막 목록으로</Link>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "확인했습니다" }));
+    fireEvent.click(screen.getAllByTestId("booth-card")[0]);
+    fireEvent.click(screen.getByRole("link", { name: "주막 목록으로" }));
+
+    expect(screen.getAllByTestId("booth-card")).toHaveLength(22);
+    expect(
+      screen.queryByRole("heading", { name: "주막 이용 안내 사항" }),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps a permanently dismissed notice closed on the next render", () => {

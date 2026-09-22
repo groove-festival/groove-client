@@ -1,4 +1,5 @@
-import { booths, type BoothDetail, type BoothMenuSection } from "@/entities/booth";
+import { type BoothDetail, type BoothMenuSection } from "./boothDetail";
+import { booths } from "./booths";
 
 import menuBoard from "../festival-visuals/menu-board.png";
 
