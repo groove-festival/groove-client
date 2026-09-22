@@ -1,0 +1,3 @@
+[submodule "groove-docs"]
+	path = groove-docs
+	url = https://github.com/groove-festival/groove-docs.git
