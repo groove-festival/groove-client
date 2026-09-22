@@ -2,11 +2,14 @@ export { getBoothDetail, isBoothNotFound, useBoothDetail } from "./api/getBoothD
 export { getBooths, useBooths } from "./api/getBooths";
 export { createBoothMenuSections, menuCategories } from "./model/boothDetail";
 export type {
+  BoothDepositAccount,
   BoothDetail,
   BoothMenuItem,
   BoothMenuSection,
+  BoothOrderDetail,
   MenuCategory,
 } from "./model/boothDetail";
+export { getBoothOrderFixture } from "./model/boothOrderFixtures";
 export {
   boothFilterOptions,
   collegeCodes,
@@ -22,3 +25,4 @@ export type {
   College,
 } from "./model/booths";
 export { BoothCard } from "./ui/BoothCard";
+export { BoothDetailHeader } from "./ui/BoothDetailHeader";

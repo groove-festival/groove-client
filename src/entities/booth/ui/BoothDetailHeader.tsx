@@ -1,8 +1,5 @@
-import {
-  type BoothDetail,
-  formatBoothDepartments,
-  getBoothDisplayName,
-} from "@/entities/booth";
+import { type BoothDetail } from "../model/boothDetail";
+import { formatBoothDepartments, getBoothDisplayName } from "../model/booths";
 
 export const BoothDetailHeader = ({
   booth,

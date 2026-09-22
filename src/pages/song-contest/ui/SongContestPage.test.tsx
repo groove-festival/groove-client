@@ -33,28 +33,38 @@ describe("SongContestPage preview", () => {
   it("hides the native scrollbar and moves the custom indicator with the list", () => {
     renderPage("/contest");
     const scrollArea = screen.getByRole("tabpanel", { name: "가요제 타임테이블" });
-    const scrollThumb = screen.getByTestId("contest-scroll-thumb");
 
     expect(scrollArea).toHaveClass(
       "[scrollbar-width:none]",
       "[&::-webkit-scrollbar]:hidden",
     );
-    expect(scrollThumb).toHaveClass(
-      "motion-safe:[animation:contest-scroll-nudge_1.8s_ease-in-out_infinite]",
-    );
-    expect(scrollThumb).toHaveStyle({ transform: "translateY(0px)" });
 
     Object.defineProperties(scrollArea, {
       clientHeight: { configurable: true, value: 292 },
       scrollHeight: { configurable: true, value: 700 },
-      scrollTop: { configurable: true, value: 204, writable: true },
+      scrollTop: { configurable: true, value: 0, writable: true },
     });
     fireEvent.scroll(scrollArea);
 
+    const initialScrollThumb = screen.getByTestId("contest-scroll-thumb");
+    expect(initialScrollThumb).toHaveClass(
+      "motion-safe:[animation:contest-scroll-nudge_1.8s_ease-in-out_infinite]",
+    );
+    expect(initialScrollThumb).toHaveStyle({ transform: "translateY(0px)" });
+
+    scrollArea.scrollTop = 204;
+    fireEvent.scroll(scrollArea);
+
+    const scrollThumb = screen.getByTestId("contest-scroll-thumb");
     expect(scrollThumb).not.toHaveClass(
       "motion-safe:[animation:contest-scroll-nudge_1.8s_ease-in-out_infinite]",
     );
     expect(scrollThumb).toHaveStyle({ transform: "translateY(112px)" });
+
+    fireEvent.click(screen.getByRole("tab", { name: "경연 목록" }));
+    fireEvent.scroll(screen.getByRole("tabpanel", { name: "경연 목록" }));
+
+    expect(screen.getByTestId("contest-scroll-thumb")).toBeInTheDocument();
   });
 
   it("validates the form and labels completion as a preview", async () => {

@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { Navigate, useParams } from "react-router";
 
-import { isBoothNotFound, useBoothDetail } from "@/entities/booth";
+import { BoothDetailHeader, isBoothNotFound, useBoothDetail } from "@/entities/booth";
 import { LoadingFallback, NetworkErrorFallback } from "@/shared/ui";
 
-import { BoothDetailHeader } from "./BoothDetailHeader";
 import { BoothMenuSection } from "./BoothMenuSection";
 import { QrOrderNoticeDialog } from "./QrOrderNoticeDialog";
 

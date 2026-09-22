@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 
-import cardChevron from "../festival-visuals/card-chevron.svg";
+import { cardChevronIcon } from "@/shared/ui";
+
 import {
   formatBoothDepartments,
   getBoothDisplayName,
@@ -49,7 +50,7 @@ export const BoothCard = ({ booth, to }: BoothCardProps) => {
           )}
         </div>
       </div>
-      <img alt="" className="ml-3 h-4 w-2 shrink-0" src={cardChevron} />
+      <img alt="" className="ml-3 h-4 w-2 shrink-0" src={cardChevronIcon} />
     </Link>
   );
 };

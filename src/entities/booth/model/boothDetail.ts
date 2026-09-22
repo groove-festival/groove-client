@@ -52,3 +52,16 @@ export const createBoothMenuSections = (menus: BoothMenuItem[]): BoothMenuSectio
       ]
     : sections;
 };
+
+export interface BoothDepositAccount {
+  accountNumber: string;
+  bank: string;
+  holder: string;
+}
+
+// 주문 API 연동 전 QR 주문 화면에서 사용하는 추가 정보다. 목록·상세 API 모델은
+// 그대로 공유하되 계좌와 상차림비만 주문 화면 계약으로 분리한다.
+export interface BoothOrderDetail extends BoothDetail {
+  depositAccount: BoothDepositAccount;
+  separateChargeItem: BoothMenuItem | null;
+}

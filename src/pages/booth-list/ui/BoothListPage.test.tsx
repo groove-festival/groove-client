@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { MemoryRouter, Route, Routes } from "react-router";
+import { Link, MemoryRouter, Route, Routes } from "react-router";
 
 import { httpClient } from "@/shared/api";
 
@@ -55,10 +55,13 @@ const envelope = (data: unknown) => ({
   status: 200,
 });
 
-const renderPage = () => {
-  const queryClient = new QueryClient({
+const createQueryClient = () =>
+  new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
+
+const renderPage = () => {
+  const queryClient = createQueryClient();
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>{children}</MemoryRouter>
@@ -71,6 +74,7 @@ const renderPage = () => {
 beforeEach(() => {
   vi.clearAllMocks();
   window.localStorage.clear();
+  window.sessionStorage.clear();
   httpGet.mockResolvedValue(envelope(booths));
 });
 
@@ -91,11 +95,8 @@ describe("BoothListPage", () => {
   });
 
   it("opens the selected booth detail route", async () => {
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
     render(
-      <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={createQueryClient()}>
         <MemoryRouter initialEntries={["/pub"]}>
           <Routes>
             <Route path="/pub" element={<BoothListPage />} />
@@ -142,6 +143,42 @@ describe("BoothListPage", () => {
     expect(
       await screen.findByRole("button", { name: "페이지 새로고침" }),
     ).toBeInTheDocument();
+  });
+
+  it("pins the notice to the viewport so it stays visible at any scroll position", async () => {
+    renderPage();
+
+    const overlay = (
+      await screen.findByRole("dialog", {
+        name: "주막 이용 안내 사항",
+      })
+    ).closest(".fixed");
+    expect(overlay).toHaveClass("h-dvh", "overflow-y-auto");
+  });
+
+  it("does not reopen a confirmed notice when returning from a booth detail", async () => {
+    render(
+      <QueryClientProvider client={createQueryClient()}>
+        <MemoryRouter initialEntries={["/pub"]}>
+          <Routes>
+            <Route path="/pub" element={<BoothListPage />} />
+            <Route
+              path="/pub/:boothId"
+              element={<Link to="/pub">주막 목록으로</Link>}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "확인했습니다" }));
+    fireEvent.click((await screen.findAllByTestId("booth-card"))[0]);
+    fireEvent.click(screen.getByRole("link", { name: "주막 목록으로" }));
+
+    expect(await screen.findAllByTestId("booth-card")).toHaveLength(3);
+    expect(
+      screen.queryByRole("heading", { name: "주막 이용 안내 사항" }),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps a permanently dismissed notice closed on the next render", async () => {

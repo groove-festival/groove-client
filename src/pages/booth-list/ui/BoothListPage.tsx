@@ -14,12 +14,18 @@ import filterChevron from "../festival-visuals/filter-chevron.svg";
 import { BoothNoticeDialog } from "./BoothNoticeDialog";
 
 const NOTICE_DISMISSED_STORAGE_KEY = "groove:booth-notice-dismissed";
+// 확인한 안내는 같은 탭에서 다시 띄우지 않는다. 상세에서 뒤로 돌아올 때마다
+// 목록이 새로 마운트되며 안내가 다시 뜨는 것을 막는다.
+const NOTICE_CONFIRMED_SESSION_KEY = "groove:booth-notice-confirmed";
 
 const mapZoneLabels = ["전체", "학생주차장", "복지관"];
 
 const hasDismissedNotice = () => {
   try {
-    return window.localStorage.getItem(NOTICE_DISMISSED_STORAGE_KEY) === "true";
+    return (
+      window.localStorage.getItem(NOTICE_DISMISSED_STORAGE_KEY) === "true" ||
+      window.sessionStorage.getItem(NOTICE_CONFIRMED_SESSION_KEY) === "true"
+    );
   } catch {
     return false;
   }
@@ -128,6 +134,15 @@ const BoothListPage = () => {
     setIsNoticeOpen(false);
   };
 
+  const confirmNotice = () => {
+    try {
+      window.sessionStorage.setItem(NOTICE_CONFIRMED_SESSION_KEY, "true");
+    } catch {
+      // Storage can be unavailable in private or restricted browsing contexts.
+    }
+    setIsNoticeOpen(false);
+  };
+
   return (
     <main className="relative min-h-dvh bg-[#1c1c1c] px-4 pt-[100px] text-[#fcfcfc]">
       <BoothMapPreview />
@@ -160,7 +175,7 @@ const BoothListPage = () => {
 
       {isNoticeOpen && (
         <BoothNoticeDialog
-          onClose={() => setIsNoticeOpen(false)}
+          onClose={confirmNotice}
           onDismissPermanently={dismissNoticePermanently}
         />
       )}

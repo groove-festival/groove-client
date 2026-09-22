@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 
+import { useSectionInView } from "@/shared/lib/viewport";
 import { InteractionLoadingOverlay } from "@/shared/ui";
 
 import { songRequestAgreementLinks } from "../model/legalLinks";
@@ -13,7 +14,6 @@ import {
   songRequestSchema,
   type SongRequestFormValues,
 } from "../model/songRequestForm";
-import { useSectionInView } from "../model/useSectionInView";
 import { useSongRequestSubmission } from "../model/useSongRequestSubmission";
 import { useSongTrackPicker } from "../model/useSongTrackPicker";
 import { AgreementCheckbox } from "./AgreementCheckbox";
