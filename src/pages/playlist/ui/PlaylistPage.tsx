@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router";
 
 import { useFestivalStatus } from "@/entities/festival";
 import { LoadingFallback, NetworkErrorFallback } from "@/shared/ui";
+import { FestivalHero } from "@/widgets/festival-hero";
 
 import {
   nextPlaylistBoundaryAt,
@@ -14,7 +15,6 @@ import { usePlaylistGuideScroll } from "../model/usePlaylistGuideScroll";
 import { useScheduledRefetch } from "../model/useScheduledRefetch";
 import { ClosedSection } from "./ClosedSection";
 import { CountdownSection } from "./CountdownSection";
-import { FestivalHero } from "./FestivalHero";
 import { PlaylistStatusError } from "./PlaylistStatusError";
 import { SongRequestForm } from "./SongRequestForm";
 

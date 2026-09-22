@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 
-import cardChevron from "../festival-visuals/card-chevron.svg";
+import { cardChevronIcon } from "@/shared/ui";
+
 import { type Booth } from "../model/booths";
 import { CollegeBadge } from "./CollegeBadge";
 
@@ -40,7 +41,7 @@ export const BoothCard = ({ booth, to }: BoothCardProps) => {
           <p className="mt-1 truncate text-base">{booth.departments}</p>
         </div>
       </div>
-      <img alt="" className="ml-3 h-4 w-2 shrink-0" src={cardChevron} />
+      <img alt="" className="ml-3 h-4 w-2 shrink-0" src={cardChevronIcon} />
     </Link>
   );
 };

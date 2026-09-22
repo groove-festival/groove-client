@@ -30,4 +30,12 @@ describe("AppRouter", () => {
     expect(screen.queryByRole("button", { name: "메뉴 열기" })).not.toBeInTheDocument();
     expect(screen.getByRole("list", { name: "상차림비" })).toBeInTheDocument();
   });
+
+  it("renders the main page at the root path", () => {
+    const router = createMemoryRouter(routes, { initialEntries: ["/"] });
+    render(<RouterProvider router={router} />);
+
+    expect(screen.getByRole("heading", { name: "축제 전체 지도" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "메뉴 열기" })).toBeInTheDocument();
+  });
 });
