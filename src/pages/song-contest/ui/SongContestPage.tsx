@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 
 import { lockIllustration } from "@/shared/ui";
@@ -33,7 +33,34 @@ function ContestOverview({
   onTabChange: (tab: Tab) => void;
 }) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const scrollContentRef = useRef<HTMLDivElement>(null);
+  const [isScrollable, setIsScrollable] = useState(true);
   const [scrollProgress, setScrollProgress] = useState(0);
+
+  const updateScrollState = useCallback(() => {
+    const scrollArea = scrollAreaRef.current;
+    if (!scrollArea) return;
+
+    const scrollableDistance = scrollArea.scrollHeight - scrollArea.clientHeight;
+    setIsScrollable(scrollableDistance > 4);
+    setScrollProgress(
+      scrollableDistance > 0
+        ? Math.min(Math.max(scrollArea.scrollTop / scrollableDistance, 0), 1)
+        : 0,
+    );
+  }, []);
+
+  useLayoutEffect(() => {
+    updateScrollState();
+
+    const scrollContent = scrollContentRef.current;
+    if (!scrollContent || typeof ResizeObserver === "undefined") return;
+
+    const resizeObserver = new ResizeObserver(updateScrollState);
+    resizeObserver.observe(scrollContent);
+
+    return () => resizeObserver.disconnect();
+  }, [tab, updateScrollState]);
 
   const handleTabChange = (nextTab: Tab) => {
     if (scrollAreaRef.current) {
@@ -44,15 +71,7 @@ function ContestOverview({
   };
 
   const handleScroll = () => {
-    const scrollArea = scrollAreaRef.current;
-    if (!scrollArea) return;
-
-    const scrollableDistance = scrollArea.scrollHeight - scrollArea.clientHeight;
-    setScrollProgress(
-      scrollableDistance > 0
-        ? Math.min(Math.max(scrollArea.scrollTop / scrollableDistance, 0), 1)
-        : 0,
-    );
+    updateScrollState();
   };
 
   return (
@@ -84,30 +103,32 @@ function ContestOverview({
           ref={scrollAreaRef}
           role="tabpanel"
         >
-          {tab === "timetable" ? (
-            <ol className="relative ml-2 space-y-3 border-l-2 border-[#a2a2a2] pb-12 pl-[22px]">
-              {timetable.map((item, index) => (
-                <li className="relative" key={`${item.time}-${item.title}`}>
-                  <span
-                    className={`absolute top-[21px] -left-[31px] size-4 rounded-full border border-[#fcfcfc] ${index === 0 ? "bg-[#ff0080]" : "bg-[#767676]"}`}
-                  />
-                  <div
-                    className={`flex min-h-[61px] items-center justify-between gap-2 rounded-2xl border p-4 ${index === 0 ? "border-[#ff0080] bg-[rgba(255,0,128,0.8)]" : "border-[#fcfcfc] bg-[#767676] text-[#cfcfcf]"}`}
-                  >
-                    <span className="text-sm font-semibold">{item.title}</span>
-                    <time className="shrink-0 text-sm font-semibold">{item.time}</time>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p className="pt-32 text-center text-base">
-              경연 목록은 연동 후 표시됩니다
-            </p>
-          )}
+          <div ref={scrollContentRef}>
+            {tab === "timetable" ? (
+              <ol className="relative ml-2 space-y-3 border-l-2 border-[#a2a2a2] pb-12 pl-[22px]">
+                {timetable.map((item, index) => (
+                  <li className="relative" key={`${item.time}-${item.title}`}>
+                    <span
+                      className={`absolute top-[21px] -left-[31px] size-4 rounded-full border border-[#fcfcfc] ${index === 0 ? "bg-[#ff0080]" : "bg-[#767676]"}`}
+                    />
+                    <div
+                      className={`flex min-h-[61px] items-center justify-between gap-2 rounded-2xl border p-4 ${index === 0 ? "border-[#ff0080] bg-[rgba(255,0,128,0.8)]" : "border-[#fcfcfc] bg-[#767676] text-[#cfcfcf]"}`}
+                    >
+                      <span className="text-sm font-semibold">{item.title}</span>
+                      <time className="shrink-0 text-sm font-semibold">{item.time}</time>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="pt-32 text-center text-base">
+                경연 목록은 연동 후 표시됩니다
+              </p>
+            )}
+          </div>
         </div>
 
-        {tab === "timetable" && (
+        {isScrollable && (
           <div
             aria-hidden="true"
             className="pointer-events-none absolute top-1 right-0 bottom-1 w-1 rounded-full bg-[#fcfcfc]/10"
