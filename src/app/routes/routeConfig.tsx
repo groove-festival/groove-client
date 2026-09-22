@@ -3,6 +3,7 @@ import { type RouteObject } from "react-router";
 import AdminPromoPage from "@/pages/admin-promo";
 import BoothDetailPage from "@/pages/booth-detail";
 import BoothListPage from "@/pages/booth-list";
+import BoothOrderPage from "@/pages/booth-order";
 import ComingSoonPage from "@/pages/coming-soon";
 import CreditsPage from "@/pages/credits";
 import GroovePlaylistPage from "@/pages/groove-playlist";
@@ -30,6 +31,9 @@ export const routes: RouteObject[] = [
           { path: "coming-soon", element: <ComingSoonPage /> },
         ],
       },
+      // 테이블 QR 주문은 전역 레이아웃 밖의 별도 흐름이다. 페이지가 상단바를
+      // 직접 그리고(미완료 주문 배너 포함) 단계 전환 시 스크롤도 직접 올린다.
+      { path: "pub/:boothId/:tableCode", element: <BoothOrderPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },

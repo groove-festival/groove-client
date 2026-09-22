@@ -17,4 +17,17 @@ describe("AppRouter", () => {
     );
     expect(screen.queryByRole("button", { name: "메뉴 열기" })).not.toBeInTheDocument();
   });
+
+  it("renders the table order page outside the shared layout", () => {
+    Object.defineProperty(window, "scrollTo", { configurable: true, value: vi.fn() });
+    const router = createMemoryRouter(routes, {
+      initialEntries: ["/pub/electronics-eh/table-a"],
+    });
+    render(<RouterProvider router={router} />);
+
+    expect(screen.getAllByRole("img", { name: "GROOVE" })).toHaveLength(1);
+    expect(screen.queryByRole("link", { name: "GROOVE 홈" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "메뉴 열기" })).not.toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "상차림비" })).toBeInTheDocument();
+  });
 });
