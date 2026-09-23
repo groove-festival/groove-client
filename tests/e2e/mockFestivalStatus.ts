@@ -6,7 +6,14 @@ const submissionStatus = {
     phase: "BEFORE",
     festivalStartAt: "2099-02-01T00:00:00+09:00",
     festivalEndAt: "2099-02-03T00:00:00+09:00",
-    storyCollectionOpen: false,
+    stage: {
+      storyPhase: "BEFORE",
+      storyCollectionStartAt: null,
+      storyCollectionEndAt: null,
+      contestPhase: "BEFORE",
+      contestStartAt: null,
+      contestEndAt: null,
+    },
     playlist: {
       phase: "SUBMISSION",
       submissionStartAt: "2026-09-12T00:00:00+09:00",

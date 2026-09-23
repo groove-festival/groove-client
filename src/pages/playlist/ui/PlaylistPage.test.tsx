@@ -36,7 +36,14 @@ const buildStatus = (
   phase: "BEFORE",
   festivalStartAt: "2026-10-01T00:00:00+09:00",
   festivalEndAt: "2026-10-03T00:00:00+09:00",
-  storyCollectionOpen: false,
+  stage: {
+    storyPhase: "BEFORE",
+    storyCollectionStartAt: null,
+    storyCollectionEndAt: null,
+    contestPhase: "BEFORE",
+    contestStartAt: null,
+    contestEndAt: null,
+  },
   playlist: {
     phase,
     submissionStartAt: "2026-09-12T00:00:00+09:00",
@@ -225,7 +232,6 @@ describe("PlaylistPage", () => {
         phase: "BEFORE",
         festivalStartAt: "2026-10-01T00:00:00+09:00",
         festivalEndAt: "2026-10-03T00:00:00+09:00",
-        storyCollectionOpen: false,
       } as FestivalStatusResponseBody,
     });
     renderPage();
