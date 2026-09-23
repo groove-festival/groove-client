@@ -7,7 +7,7 @@ import { createBoothMenuSections } from "../model/boothDetail";
 import type { Booth } from "../model/booths";
 import { boothQueryKeys } from "./queryKeys";
 
-interface BoothMenuResponseBody {
+export interface BoothMenuResponseBody {
   category: MenuCategory;
   description: string | null;
   imageUrl: string | null;
@@ -18,13 +18,13 @@ interface BoothMenuResponseBody {
   soldOut: boolean;
 }
 
-interface BoothDetailResponseBody {
+export interface BoothDetailResponseBody {
   menuBoardImageUrl: string | null;
   menus: BoothMenuResponseBody[];
   pub: Booth;
 }
 
-const toBoothMenuItem = (menu: BoothMenuResponseBody): BoothMenuItem => ({
+export const toBoothMenuItem = (menu: BoothMenuResponseBody): BoothMenuItem => ({
   category: menu.category,
   description: menu.description,
   id: menu.menuId,
