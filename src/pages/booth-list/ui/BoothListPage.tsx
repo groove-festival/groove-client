@@ -29,6 +29,9 @@ const scrollCardIntoView = (card: HTMLElement) => {
   });
 };
 
+// 펼친 단대 목록과 화면 아래 끝 사이에 남길 여백.
+const MENU_BOTTOM_MARGIN_PX = 16;
+
 const NOTICE_DISMISSED_STORAGE_KEY = "groove:booth-notice-dismissed";
 // 확인한 안내는 같은 탭에서 다시 띄우지 않는다. 상세에서 뒤로 돌아올 때마다
 // 목록이 새로 마운트되며 안내가 다시 뜨는 것을 막는다.
@@ -53,6 +56,29 @@ const BoothFilterMenu = ({
   selectedFilter: BoothFilter;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // 펼친 목록이 화면 아래로 잘리면 잘린 만큼만 내려 준다. 화면 안에 다 들어와
+  // 있으면 움직이지 않는다.
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const menu = menuRef.current;
+    if (!menu) return;
+
+    const hiddenBelow =
+      menu.getBoundingClientRect().bottom + MENU_BOTTOM_MARGIN_PX - window.innerHeight;
+    if (hiddenBelow <= 0) return;
+
+    const prefersReducedMotion = window.matchMedia?.(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    window.scrollBy({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      top: hiddenBelow,
+    });
+  }, [isOpen]);
   const selectedLabel = boothFilterOptions.find(
     ({ id }) => id === selectedFilter,
   )?.label;
@@ -73,13 +99,17 @@ const BoothFilterMenu = ({
       {isOpen && (
         <div
           aria-label="단과대 필터"
-          className="absolute top-9 left-0 flex w-[111px] flex-col items-center justify-center rounded-xl bg-[rgba(252,252,252,0.4)] px-4 py-3 text-base font-medium text-[#fcfcfc] backdrop-blur-[24px]"
+          ref={menuRef}
+          // 버튼(37px) 바로 아래 한 픽셀부터 이어 붙인다.
+          className="absolute top-[38px] left-0 flex w-[111px] flex-col items-center justify-center rounded-xl bg-[rgba(252,252,252,0.4)] px-4 py-2 text-base font-medium text-[#fcfcfc] backdrop-blur-[24px]"
           role="listbox"
         >
           {boothFilterOptions.map((option) => (
             <button
               aria-selected={selectedFilter === option.id}
-              className="flex h-[43px] w-max items-center px-4 whitespace-nowrap"
+              className={`flex h-9 w-max items-center px-4 whitespace-nowrap ${
+                selectedFilter === option.id ? "text-[#cfff04]" : ""
+              }`}
               key={option.id}
               onClick={() => {
                 onChange(option.id);
@@ -176,7 +206,9 @@ const BoothListPage = () => {
 
       <ul
         aria-label={`${boothFilterOptions.find(({ id }) => id === selectedFilter)?.label} 주막 목록`}
-        className="mt-4 flex flex-col gap-4"
+        // 펼친 단대 드롭다운(버튼 아래 342px)보다 목록이 짧아도 푸터가 그 위로
+        // 올라오지 않도록 최소 높이를 준다. 카드가 많으면 영향이 없다.
+        className="mt-4 flex min-h-[300px] flex-col gap-4 pb-6"
       >
         {filteredBooths.length === 0 && (
           <li className="py-10 text-center text-sm text-[#a2a2a2]">
