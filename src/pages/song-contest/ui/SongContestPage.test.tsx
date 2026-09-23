@@ -1,16 +1,216 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 
+import {
+  useFestivalStatus,
+  type FestivalStatusResponseBody,
+} from "@/entities/festival";
+import { useGoogleAuthMe, useGoogleLogin } from "@/features/google-auth";
+
+import { usePublicContestStories } from "../api/getPublicContestStories";
+import { useSubmitContestStory } from "../api/submitContestStory";
 import SongContestPage from "./SongContestPage";
 
-const renderPage = (path: string) =>
-  render(
-    <MemoryRouter initialEntries={[path]}>
-      <SongContestPage />
-    </MemoryRouter>,
+vi.mock("@/entities/festival", () => ({ useFestivalStatus: vi.fn() }));
+vi.mock("@/features/google-auth", async () => {
+  const actual = await vi.importActual<Record<string, unknown>>(
+    "@/features/google-auth",
   );
+  return {
+    ...actual,
+    useGoogleAuthMe: vi.fn(),
+    useGoogleLogin: vi.fn(),
+    GoogleSignInButton: ({
+      onCredential,
+    }: {
+      onCredential: (credential: string) => void;
+    }) => (
+      <button onClick={() => onCredential("test-id-token")} type="button">
+        Google 계정으로 로그인
+      </button>
+    ),
+  };
+});
+vi.mock("../api/getPublicContestStories", () => ({
+  usePublicContestStories: vi.fn(),
+}));
+vi.mock("../api/submitContestStory", async () => {
+  const actual = await vi.importActual<Record<string, unknown>>(
+    "../api/submitContestStory",
+  );
+  return { ...actual, useSubmitContestStory: vi.fn() };
+});
 
-describe("SongContestPage preview", () => {
+const useFestivalStatusMock = vi.mocked(useFestivalStatus);
+const useGoogleAuthMeMock = vi.mocked(useGoogleAuthMe);
+const usePublicContestStoriesMock = vi.mocked(usePublicContestStories);
+const useGoogleLoginMock = vi.mocked(useGoogleLogin);
+const useSubmitContestStoryMock = vi.mocked(useSubmitContestStory);
+
+const submitStoryMutateAsync = vi.fn();
+const submitStoryReset = vi.fn();
+
+function statusBody(
+  storyPhase: FestivalStatusResponseBody["stage"]["storyPhase"],
+): FestivalStatusResponseBody {
+  return {
+    phase: "BEFORE",
+    festivalStartAt: "2026-10-01T00:00:00+09:00",
+    festivalEndAt: "2026-10-03T00:00:00+09:00",
+    stage: {
+      storyPhase,
+      storyCollectionStartAt: "2026-09-20T00:00:00+09:00",
+      storyCollectionEndAt: "2026-09-30T00:00:00+09:00",
+      contestPhase: "BEFORE",
+      contestStartAt: "2026-10-01T18:00:00+09:00",
+      contestEndAt: "2026-10-01T21:00:00+09:00",
+    },
+    playlist: {
+      phase: "SUBMISSION",
+      submissionStartAt: "2026-09-12T00:00:00+09:00",
+      submissionEndAt: "2026-09-17T00:00:00+09:00",
+      publishAt: "2026-10-01T00:00:00+09:00",
+    },
+  };
+}
+
+const renderPage = (path: string) => {
+  const queryClient = new QueryClient({
+    defaultOptions: { mutations: { retry: 0 }, queries: { retry: false } },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[path]}>
+        <SongContestPage />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+};
+
+beforeEach(() => {
+  submitStoryMutateAsync.mockResolvedValue({
+    storyId: 1,
+    title: "축제 이야기",
+    nickname: null,
+    college: "IT",
+    submittedAt: "2026-09-22T10:00:00+09:00",
+    updatedAt: "2026-09-22T10:00:00+09:00",
+  });
+  submitStoryReset.mockReset();
+
+  useFestivalStatusMock.mockReturnValue({
+    data: statusBody("BEFORE"),
+    isError: false,
+    isPending: false,
+    refetch: vi.fn(),
+  } as unknown as ReturnType<typeof useFestivalStatus>);
+  useGoogleAuthMeMock.mockReturnValue({
+    data: { loggedIn: true, role: "USER", displayName: "홍길동", pubId: null },
+    isError: false,
+    isPending: false,
+    refetch: vi.fn(),
+  } as unknown as ReturnType<typeof useGoogleAuthMe>);
+  usePublicContestStoriesMock.mockReturnValue({
+    data: [
+      {
+        storyId: 7,
+        title: "함께 부르는 밤",
+        nickname: "groove",
+        college: "IT",
+        submittedAt: "2026-09-22T10:00:00+09:00",
+      },
+      {
+        storyId: 8,
+        title: "첫 무대의 떨림",
+        nickname: null,
+        college: "ART",
+        submittedAt: "2026-09-22T10:05:00+09:00",
+      },
+      {
+        storyId: 9,
+        title: "우리 과 응원가",
+        nickname: "응원단장",
+        college: "SOCIAL",
+        submittedAt: "2026-09-22T10:10:00+09:00",
+      },
+    ],
+    isError: false,
+    isPending: false,
+    refetch: vi.fn(),
+  } as unknown as ReturnType<typeof usePublicContestStories>);
+  useGoogleLoginMock.mockReturnValue({
+    error: null,
+    isPending: false,
+    mutate: vi.fn(),
+  } as unknown as ReturnType<typeof useGoogleLogin>);
+  useSubmitContestStoryMock.mockReturnValue({
+    isPending: false,
+    mutateAsync: submitStoryMutateAsync,
+    reset: submitStoryReset,
+  } as unknown as ReturnType<typeof useSubmitContestStory>);
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+  vi.clearAllMocks();
+});
+
+describe("SongContestPage", () => {
+  it("requires Google login before showing the form and forwards the credential", () => {
+    const login = vi.fn();
+    useGoogleAuthMeMock.mockReturnValue({
+      data: { loggedIn: false, role: null, displayName: null, pubId: null },
+      isError: false,
+      isPending: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useGoogleAuthMe>);
+    useGoogleLoginMock.mockReturnValue({
+      error: null,
+      isPending: false,
+      mutate: login,
+    } as unknown as ReturnType<typeof useGoogleLogin>);
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter initialEntries={["/contest?phase=open"]}>
+          <SongContestPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "신청하기" }));
+    fireEvent.click(screen.getByRole("button", { name: "사연 작성하기" }));
+
+    expect(screen.getByRole("heading", { name: "Google 로그인" })).toBeInTheDocument();
+    const accountLimit = screen.getByText(
+      "사연은 Google 계정당 하나만 접수할 수 있어요.",
+    );
+    expect(accountLimit).toHaveClass("block");
+    expect(accountLimit.nextElementSibling).toHaveTextContent(
+      "다시 제출하면 기존 사연이 새 내용으로 바뀝니다.",
+    );
+    expect(
+      screen.getByText(
+        /학교 계정이 아니어도 참여할 수 있어요. 1인 1회 참여 원칙을 위해/,
+      ),
+    ).toBeInTheDocument();
+    const passwordNotice = screen.getByText(
+      "Google 비밀번호는 GROOVE에 전달되지 않아요.",
+    );
+    expect(passwordNotice).toHaveClass("block");
+    expect(passwordNotice.nextElementSibling).toHaveClass("block");
+    expect(passwordNotice.nextElementSibling).toHaveTextContent(
+      "Google에서 발급한 인증 정보로 로그인 상태를 확인합니다.",
+    );
+    expect(
+      screen.queryByRole("heading", { name: "사연 신청하기" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Google 계정으로 로그인" }));
+    expect(login).toHaveBeenCalledWith({ idToken: "test-id-token" });
+  });
+
   it("shows a closed form before collection and after collection", () => {
     const before = renderPage("/contest");
     expect(screen.getByText("사연 모집이 아직이에요")).toBeInTheDocument();
@@ -28,6 +228,43 @@ describe("SongContestPage preview", () => {
     expect(screen.getByText("경연 목록은 연동 후 표시됩니다")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: "타임테이블" }));
     expect(screen.getByText("가요제 오프닝")).toBeInTheDocument();
+  });
+
+  it("renders public story titles in the open phase", () => {
+    renderPage("/contest?phase=open");
+
+    expect(screen.getByText("함께 부르는 밤")).toBeInTheDocument();
+    expect(screen.getByText("첫 무대의 떨림")).toBeInTheDocument();
+    expect(screen.getByText("우리 과 응원가")).toBeInTheDocument();
+    const [firstStoryTitle] = screen.getAllByTestId("contest-story-title");
+
+    if (!firstStoryTitle) {
+      throw new Error("Expected at least one story title token.");
+    }
+
+    expect(firstStoryTitle).toHaveStyle({ lineHeight: "1.05" });
+    expect(firstStoryTitle.style.getPropertyValue("--story-float-duration")).toMatch(
+      /s$/,
+    );
+  });
+
+  it("shows clearly labeled sample titles without fetching stories in development preview", () => {
+    usePublicContestStoriesMock.mockReturnValue({
+      data: undefined,
+      isError: true,
+      isPending: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof usePublicContestStories>);
+
+    renderPage("/contest?phase=open&preview=stories");
+
+    expect(usePublicContestStoriesMock).toHaveBeenCalledWith(false);
+    expect(screen.getByText("예시 미리보기")).toBeInTheDocument();
+    expect(screen.getAllByTestId("contest-story-title")).toHaveLength(12);
+    expect(screen.getByText("졸업 전에 꼭 하고 싶은 이야기")).toBeInTheDocument();
+    expect(
+      screen.queryByText("사연 목록을 불러오지 못했어요."),
+    ).not.toBeInTheDocument();
   });
 
   it("hides the native scrollbar and moves the custom indicator with the list", () => {
@@ -67,15 +304,85 @@ describe("SongContestPage preview", () => {
     expect(screen.getByTestId("contest-scroll-thumb")).toBeInTheDocument();
   });
 
-  it("validates the form and labels completion as a preview", async () => {
+  it("advances the highlighted event and centers it without reloading the page", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-02T19:59:59+09:00"));
+    renderPage("/contest");
+
+    const scrollArea = screen.getByRole("tabpanel", { name: "가요제 타임테이블" });
+    const previousItem = screen.getByText("가요제 1라운드").closest("li");
+    const nextItem = screen.getByText("댄스동아리 축하 공연").closest("li");
+    expect(previousItem).not.toBeNull();
+    expect(nextItem).not.toBeNull();
+    expect(previousItem!.querySelector("div")).toHaveClass("border-[#ff0080]");
+    expect(nextItem!.querySelector("div")).toHaveClass("border-[#fcfcfc]");
+
+    Object.defineProperties(scrollArea, {
+      clientHeight: { configurable: true, value: 292 },
+      scrollHeight: { configurable: true, value: 900 },
+      scrollTop: { configurable: true, value: 0, writable: true },
+      scrollTo: { configurable: true, value: vi.fn() },
+    });
+    vi.spyOn(scrollArea, "getBoundingClientRect").mockReturnValue({
+      top: 100,
+    } as DOMRect);
+    vi.spyOn(nextItem!, "getBoundingClientRect").mockReturnValue({
+      top: 420,
+      height: 61,
+    } as DOMRect);
+
+    act(() => vi.advanceTimersByTime(1000));
+
+    expect(previousItem!.querySelector("div")).toHaveClass("border-[#fcfcfc]");
+    expect(nextItem!.querySelector("div")).toHaveClass("border-[#ff0080]");
+    expect(scrollArea.scrollTo).toHaveBeenCalledWith({
+      top: 205,
+      behavior: "smooth",
+    });
+  });
+
+  it("validates the form and submits the story API body", async () => {
     vi.spyOn(window, "scrollTo").mockImplementation(() => {});
     renderPage("/contest?phase=open");
     fireEvent.click(screen.getByRole("button", { name: "신청하기" }));
     expect(
       screen.getByRole("dialog", { name: "사연 신청 안내 사항" }),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "작성 화면 미리보기" }));
-    fireEvent.click(screen.getByRole("button", { name: "접수 완료 화면 미리보기" }));
+    fireEvent.click(screen.getByRole("button", { name: "사연 작성하기" }));
+    const submitButton = screen.getByRole("button", { name: "사연 접수하기" });
+    const termsCheckbox = screen.getByRole("checkbox", {
+      name: /GROOVE 웹서비스 이용약관에 동의합니다/,
+    });
+    const consentCheckbox = screen.getByRole("checkbox", {
+      name: /개인정보 수집 및 이용에 동의합니다/,
+    });
+    expect(submitButton).toBeDisabled();
+    expect(screen.getByRole("link", { name: "약관 전문 보기" })).toHaveAttribute(
+      "href",
+      "https://knu-cse-sysdev.notion.site/festival-terms-of-services",
+    );
+    expect(screen.getByRole("link", { name: "동의서 전문 보기" })).toHaveAttribute(
+      "href",
+      "https://knu-cse-sysdev.notion.site/festival-personal-information-collection-and-use-consent",
+    );
+    expect(termsCheckbox).not.toBeChecked();
+    expect(consentCheckbox).not.toBeChecked();
+    expect(screen.getAllByText("(필수)")).toHaveLength(2);
+    for (const required of screen.getAllByText("(필수)")) {
+      expect(required).toHaveClass("text-[#ff0080]");
+    }
+    expect(termsCheckbox).toHaveClass("accent-[#ff0080]");
+    expect(consentCheckbox).toHaveClass("accent-[#ff0080]");
+    expect(submitStoryMutateAsync).not.toHaveBeenCalled();
+
+    fireEvent.click(consentCheckbox);
+    expect(submitButton).toBeDisabled();
+    fireEvent.click(termsCheckbox);
+    expect(submitButton).toBeEnabled();
+    fireEvent.click(termsCheckbox);
+    expect(submitButton).toBeDisabled();
+    fireEvent.click(termsCheckbox);
+    fireEvent.click(submitButton);
     expect(await screen.findByText("단대를 선택해 주세요.")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "IT" }));
@@ -94,12 +401,19 @@ describe("SongContestPage preview", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "사연 내용 *" }), {
       target: { value: "함께 노래해요." },
     });
-    fireEvent.click(screen.getByRole("button", { name: "접수 완료 화면 미리보기" }));
+    fireEvent.click(submitButton);
+
     await waitFor(() =>
-      expect(
-        screen.getByText("실제 접수가 아닌 완료 화면 미리보기입니다"),
-      ).toBeInTheDocument(),
+      expect(submitStoryMutateAsync).toHaveBeenCalledWith({
+        college: "IT",
+        department: "컴퓨터학부",
+        studentNumber: "20241234",
+        name: "홍길동",
+        nickname: null,
+        title: "축제 이야기",
+        content: "함께 노래해요.",
+      }),
     );
-    expect(screen.getByRole("status")).toHaveTextContent("실제 접수는 연결 전");
+    expect(await screen.findByText("사연이 접수되었어요")).toBeInTheDocument();
   });
 });

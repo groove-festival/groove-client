@@ -1,7 +1,41 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 
+import {
+  useFestivalStatus,
+  type FestivalStatusResponseBody,
+} from "@/entities/festival";
+
 import { FestivalHeader } from "./FestivalHeader";
+
+vi.mock("@/entities/festival", () => ({ useFestivalStatus: vi.fn() }));
+
+const useFestivalStatusMock = vi.mocked(useFestivalStatus);
+
+function statusBody(
+  storyPhase: FestivalStatusResponseBody["stage"]["storyPhase"] = "BEFORE",
+  contestPhase: FestivalStatusResponseBody["stage"]["contestPhase"] = "BEFORE",
+): FestivalStatusResponseBody {
+  return {
+    phase: "BEFORE",
+    festivalStartAt: "2026-10-01T00:00:00+09:00",
+    festivalEndAt: "2026-10-03T00:00:00+09:00",
+    stage: {
+      storyPhase,
+      storyCollectionStartAt: "2026-09-20T00:00:00+09:00",
+      storyCollectionEndAt: "2026-09-30T00:00:00+09:00",
+      contestPhase,
+      contestStartAt: "2026-10-01T18:00:00+09:00",
+      contestEndAt: "2026-10-01T21:00:00+09:00",
+    },
+    playlist: {
+      phase: "SUBMISSION",
+      submissionStartAt: "2026-09-12T00:00:00+09:00",
+      submissionEndAt: "2026-09-17T00:00:00+09:00",
+      publishAt: "2026-10-01T00:00:00+09:00",
+    },
+  };
+}
 
 const renderHeader = (path = "/") =>
   render(
@@ -9,6 +43,19 @@ const renderHeader = (path = "/") =>
       <FestivalHeader />
     </MemoryRouter>,
   );
+
+beforeEach(() => {
+  useFestivalStatusMock.mockReturnValue({
+    data: statusBody(),
+    isError: false,
+    isPending: false,
+    refetch: vi.fn(),
+  } as unknown as ReturnType<typeof useFestivalStatus>);
+});
+
+afterEach(() => {
+  vi.clearAllMocks();
+});
 
 describe("FestivalHeader", () => {
   it("merges the extra class onto the header bar", () => {
@@ -105,14 +152,45 @@ describe("FestivalHeader", () => {
     expect(screen.queryByRole("link", { name: "PROGRAM" })).not.toBeInTheDocument();
   });
 
-  it("shows the story badge only in the open preview state", () => {
-    const open = renderHeader("/contest?phase=open");
+  it("shows the story badge from the server phase or preview override", () => {
+    useFestivalStatusMock.mockReturnValue({
+      data: statusBody("OPEN"),
+      isError: false,
+      isPending: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useFestivalStatus>);
+    const open = renderHeader("/contest");
     fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
     expect(screen.getByText("사연 모집중")).toBeInTheDocument();
     open.unmount();
 
-    renderHeader("/contest?phase=closed");
+    useFestivalStatusMock.mockReturnValue({
+      data: statusBody("CLOSED"),
+      isError: false,
+      isPending: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useFestivalStatus>);
+    const closed = renderHeader("/contest");
     fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
     expect(screen.queryByText("사연 모집중")).not.toBeInTheDocument();
+    closed.unmount();
+
+    renderHeader("/contest?phase=open");
+    fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
+    expect(screen.getByText("사연 모집중")).toBeInTheDocument();
+  });
+
+  it("shows the contest voting badge from the server phase", () => {
+    useFestivalStatusMock.mockReturnValue({
+      data: statusBody("CLOSED", "OPEN"),
+      isError: false,
+      isPending: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useFestivalStatus>);
+
+    renderHeader();
+    fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
+
+    expect(screen.getByText("투표진행중")).toBeInTheDocument();
   });
 });

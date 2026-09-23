@@ -1,7 +1,39 @@
 import { expect, type Page, test } from "@playwright/test";
 
 const zoneList = (page: Page) => page.getByRole("list", { name: "체험존 목록" });
-const boothPin = (page: Page) => page.getByTestId("booth-pin");
+const boothShapes = (page: Page) => page.getByTestId(/^zone-booth-[A-Z]+$/);
+const boothShape = (page: Page, type: string) => page.getByTestId(`zone-booth-${type}`);
+
+const zones = ["MOVE", "LOVE", "PROVE", "RECOVER", "GROOVE"].map((type, index) => ({
+  type,
+  name: `${type} ZONE`,
+  description: `${type} 체험존`,
+  xRatio: 0.58 + index * 0.01,
+  yRatio: 0.58 + index * 0.01,
+}));
+
+async function mockEventApi(page: Page): Promise<void> {
+  await page.route("**/zones", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        success: true,
+        data: { totalCount: zones.length, zones },
+        error: null,
+      }),
+    }),
+  );
+  await page.route("**/rivals/scores", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        success: true,
+        data: { scores: [], updatedAt: null },
+        error: null,
+      }),
+    }),
+  );
+}
 
 const scrollState = (page: Page) =>
   zoneList(page).evaluate((list) => ({
@@ -10,20 +42,23 @@ const scrollState = (page: Page) =>
   }));
 
 test.beforeEach(async ({ page }) => {
+  await mockEventApi(page);
   await page.goto("./event");
   await expect(page.getByRole("heading", { name: "GRO-OVE ZONE" })).toBeVisible();
 });
 
 test("starts with no selected zone", async ({ page }) => {
-  await expect(boothPin(page)).toHaveCount(0);
+  await expect(boothShapes(page)).toHaveCount(5);
   await expect(page.getByRole("button", { pressed: true })).toHaveCount(0);
   expect(await scrollState(page)).toMatchObject({ scrollLeft: 0 });
 });
 
-test("pins the tapped booth and slides its card into view", async ({ page }) => {
+test("selects the tapped booth and slides its card into view", async ({ page }) => {
   await page.getByRole("button", { name: "GROOVE ZONE 위치 선택" }).tap();
 
-  await expect(boothPin(page)).toHaveAttribute("data-zone", "GROOVE");
+  await expect(boothShape(page, "GROOVE")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("zone-booth-color-GROOVE")).toHaveCSS("opacity", "1");
+  await expect(page.getByTestId("zone-booth-color-LOVE")).toHaveCSS("opacity", "0");
   await expect(
     zoneList(page).getByRole("button", { name: /GROOVE ZONE/ }),
   ).toHaveAttribute("aria-pressed", "true");
@@ -39,12 +74,12 @@ test("pins the tapped booth and slides its card into view", async ({ page }) => 
 
 test("keeps a single selection when another booth is tapped", async ({ page }) => {
   await page.getByRole("button", { name: "LOVE ZONE 위치 선택" }).tap();
-  await expect(boothPin(page)).toHaveAttribute("data-zone", "LOVE");
+  await expect(boothShape(page, "LOVE")).toHaveAttribute("aria-pressed", "true");
 
   await page.getByRole("button", { name: "PROVE ZONE 위치 선택" }).tap();
 
-  await expect(boothPin(page)).toHaveCount(1);
-  await expect(boothPin(page)).toHaveAttribute("data-zone", "PROVE");
+  await expect(boothShape(page, "LOVE")).toHaveAttribute("aria-pressed", "false");
+  await expect(boothShape(page, "PROVE")).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("button", { pressed: true })).toHaveCount(2);
 });
 
@@ -61,6 +96,6 @@ test("does not select a zone by scrolling the cards", async ({ page }) => {
     .toBeGreaterThan(0);
   await page.waitForTimeout(500);
 
-  await expect(boothPin(page)).toHaveCount(0);
+  await expect(boothShapes(page)).toHaveCount(5);
   await expect(page.getByRole("button", { pressed: true })).toHaveCount(0);
 });

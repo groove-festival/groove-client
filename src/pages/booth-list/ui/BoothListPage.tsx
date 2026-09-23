@@ -34,11 +34,11 @@ const hasDismissedNotice = () => {
 const BoothMapPreview = () => {
   return (
     <section aria-label="주막 지도" className="flex w-full flex-col gap-3">
-      <div className="grid h-[59px] grid-cols-3 gap-2 rounded-full border border-[#767676] bg-[rgba(252,252,252,0.1)] p-2">
+      <div className="grid h-[59px] grid-cols-[1fr_1.35fr_1fr] gap-2 rounded-full border border-[#767676] bg-[rgba(252,252,252,0.1)] p-2">
         {mapZoneLabels.map((label, index) => (
           <span
             aria-current={index === 0 ? "true" : undefined}
-            className={`flex items-center justify-center rounded-full px-5 text-base font-semibold whitespace-nowrap ${
+            className={`flex min-w-0 items-center justify-center rounded-full px-1 text-base font-semibold whitespace-nowrap ${
               index === 0 ? "bg-[rgba(207,255,4,0.8)] text-[#1c1c1c]" : "text-[#767676]"
             }`}
             key={label}
@@ -166,12 +166,6 @@ const BoothListPage = () => {
           </li>
         ))}
       </ul>
-
-      <p
-        className={`${selectedFilter === "NURSING" ? "mt-[164px]" : "mt-40"} pb-[74px] text-center text-[10px] leading-3 text-[#a2a2a2]`}
-      >
-        자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요.
-      </p>
 
       {isNoticeOpen && (
         <BoothNoticeDialog

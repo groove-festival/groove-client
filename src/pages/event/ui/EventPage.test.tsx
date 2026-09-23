@@ -356,16 +356,13 @@ describe("EventPage", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("keeps the zoom controls and the SNS notice", async () => {
+  it("keeps the zoom controls", async () => {
     await renderLoadedPage();
 
     expect(screen.getByRole("button", { name: "지도 확대" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "지도 축소" })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "지도 원래 크기로 보기" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요."),
     ).toBeInTheDocument();
   });
 });

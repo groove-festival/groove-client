@@ -12,9 +12,6 @@ export default function ComingSoonPage() {
           />
           <p className="mt-12 text-xl font-bold">페이지 준비중입니다</p>
         </div>
-        <p className="text-[10px] leading-3 text-[#a2a2a2]">
-          자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요.
-        </p>
       </section>
     </main>
   );

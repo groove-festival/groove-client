@@ -4,6 +4,7 @@ coverage/
 playwright-report/
 test-results/
 pnpm-lock.yaml
+groove-docs/
 docs/PRD.md
 .agents/
 .claude/

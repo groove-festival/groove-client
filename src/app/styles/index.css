@@ -193,3 +193,15 @@
     @apply festival-glass-rim;
   }
 }
+
+@keyframes contest-story-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(var(--story-rotate-from));
+  }
+
+  50% {
+    transform: translate3d(var(--story-drift-x), var(--story-drift-y), 0)
+      rotate(var(--story-rotate-to));
+  }
+}

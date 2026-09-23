@@ -17,11 +17,22 @@ export interface PlaylistStatus {
   publishAt: string;
 }
 
+export type StagePhase = "BEFORE" | "OPEN" | "CLOSED";
+
+export interface StageStatus {
+  storyPhase: StagePhase;
+  storyCollectionStartAt: string | null;
+  storyCollectionEndAt: string | null;
+  contestPhase: StagePhase;
+  contestStartAt: string | null;
+  contestEndAt: string | null;
+}
+
 export interface FestivalStatusResponseBody {
   phase: FestivalPhase;
   festivalStartAt: string;
   festivalEndAt: string;
-  storyCollectionOpen: boolean;
+  stage: StageStatus;
   playlist: PlaylistStatus;
 }
 

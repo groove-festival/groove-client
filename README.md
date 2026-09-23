@@ -18,13 +18,29 @@ pnpm dev
 않습니다. `pnpm hooks:install`은 현재 checkout의 `core.hooksPath`를
 `.githooks`로 설정해 커밋 메시지 형식을 검사합니다.
 
-### 가요제 사연 모집 UI 미리보기
+### 가요제 사연 모집
 
-`/groove/contest`는 모집 전 화면을 표시합니다. 디자인 상태는
+`/groove/contest`는 서버의 무대 일정에 따라 모집 단계를 표시합니다. 화면 상태는
 `/groove/contest?phase=open`(모집 중)과
 `/groove/contest?phase=closed`(모집 종료)에서 확인할 수 있습니다.
-모집 중 화면의 안내·작성·완료 전환은 UI 미리보기이며 Google 로그인,
-사연 목록, 실제 접수, 운영 시각 판정은 아직 연결되지 않았습니다.
+개발 중 사연 제목 표현만 확인하려면
+`/groove/contest?phase=open&preview=stories`를 사용합니다. 이 주소의 예시 제목은
+개발 빌드에서만 표시되며 실제 API 응답이나 접수 데이터로 사용하지 않습니다.
+모집 중에는 공개 사연 목록을 조회하고, Google 로그인과 웹서비스 이용약관 및
+개인정보 수집·이용 동의 후 사연을 접수합니다. 실제 로그인을 확인하려면 `.env.local`의
+`VITE_GOOGLE_CLIENT_ID`와 API 서버의 허용 오리진·세션 쿠키 설정이 필요합니다.
+
+Google Cloud의 기존 프로젝트에서 **웹 애플리케이션** OAuth 클라이언트 ID를
+사용합니다. 승인된 JavaScript 원본에 로컬 개발용 `http://localhost:5173`과
+운영용 `https://chcse.knu.ac.kr`을 등록합니다. 원본에는 `/groove` 경로를
+붙이지 않습니다. 받은 ID를 `.env.local`의 `VITE_GOOGLE_CLIENT_ID`에 넣고
+개발 서버를 다시 시작합니다. 서버도 같은 ID를 ID 토큰의 대상으로 검증해야 하며,
+로컬 프론트 원본을 허용하고 세션 쿠키를 정상 발급해야 합니다. 이 화면은 Google
+Identity Services의 JavaScript 콜백 방식이므로 별도 리디렉션 URI는 쓰지 않습니다.
+`VITE_GOOGLE_CLIENT_ID`는 프론트 빌드 시 주입되는 값입니다. 서버에는 별도로
+동일한 OAuth 클라이언트 ID를 서버가 사용하는 환경변수로 주입해야 하며, 서버의
+허용 오리진과 세션 쿠키 설정도 맞아야 합니다. Google Cloud의 승인된 JavaScript
+원본 등록은 이 환경변수 설정과 별개입니다.
 
 ### 문서 저장소
 
