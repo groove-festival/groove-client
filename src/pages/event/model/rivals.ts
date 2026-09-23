@@ -9,16 +9,6 @@ export interface RivalScore {
   rank: number;
 }
 
-// API 연동 전까지 쓰는 Figma(34:3619) 점수. 응답처럼 점수 내림차순이다.
-export const MOCK_RIVAL_SCORES: readonly RivalScore[] = [
-  { college: "ART", collegeName: "예술대학", score: 505, rank: 1 },
-  { college: "NURSING", collegeName: "간호대학", score: 410, rank: 2 },
-  { college: "EDU", collegeName: "사범대학", score: 388, rank: 3 },
-  { college: "IT", collegeName: "IT대학", score: 340, rank: 4 },
-  { college: "SOCIAL", collegeName: "사회과학대학", score: 275, rank: 5 },
-  { college: "NATURE", collegeName: "자연과학대학", score: 260, rank: 6 },
-];
-
 export interface RivalStandings {
   podium: readonly RivalScore[];
   others: readonly RivalScore[];

@@ -1,62 +1,50 @@
 // PLAN-1 체험존 종류. 선언 순서가 곧 화면 카드 순서다.
 export type ZoneType = "MOVE" | "LOVE" | "PROVE" | "RECOVER" | "GROOVE";
 
-export interface MapPoint {
-  x: number;
-  y: number;
-}
-
+// PLAN-1 응답의 zones 항목 모양을 따른다.
 export interface ExperienceZone {
   type: ZoneType;
   name: string;
   description: string;
-  // 정적 지도 이미지에 적힌 부스 번호.
-  boothNumber: number;
-  // 지도 박스(EVENT_MAP_SIZE) 기준 부스 중심 좌표. Figma 34:3505 내보내기에서 실측했다.
-  boothCenter: MapPoint;
+  // 캠퍼스 전체 배치도 기준 비율(0.0~1.0). 좌표를 아직 넣지 않았으면 null이고,
+  // 이때는 지도에 그리지 않는다 (API 명세 PLAN-1).
+  xRatio: number | null;
+  yRatio: number | null;
 }
 
-// Figma 지도 박스(34:3604) 크기. 부스 좌표는 이 크기에 대한 비율로 배치한다.
-export const EVENT_MAP_SIZE = { width: 361, height: 320 } as const;
+// 좌표가 들어온 존. 지도에 그릴 수 있는지 한 번만 판별하고 이후로는 타입이 보장한다.
+export interface PlacedZone extends ExperienceZone {
+  xRatio: number;
+  yRatio: number;
+}
 
-// API 연동 전까지 쓰는 Figma(34:3578) 문구와 부스 위치.
-export const EXPERIENCE_ZONES: readonly ExperienceZone[] = [
-  {
-    type: "MOVE",
-    name: "MOVE ZONE",
-    description: "다양한 미니게임을 제한 시간 내에 수행하는 액티비티 프로그램",
-    boothNumber: 1,
-    boothCenter: { x: 279.6, y: 174.2 },
-  },
-  {
-    type: "LOVE",
-    name: "LOVE ZONE",
-    description:
-      "소중한 사람에게 마음을 전하거나 익명의 누군가와 따뜻한 마음을 주고받는 편지 프로그램",
-    boothNumber: 2,
-    boothCenter: { x: 238, y: 192.6 },
-  },
-  {
-    type: "PROVE",
-    name: "PROVE ZONE",
-    description:
-      "스프레이로 나만의 흔적을 남기고 모두 함께 하나의 GROOVE 아트월을 완성하는 프로그램",
-    boothNumber: 3,
-    boothCenter: { x: 76.8, y: 176.8 },
-  },
-  {
-    type: "RECOVER",
-    name: "RECOVER ZONE",
-    description: "나에게 필요한 의미를 담은 색을 골라 실팔찌를 만드는 프로그램",
-    boothNumber: 4,
-    boothCenter: { x: 196.4, y: 211 },
-  },
-  {
-    type: "GROOVE",
-    name: "GROOVE ZONE",
-    description:
-      "나에게 영감을 준 순간을 노래로 남기고, 문구를 뽑으며 GRO-OVE를 마무리하는 프로그램",
-    boothNumber: 5,
-    boothCenter: { x: 98.3, y: 218.7 },
-  },
-];
+export const isPlacedZone = (zone: ExperienceZone): zone is PlacedZone =>
+  zone.xRatio !== null && zone.yRatio !== null;
+
+// 처음 화면이 볼 자리. 부스 5개를 감싸는 범위의 한가운데다.
+// 상수로 박지 않아 좌표가 바뀌어도 화면이 따라간다.
+export const getZonesCenter = (zones: readonly ExperienceZone[]) => {
+  const placed = zones.filter(isPlacedZone);
+  if (placed.length === 0) return { xRatio: 0.5, yRatio: 0.5 };
+
+  const xs = placed.map(({ xRatio }) => xRatio);
+  const ys = placed.map(({ yRatio }) => yRatio);
+
+  return {
+    xRatio: (Math.min(...xs) + Math.max(...xs)) / 2,
+    yRatio: (Math.min(...ys) + Math.max(...ys)) / 2,
+  };
+};
+
+// 선택한 존으로 지도를 옮길 자리. 좌표가 없는 존은 옮기지 않는다.
+export const getZoneFocus = (
+  zones: readonly ExperienceZone[],
+  selectedZone: ZoneType | null,
+) => {
+  if (!selectedZone) return null;
+
+  const zone = zones.find(({ type }) => type === selectedZone);
+  if (!zone || !isPlacedZone(zone)) return null;
+
+  return { xRatio: zone.xRatio, yRatio: zone.yRatio };
+};

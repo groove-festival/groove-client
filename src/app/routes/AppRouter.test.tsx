@@ -1,12 +1,26 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 
 import { routes } from "./routeConfig";
 
+// 데이터를 부르는 화면이 섞여 있어 라우팅만 보는 이 검사에도 쿼리 클라이언트가 필요하다.
+const renderRoute = (path: string) => {
+  const router = createMemoryRouter(routes, { initialEntries: [path] });
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+
+  render(
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  );
+};
+
 describe("AppRouter", () => {
   it("renders the not-found fallback without the shared header", () => {
-    const router = createMemoryRouter(routes, { initialEntries: ["/missing"] });
-    render(<RouterProvider router={router} />);
+    renderRoute("/missing");
 
     expect(
       screen.getByRole("heading", { name: "페이지를 찾을 수 없어요" }),
@@ -20,10 +34,7 @@ describe("AppRouter", () => {
 
   it("renders the table order page outside the shared layout", () => {
     Object.defineProperty(window, "scrollTo", { configurable: true, value: vi.fn() });
-    const router = createMemoryRouter(routes, {
-      initialEntries: ["/pub/electronics-eh/table-a"],
-    });
-    render(<RouterProvider router={router} />);
+    renderRoute("/pub/electronics-eh/table-a");
 
     expect(screen.getAllByRole("img", { name: "GROOVE" })).toHaveLength(1);
     expect(screen.queryByRole("link", { name: "GROOVE 홈" })).not.toBeInTheDocument();
@@ -32,16 +43,14 @@ describe("AppRouter", () => {
   });
 
   it("renders the main page at the root path", () => {
-    const router = createMemoryRouter(routes, { initialEntries: ["/"] });
-    render(<RouterProvider router={router} />);
+    renderRoute("/");
 
     expect(screen.getByRole("heading", { name: "축제 전체 지도" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "메뉴 열기" })).toBeInTheDocument();
   });
 
   it("renders the event page inside the shared layout", () => {
-    const router = createMemoryRouter(routes, { initialEntries: ["/event"] });
-    render(<RouterProvider router={router} />);
+    renderRoute("/event");
 
     expect(screen.getByRole("heading", { name: "GRO-OVE ZONE" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "메뉴 열기" })).toBeInTheDocument();
