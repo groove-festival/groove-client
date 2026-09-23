@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ApiEnvelope, httpClient, requestData } from "@/shared/api";
 
 import type { AdminSongRequest } from "./getSongRequests";
-import { adminPromoQueryKeys } from "./queryKeys";
+import { promoAdminQueryKeys } from "./queryKeys";
 
 export interface DisplayOrderResult {
   totalCount: number;
@@ -32,7 +32,7 @@ export function useChangeDisplayOrder() {
     mutationFn: changeDisplayOrder,
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: adminPromoQueryKeys.songRequests(),
+        queryKey: promoAdminQueryKeys.songRequests(),
       });
     },
   });

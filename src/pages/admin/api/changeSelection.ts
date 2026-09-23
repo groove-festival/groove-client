@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ApiEnvelope, httpClient, requestData } from "@/shared/api";
 
 import type { AdminSongRequest } from "./getSongRequests";
-import { adminPromoQueryKeys } from "./queryKeys";
+import { promoAdminQueryKeys } from "./queryKeys";
 
 interface ChangeSelectionArgs {
   songRequestId: number;
@@ -31,7 +31,7 @@ export function useChangeSelection() {
     mutationFn: changeSelection,
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: adminPromoQueryKeys.songRequests(),
+        queryKey: promoAdminQueryKeys.songRequests(),
       });
     },
   });

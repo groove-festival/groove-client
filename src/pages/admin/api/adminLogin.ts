@@ -1,8 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
 
+import type { AdminRole } from "@/entities/auth";
 import { type ApiEnvelope, httpClient, requestData } from "@/shared/api";
 
-import type { AdminRole } from "../model/adminRole";
 import type { AdminLoginFormValues } from "../model/adminLoginForm";
 
 // AUTH-2. 관리자 4종 공용 ID/PW 로그인. 세션은 쿠키로 발급되고(withCredentials),

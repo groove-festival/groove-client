@@ -1,6 +1,6 @@
 import { type RouteObject } from "react-router";
 
-import AdminPromoPage from "@/pages/admin-promo";
+import AdminPage from "@/pages/admin";
 import BoothDetailPage from "@/pages/booth-detail";
 import BoothListPage from "@/pages/booth-list";
 import ComingSoonPage from "@/pages/coming-soon";
@@ -27,7 +27,7 @@ export const routes: RouteObject[] = [
           { path: "pub/:boothId", element: <BoothDetailPage /> },
           { path: "playlist", element: <GroovePlaylistPage /> },
           { path: "contest", element: <SongContestPage /> },
-          { path: "admin", element: <AdminPromoPage /> },
+          { path: "admin", element: <AdminPage /> },
           { path: "credits", element: <CreditsPage /> },
           { path: "coming-soon", element: <ComingSoonPage /> },
         ],

@@ -21,7 +21,7 @@ const renderForm = () => {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
-  return render(<AdminLoginForm account={undefined} />, { wrapper });
+  return render(<AdminLoginForm />, { wrapper });
 };
 
 const fillAndSubmit = () => {
@@ -63,36 +63,19 @@ describe("AdminLoginForm", () => {
     ).toBeInTheDocument();
   });
 
-  it("rejects a non-promo admin after a successful login", async () => {
+  it("submits the credentials on valid input", async () => {
     httpPost.mockResolvedValueOnce({
-      data: { success: true, data: { role: "PUB_ADMIN", pubId: 3 }, error: null },
+      data: { success: true, data: { role: "STAGE_ADMIN", pubId: null }, error: null },
       status: 200,
     });
     renderForm();
 
     fillAndSubmit();
 
-    expect(
-      await screen.findByText(/홍보팀 관리자 계정이 아니에요/),
-    ).toBeInTheDocument();
-  });
-
-  it("shows the wrong-account notice when already logged in as another role", () => {
-    const queryClient = new QueryClient();
-    render(
-      <QueryClientProvider client={queryClient}>
-        <AdminLoginForm
-          account={{
-            loggedIn: true,
-            role: "STAGE_ADMIN",
-            displayName: null,
-            pubId: null,
-          }}
-        />
-      </QueryClientProvider>,
+    await screen.findByRole("button", { name: "로그인" });
+    expect(httpPost).toHaveBeenCalledWith(
+      "/auth/admin/login",
+      expect.objectContaining({ loginId: "admin", password: "pw" }),
     );
-
-    expect(screen.getByText(/홍보팀 관리자 계정이 아니에요/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "로그아웃" })).toBeInTheDocument();
   });
 });

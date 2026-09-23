@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { type ApiEnvelope, httpClient, requestData } from "@/shared/api";
 
-import { adminPromoQueryKeys } from "./queryKeys";
+import { promoAdminQueryKeys } from "./queryKeys";
 
 export type AdminCollege = "IT" | "NURSING" | "ART" | "SOCIAL" | "EDU" | "NATURE";
 
@@ -48,7 +48,7 @@ export async function getSongRequests(): Promise<AdminSongRequestList> {
 
 export function useSongRequests() {
   return useQuery({
-    queryKey: adminPromoQueryKeys.songRequests(),
+    queryKey: promoAdminQueryKeys.songRequests(),
     queryFn: getSongRequests,
   });
 }
