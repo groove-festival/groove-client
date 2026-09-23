@@ -1,31 +1,21 @@
 import { z } from "zod";
 
-import { type PlacedOrder } from "./order";
-
-// 주문 API 연동 전까지 쓰는 목 저장소. 같은 브라우저·같은 테이블에서 넣은
-// 최근 주문 1건을 보관한다. API 연동 후에는 주문 토큰 저장소로 대체한다.
+// 로그인이 없으므로 주문 토큰이 곧 "내 주문"의 증명이다 (API 명세 §1.6). 같은
+// 브라우저·같은 테이블에서 넣은 최근 주문 1건의 식별자와 토큰만 보관하고,
+// 주문 내용은 매번 PUB-5로 다시 읽는다.
 const ORDER_STORAGE_KEY_PREFIX = "groove:pub-order";
 
-const placedOrderSchema = z.object({
-  depositorName: z.string().nullable(),
-  id: z.string(),
-  lines: z.array(
-    z.object({
-      menuId: z.string(),
-      name: z.string(),
-      price: z.number(),
-      quantity: z.number().int().positive(),
-    }),
-  ),
-  paymentMethod: z.enum(["TRANSFER", "CASH"]),
-  status: z.enum(["PENDING_DEPOSIT", "DEPOSIT_CLAIMED", "PAID", "COMPLETED"]),
-  totalPrice: z.number(),
+const storedOrderRefSchema = z.object({
+  orderId: z.number().int().positive(),
+  orderToken: z.string().min(1),
 });
 
-export const getOrderStorageKey = (boothId: string, tableCode: string) =>
-  `${ORDER_STORAGE_KEY_PREFIX}:${boothId}:${tableCode}`;
+export type StoredOrderRef = z.infer<typeof storedOrderRefSchema>;
 
-export const readStoredOrder = (storageKey: string): PlacedOrder | null => {
+export const getOrderStorageKey = (boothCode: string, tableCode: string) =>
+  `${ORDER_STORAGE_KEY_PREFIX}:${boothCode}:${tableCode}`;
+
+export const readStoredOrderRef = (storageKey: string): StoredOrderRef | null => {
   try {
     const rawValue = window.localStorage.getItem(storageKey);
 
@@ -33,17 +23,20 @@ export const readStoredOrder = (storageKey: string): PlacedOrder | null => {
       return null;
     }
 
-    const result = placedOrderSchema.safeParse(JSON.parse(rawValue));
+    const result = storedOrderRefSchema.safeParse(JSON.parse(rawValue));
     return result.success ? result.data : null;
   } catch {
     return null;
   }
 };
 
-export const writeStoredOrder = (storageKey: string, order: PlacedOrder | null) => {
+export const writeStoredOrderRef = (
+  storageKey: string,
+  orderRef: StoredOrderRef | null,
+) => {
   try {
-    if (order) {
-      window.localStorage.setItem(storageKey, JSON.stringify(order));
+    if (orderRef) {
+      window.localStorage.setItem(storageKey, JSON.stringify(orderRef));
     } else {
       window.localStorage.removeItem(storageKey);
     }

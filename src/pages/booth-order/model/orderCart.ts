@@ -3,7 +3,7 @@ import { type BoothMenuItem, type BoothOrderDetail } from "@/entities/booth";
 import { type OrderLine } from "./order";
 
 // 메뉴 id별 담은 수량.
-export type OrderCart = Record<string, number>;
+export type OrderCart = Record<number, number>;
 
 // 상차림비는 모든 주문에 붙는 항목이라 1 아래로 내릴 수 없다.
 export const getMinimumQuantity = (item: BoothMenuItem) =>
@@ -53,7 +53,7 @@ export const buildOrderLines = (
       return [];
     }
 
-    return [{ menuId: String(item.id), name: item.name, price: item.price, quantity }];
+    return [{ menuId: item.id, name: item.name, price: item.price, quantity }];
   });
 
 export const getOrderTotal = (lines: OrderLine[]) =>

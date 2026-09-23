@@ -1,13 +1,11 @@
 import { useLayoutEffect, useState } from "react";
 import { Navigate, useParams } from "react-router";
 
-import {
-  BoothDetailHeader,
-  type BoothOrderDetail,
-  getBoothOrderFixture,
-} from "@/entities/booth";
+import { BoothDetailHeader, type BoothOrderDetail } from "@/entities/booth";
+import { LoadingFallback, NetworkErrorFallback } from "@/shared/ui";
 import { FestivalHeader } from "@/widgets/festival-header";
 
+import { isOrderTableNotFound, useOrderTable } from "../api/getOrderTable";
 import { INCOMPLETE_ORDER_BANNER_HEIGHT } from "../config/layout";
 import { formatWon } from "../lib/formatWon";
 import { getQuantity } from "../model/orderCart";
@@ -17,10 +15,12 @@ import { DepositorNameEditDialog } from "./DepositorNameEditDialog";
 import { IncompleteOrderBanner } from "./IncompleteOrderBanner";
 import { OrderActionButton } from "./OrderActionButton";
 import { OrderBottomBar } from "./OrderBottomBar";
+import { OrderCanceledDialog } from "./OrderCanceledDialog";
 import { OrderMenuItemRow } from "./OrderMenuItemRow";
 import { OrderMenuSection } from "./OrderMenuSection";
 import { OrderReceipt } from "./OrderReceipt";
 import { OrderStatusScreen } from "./OrderStatusScreen";
+import { OrderToast } from "./OrderToast";
 
 // 디자인의 진행바 채움 폭(361px 트랙 안 354px 중 183px).
 const DEPOSIT_PENDING_PROGRESS = 183 / 354;
@@ -39,7 +39,11 @@ const BoothOrderContent = ({
     changeItemQuantity,
     chooseCashPayment,
     closeTransferDialog,
+    dismissCanceledOrder,
+    dismissErrorToast,
+    errorToast,
     hasIncompleteOrder,
+    isPlacingOrder,
     isTransferDialogOpen,
     order,
     placeOrder,
@@ -71,7 +75,7 @@ const BoothOrderContent = ({
         topOffset={bannerOffset}
       />
 
-      {screen === "menu" && (
+      {(screen === "menu" || screen === "canceled") && (
         <main
           className={`px-4 ${canPlaceOrder ? "pb-[89px]" : ""}`}
           style={{ paddingTop: 100 + bannerOffset }}
@@ -103,7 +107,7 @@ const BoothOrderContent = ({
 
           <OrderBottomBar
             isVisible={canPlaceOrder}
-            label={`${formatWon(cartTotal)} 주문하기`}
+            label={isPlacingOrder ? "주문하는 중…" : `${formatWon(cartTotal)} 주문하기`}
             onClick={placeOrder}
           />
         </main>
@@ -117,7 +121,7 @@ const BoothOrderContent = ({
             title="입금 확인 중"
           >
             <OrderReceipt
-              account={booth.depositAccount}
+              account={order.account}
               boothName={booth.name}
               canCopyAccountNumber
               order={order}
@@ -142,11 +146,7 @@ const BoothOrderContent = ({
             subtitle="직원이 자리로 가고 있어요. 조금만 기다려 주세요."
             title="현금 준비 안내"
           >
-            <OrderReceipt
-              account={booth.depositAccount}
-              boothName={booth.name}
-              order={order}
-            />
+            <OrderReceipt account={order.account} boothName={booth.name} order={order} />
           </OrderStatusScreen>
         </main>
       )}
@@ -158,11 +158,7 @@ const BoothOrderContent = ({
             subtitle="조리 중이에요. 잠시만 기다려주세요."
             title="주문이 완료되었어요!"
           >
-            <OrderReceipt
-              account={booth.depositAccount}
-              boothName={booth.name}
-              order={order}
-            />
+            <OrderReceipt account={order.account} boothName={booth.name} order={order} />
           </OrderStatusScreen>
           <div className="mt-12">
             <OrderActionButton label="추가 주문하기" onClick={startAdditionalOrder} />
@@ -170,9 +166,11 @@ const BoothOrderContent = ({
         </main>
       )}
 
+      {screen === "canceled" && <OrderCanceledDialog onClose={dismissCanceledOrder} />}
+
       {isTransferDialogOpen && order && (
         <BankTransferDialog
-          account={booth.depositAccount}
+          account={order.account}
           onChooseCash={chooseCashPayment}
           onClose={closeTransferDialog}
           onSubmitDepositorName={submitDepositorName}
@@ -189,16 +187,39 @@ const BoothOrderContent = ({
           }}
         />
       )}
+
+      <OrderToast onDismiss={dismissErrorToast} toast={errorToast} />
     </div>
   );
 };
 
 export default function BoothOrderPage() {
   const { boothId, tableCode } = useParams<{ boothId: string; tableCode: string }>();
-  const booth = boothId ? getBoothOrderFixture(boothId) : undefined;
+  const tableQuery = useOrderTable(boothId, tableCode);
 
-  if (!booth || !tableCode) {
+  // 없는 부스·없는 테이블은 구분해 안내하지 않는다 (테이블 추측 공격 방어).
+  if (
+    !boothId ||
+    !tableCode ||
+    (tableQuery.isError && isOrderTableNotFound(tableQuery.error))
+  ) {
     return <Navigate replace to="/pub" />;
+  }
+
+  if (tableQuery.isPending) {
+    return <LoadingFallback />;
+  }
+
+  if (tableQuery.isError) {
+    return <NetworkErrorFallback onReload={() => void tableQuery.refetch()} />;
+  }
+
+  const { booth, isOrderable } = tableQuery.data;
+
+  // 준비중이면 주문 UI 대신 같은 내용을 읽기 전용으로 보여주는 주막 정보
+  // 페이지로 보낸다 (PUB-3 orderable=false).
+  if (!isOrderable) {
+    return <Navigate replace to={`/pub/${encodeURIComponent(boothId)}`} />;
   }
 
   // 주막·테이블이 바뀌면 장바구니와 주문 상태를 새로 읽는다.
