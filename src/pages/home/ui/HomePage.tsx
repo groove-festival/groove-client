@@ -22,7 +22,7 @@ const scrollToFestivalMap = () => {
 // 그 아래 지도·바로가기·타임테이블 섹션이 스크롤에 따라 차례로 올라온다.
 export default function HomePage() {
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#1c1c1c] text-[#fcfcfc]">
+    <main className="min-h-screen overflow-x-hidden bg-[#1c1c1c] pb-40 text-[#fcfcfc]">
       <div className="relative h-[2224px] w-full" id="top">
         <FestivalHero onBottomArrowClick={scrollToFestivalMap} />
       </div>
@@ -38,10 +38,6 @@ export default function HomePage() {
           <TimetableSection />
         </RevealSection>
       </div>
-
-      <p className="mt-40 pb-[62px] text-center text-[10px] leading-3 text-[#a2a2a2]">
-        자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요.
-      </p>
     </main>
   );
 }

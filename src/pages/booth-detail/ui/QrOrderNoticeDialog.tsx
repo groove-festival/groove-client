@@ -21,7 +21,7 @@ export const QrOrderNoticeDialog = ({
   }, []);
 
   return (
-    <div className="fixed inset-y-0 left-1/2 z-[70] flex w-full max-w-[600px] -translate-x-1/2 items-center justify-center bg-[rgba(28,28,28,0.5)] p-4 backdrop-blur-[24px]">
+    <div className="fixed top-0 left-1/2 z-[70] flex h-dvh w-full max-w-[600px] -translate-x-1/2 items-center justify-center overflow-y-auto bg-[rgba(28,28,28,0.5)] p-4 backdrop-blur-[24px]">
       <section
         aria-labelledby="qr-order-notice-title"
         aria-modal="true"

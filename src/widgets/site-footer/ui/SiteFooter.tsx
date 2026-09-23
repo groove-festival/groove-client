@@ -1,6 +1,6 @@
 import { festivalFooterLinks } from "@/shared/config";
 
-export const FestivalFooter = () => (
+export const SiteFooter = () => (
   <footer className="font-pretendard w-full bg-[#1c1c1c] px-4 pt-8 pb-8 text-center text-[#fcfcfc]">
     <div className="mx-auto flex w-full max-w-[600px] flex-col items-center gap-4">
       <p className="text-[10px] leading-3 text-[#a2a2a2]">
