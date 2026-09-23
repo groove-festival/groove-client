@@ -17,3 +17,7 @@ export interface AdminAccount {
 export function isPromoAdmin(account: AdminAccount | undefined): boolean {
   return account?.loggedIn === true && account.role === PROMO_ADMIN_ROLE;
 }
+
+export function isGoogleParticipant(account: AdminAccount | undefined): boolean {
+  return account?.loggedIn === true && account.role === "USER";
+}

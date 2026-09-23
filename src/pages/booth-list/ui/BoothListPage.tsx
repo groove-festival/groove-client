@@ -5,19 +5,27 @@ import {
   boothFilterOptions,
   getBoothsByFilter,
   type BoothFilter,
+  useBooths,
 } from "@/entities/booth";
+import { LoadingFallback, NetworkErrorFallback } from "@/shared/ui";
 
 import boothMap from "../festival-visuals/booth-map.png";
 import filterChevron from "../festival-visuals/filter-chevron.svg";
 import { BoothNoticeDialog } from "./BoothNoticeDialog";
 
 const NOTICE_DISMISSED_STORAGE_KEY = "groove:booth-notice-dismissed";
+// 확인한 안내는 같은 탭에서 다시 띄우지 않는다. 상세에서 뒤로 돌아올 때마다
+// 목록이 새로 마운트되며 안내가 다시 뜨는 것을 막는다.
+const NOTICE_CONFIRMED_SESSION_KEY = "groove:booth-notice-confirmed";
 
 const mapZoneLabels = ["전체", "학생주차장", "복지관"];
 
 const hasDismissedNotice = () => {
   try {
-    return window.localStorage.getItem(NOTICE_DISMISSED_STORAGE_KEY) === "true";
+    return (
+      window.localStorage.getItem(NOTICE_DISMISSED_STORAGE_KEY) === "true" ||
+      window.sessionStorage.getItem(NOTICE_CONFIRMED_SESSION_KEY) === "true"
+    );
   } catch {
     return false;
   }
@@ -26,11 +34,11 @@ const hasDismissedNotice = () => {
 const BoothMapPreview = () => {
   return (
     <section aria-label="주막 지도" className="flex w-full flex-col gap-3">
-      <div className="grid h-[59px] grid-cols-3 gap-2 rounded-full border border-[#767676] bg-[rgba(252,252,252,0.1)] p-2">
+      <div className="grid h-[59px] grid-cols-[1fr_1.35fr_1fr] gap-2 rounded-full border border-[#767676] bg-[rgba(252,252,252,0.1)] p-2">
         {mapZoneLabels.map((label, index) => (
           <span
             aria-current={index === 0 ? "true" : undefined}
-            className={`flex items-center justify-center rounded-full px-5 text-base font-semibold whitespace-nowrap ${
+            className={`flex min-w-0 items-center justify-center rounded-full px-1 text-base font-semibold whitespace-nowrap ${
               index === 0 ? "bg-[rgba(207,255,4,0.8)] text-[#1c1c1c]" : "text-[#767676]"
             }`}
             key={label}
@@ -103,14 +111,32 @@ const BoothFilterMenu = ({
 const BoothListPage = () => {
   const [selectedFilter, setSelectedFilter] = useState<BoothFilter>("all");
   const [isNoticeOpen, setIsNoticeOpen] = useState(() => !hasDismissedNotice());
+  const boothsQuery = useBooths();
   const filteredBooths = useMemo(
-    () => getBoothsByFilter(selectedFilter),
-    [selectedFilter],
+    () => getBoothsByFilter(boothsQuery.data ?? [], selectedFilter),
+    [boothsQuery.data, selectedFilter],
   );
+
+  if (boothsQuery.isPending) {
+    return <LoadingFallback />;
+  }
+
+  if (boothsQuery.isError) {
+    return <NetworkErrorFallback onReload={() => void boothsQuery.refetch()} />;
+  }
 
   const dismissNoticePermanently = () => {
     try {
       window.localStorage.setItem(NOTICE_DISMISSED_STORAGE_KEY, "true");
+    } catch {
+      // Storage can be unavailable in private or restricted browsing contexts.
+    }
+    setIsNoticeOpen(false);
+  };
+
+  const confirmNotice = () => {
+    try {
+      window.sessionStorage.setItem(NOTICE_CONFIRMED_SESSION_KEY, "true");
     } catch {
       // Storage can be unavailable in private or restricted browsing contexts.
     }
@@ -129,22 +155,21 @@ const BoothListPage = () => {
         aria-label={`${boothFilterOptions.find(({ id }) => id === selectedFilter)?.label} 주막 목록`}
         className="mt-4 flex flex-col gap-4"
       >
+        {filteredBooths.length === 0 && (
+          <li className="py-10 text-center text-sm text-[#a2a2a2]">
+            등록된 주막이 아직 없어요.
+          </li>
+        )}
         {filteredBooths.map((booth) => (
-          <li key={booth.id}>
-            <BoothCard booth={booth} to={`/pub/${booth.id}`} />
+          <li key={booth.boothCode}>
+            <BoothCard booth={booth} to={`/pub/${booth.boothCode}`} />
           </li>
         ))}
       </ul>
 
-      <p
-        className={`${selectedFilter === "nursing" ? "mt-[164px]" : "mt-40"} pb-[74px] text-center text-[10px] leading-3 text-[#a2a2a2]`}
-      >
-        자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요.
-      </p>
-
       {isNoticeOpen && (
         <BoothNoticeDialog
-          onClose={() => setIsNoticeOpen(false)}
+          onClose={confirmNotice}
           onDismissPermanently={dismissNoticePermanently}
         />
       )}

@@ -48,10 +48,6 @@ export default function GroovePlaylistPage() {
             ))}
           </ul>
         </div>
-
-        <p className="absolute bottom-[39px] left-1/2 -translate-x-1/2 text-[10px] leading-3 whitespace-nowrap text-[#a2a2a2]">
-          자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요.
-        </p>
       </div>
     </main>
   );

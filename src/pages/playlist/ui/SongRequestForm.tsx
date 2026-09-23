@@ -2,7 +2,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 
-import { InteractionLoadingOverlay } from "@/shared/ui";
+import { useSectionInView } from "@/shared/lib/viewport";
+import { AgreementCheckbox, InteractionLoadingOverlay } from "@/shared/ui";
 
 import { songRequestAgreementLinks } from "../model/legalLinks";
 import { PLAYLIST_BOTTOM_ANCHOR_ID } from "../model/playlistAnchors";
@@ -13,14 +14,11 @@ import {
   songRequestSchema,
   type SongRequestFormValues,
 } from "../model/songRequestForm";
-import { useSectionInView } from "../model/useSectionInView";
 import { useSongRequestSubmission } from "../model/useSongRequestSubmission";
 import { useSongTrackPicker } from "../model/useSongTrackPicker";
-import { AgreementCheckbox } from "./AgreementCheckbox";
 import { FormInput } from "./FormInput";
 import { SongRequestCompleteModal } from "./SongRequestCompleteModal";
 import { SongRequestGuideModal } from "./SongRequestGuideModal";
-import { PlaylistLegalFooter } from "./PlaylistLegalFooter";
 import { SongTrackPicker } from "./SongTrackPicker";
 
 interface SongRequestFormProps {
@@ -218,8 +216,6 @@ export const SongRequestForm = ({
           </button>
         </form>
       </div>
-
-      <PlaylistLegalFooter />
 
       <SongRequestGuideModal onClose={closeGuide} open={isGuideOpen} />
 

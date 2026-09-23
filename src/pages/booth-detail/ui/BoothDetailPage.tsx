@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Navigate, useParams } from "react-router";
 
-import { getBoothDetailFixture } from "../model/boothDetailFixtures";
-import { BoothDetailHeader } from "./BoothDetailHeader";
+import { BoothDetailHeader, isBoothNotFound, useBoothDetail } from "@/entities/booth";
+import { LoadingFallback, NetworkErrorFallback } from "@/shared/ui";
+
 import { BoothMenuSection } from "./BoothMenuSection";
 import { QrOrderNoticeDialog } from "./QrOrderNoticeDialog";
 
@@ -18,12 +19,22 @@ const hasDismissedQrNotice = () => {
 
 export default function BoothDetailPage() {
   const { boothId } = useParams<{ boothId: string }>();
-  const booth = boothId ? getBoothDetailFixture(boothId) : undefined;
+  const boothQuery = useBoothDetail(boothId);
   const [isQrNoticeOpen, setIsQrNoticeOpen] = useState(() => !hasDismissedQrNotice());
 
-  if (!booth) {
+  if (!boothId || (boothQuery.isError && isBoothNotFound(boothQuery.error))) {
     return <Navigate replace to="/pub" />;
   }
+
+  if (boothQuery.isPending) {
+    return <LoadingFallback />;
+  }
+
+  if (boothQuery.isError) {
+    return <NetworkErrorFallback onReload={() => void boothQuery.refetch()} />;
+  }
+
+  const booth = boothQuery.data;
 
   const dismissQrNoticePermanently = () => {
     try {
@@ -37,7 +48,7 @@ export default function BoothDetailPage() {
   return (
     <main
       className={`relative min-h-dvh bg-[#1c1c1c] px-4 text-[#fcfcfc] ${
-        booth.menuImageUrl
+        booth.menuBoardImageUrl
           ? `pt-[100px] ${isQrNoticeOpen ? "pb-11" : "pb-[42px]"}`
           : "pt-24 pb-[83px]"
       }`}
@@ -45,6 +56,11 @@ export default function BoothDetailPage() {
       <BoothDetailHeader booth={booth} />
 
       <div className="mt-12 flex flex-col gap-12">
+        {booth.menuSections.length === 0 && (
+          <p className="py-10 text-center text-sm text-[#a2a2a2]">
+            등록된 메뉴가 아직 없어요.
+          </p>
+        )}
         {booth.menuSections.map((section) => (
           <BoothMenuSection key={section.id} section={section} />
         ))}

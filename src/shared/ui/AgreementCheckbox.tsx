@@ -1,6 +1,7 @@
 import type { ComponentPropsWithRef } from "react";
 
 interface AgreementCheckboxProps extends ComponentPropsWithRef<"input"> {
+  accent?: "violet" | "pink";
   inputId: string;
   label: string;
   linkHref: string;
@@ -8,12 +9,15 @@ interface AgreementCheckboxProps extends ComponentPropsWithRef<"input"> {
 }
 
 export const AgreementCheckbox = ({
+  accent = "violet",
   inputId,
   label,
   linkHref,
   linkLabel,
   ...inputProps
 }: AgreementCheckboxProps) => {
+  const isPink = accent === "pink";
+
   return (
     <div className="flex flex-col gap-1">
       <label
@@ -22,12 +26,13 @@ export const AgreementCheckbox = ({
       >
         <input
           {...inputProps}
-          className="mt-0.5 size-5 shrink-0 rounded border border-[#cfcfcf] bg-transparent accent-[#5d00ff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00ffff]"
+          className={`mt-0.5 size-5 shrink-0 rounded border border-[#cfcfcf] bg-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00ffff] ${isPink ? "accent-[#ff0080]" : "accent-[#5d00ff]"}`}
           id={inputId}
           type="checkbox"
         />
         <span>
-          <span className="text-[#00ffff]">(필수)</span> {label}
+          <span className={isPink ? "text-[#ff0080]" : "text-[#00ffff]"}>(필수)</span>{" "}
+          {label}
         </span>
       </label>
       <a

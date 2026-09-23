@@ -1,87 +1,194 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router";
+import type { ReactNode } from "react";
+import { Link, MemoryRouter, Route, Routes } from "react-router";
+
+import { httpClient } from "@/shared/api";
 
 import BoothListPage from "./BoothListPage";
 
-const renderPage = () =>
-  render(
-    <MemoryRouter>
-      <BoothListPage />
-    </MemoryRouter>,
-  );
+vi.mock("@/shared/api", async () => {
+  const actual = await vi.importActual<Record<string, unknown>>("@/shared/api");
+  return { ...actual, httpClient: { get: vi.fn() } };
+});
 
-describe("BoothListPage", () => {
-  beforeEach(() => {
-    window.localStorage.clear();
+const httpGet = vi.mocked(httpClient.get);
+
+const booths = [
+  {
+    area: "PARKING",
+    boothCode: "electronics-eh",
+    colleges: ["IT"],
+    departments: ["전자공학부E", "전자공학부H"],
+    description: null,
+    name: "일렉트로닉 나이트",
+    status: "OPEN",
+    xRatio: 0.2,
+    yRatio: 0.3,
+  },
+  {
+    area: "PARKING",
+    boothCode: "electronics-b-design",
+    colleges: ["IT", "ART"],
+    departments: ["전자공학부B", "디자인학과"],
+    description: null,
+    name: "",
+    status: "PREPARING",
+    xRatio: 0.4,
+    yRatio: 0.5,
+  },
+  {
+    area: "WELFARE_CENTER",
+    boothCode: "nursing",
+    colleges: ["NURSING"],
+    departments: ["간호학과"],
+    description: null,
+    name: "나이팅게일",
+    status: "OPEN",
+    xRatio: 0.6,
+    yRatio: 0.7,
+  },
+];
+
+const envelope = (data: unknown) => ({
+  data: { success: true, data, error: null },
+  status: 200,
+});
+
+const createQueryClient = () =>
+  new QueryClient({
+    defaultOptions: { queries: { retry: false } },
   });
 
-  it("renders all 22 confirmed booths with placeholder names", () => {
+const renderPage = () => {
+  const queryClient = createQueryClient();
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>{children}</MemoryRouter>
+    </QueryClientProvider>
+  );
+
+  return render(<BoothListPage />, { wrapper });
+};
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  window.localStorage.clear();
+  window.sessionStorage.clear();
+  httpGet.mockResolvedValue(envelope(booths));
+});
+
+describe("BoothListPage", () => {
+  it("renders PUB-1 booths and uses the API booth code in detail links", async () => {
     renderPage();
 
-    fireEvent.click(screen.getByRole("button", { name: "확인했습니다" }));
+    fireEvent.click(await screen.findByRole("button", { name: "확인했습니다" }));
 
-    expect(screen.getAllByTestId("booth-card")).toHaveLength(22);
-    expect(screen.getAllByText("부스 이름")).toHaveLength(22);
+    expect(await screen.findAllByTestId("booth-card")).toHaveLength(3);
+    expect(screen.getByText("일렉트로닉 나이트")).toBeInTheDocument();
+    expect(screen.getByText("전자공학부B • 디자인학과")).toBeInTheDocument();
     expect(screen.getAllByTestId("booth-card")[0]).toHaveAttribute(
       "href",
       "/pub/electronics-eh",
     );
+    expect(httpGet).toHaveBeenCalledWith("/pubs");
   });
 
-  it("opens the selected booth detail route", () => {
+  it("opens the selected booth detail route", async () => {
     render(
-      <MemoryRouter initialEntries={["/pub"]}>
-        <Routes>
-          <Route path="/pub" element={<BoothListPage />} />
-          <Route path="/pub/:boothId" element={<div>주막 상세</div>} />
-        </Routes>
-      </MemoryRouter>,
+      <QueryClientProvider client={createQueryClient()}>
+        <MemoryRouter initialEntries={["/pub"]}>
+          <Routes>
+            <Route path="/pub" element={<BoothListPage />} />
+            <Route path="/pub/:boothId" element={<div>주막 상세</div>} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "확인했습니다" }));
-    fireEvent.click(screen.getAllByTestId("booth-card")[0]);
+    fireEvent.click(await screen.findByRole("button", { name: "확인했습니다" }));
+    fireEvent.click((await screen.findAllByTestId("booth-card"))[0]);
 
     expect(screen.getByText("주막 상세")).toBeInTheDocument();
   });
 
-  it("filters union booths without duplicating the reusable booth card", () => {
+  it("filters union and college booths from the fetched list", async () => {
     renderPage();
 
-    fireEvent.click(screen.getByRole("button", { name: "확인했습니다" }));
+    fireEvent.click(await screen.findByRole("button", { name: "확인했습니다" }));
     fireEvent.click(screen.getByRole("button", { name: "전체" }));
     fireEvent.click(screen.getByRole("option", { name: "연합" }));
+    expect(screen.getAllByTestId("booth-card")).toHaveLength(1);
+    expect(screen.getByText("전자공학부B • 디자인학과")).toBeInTheDocument();
 
-    expect(screen.getAllByTestId("booth-card")).toHaveLength(4);
-    expect(screen.getByText("전자공학부B • 디자인")).toBeInTheDocument();
-    expect(screen.getByText("전자공학부A • 음악학과")).toBeInTheDocument();
-    expect(screen.getByText("모바일공학전공 • 사회복지학부")).toBeInTheDocument();
-    expect(screen.getByText("전기공학과 • 사회학과")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "연합" }));
+    fireEvent.click(screen.getByRole("option", { name: "간호대학" }));
+    expect(screen.getAllByTestId("booth-card")).toHaveLength(1);
+    expect(screen.getByText("나이팅게일")).toBeInTheDocument();
   });
 
-  it.each([
-    ["IT대학", 9],
-    ["간호대학", 1],
-    ["예술대학", 3],
-    ["사회과학대학", 4],
-    ["사범대학", 5],
-    ["자연과학대학", 4],
-  ])("renders the confirmed %s booth count", (filterLabel, expectedCount) => {
+  it("shows an empty state when PUB-1 has no booths", async () => {
+    httpGet.mockResolvedValueOnce(envelope([]));
+
     renderPage();
 
-    fireEvent.click(screen.getByRole("button", { name: "확인했습니다" }));
-    fireEvent.click(screen.getByRole("button", { name: "전체" }));
-    fireEvent.click(screen.getByRole("option", { name: filterLabel }));
-
-    expect(screen.getAllByTestId("booth-card")).toHaveLength(expectedCount);
+    expect(await screen.findByText("등록된 주막이 아직 없어요.")).toBeInTheDocument();
   });
 
-  it("keeps a permanently dismissed notice closed on the next render", () => {
+  it("shows a retry action when PUB-1 fails", async () => {
+    httpGet.mockRejectedValueOnce(new Error("network"));
+
+    renderPage();
+
+    expect(
+      await screen.findByRole("button", { name: "페이지 새로고침" }),
+    ).toBeInTheDocument();
+  });
+
+  it("pins the notice to the viewport so it stays visible at any scroll position", async () => {
+    renderPage();
+
+    const overlay = (
+      await screen.findByRole("dialog", {
+        name: "주막 이용 안내 사항",
+      })
+    ).closest(".fixed");
+    expect(overlay).toHaveClass("h-dvh", "overflow-y-auto");
+  });
+
+  it("does not reopen a confirmed notice when returning from a booth detail", async () => {
+    render(
+      <QueryClientProvider client={createQueryClient()}>
+        <MemoryRouter initialEntries={["/pub"]}>
+          <Routes>
+            <Route path="/pub" element={<BoothListPage />} />
+            <Route
+              path="/pub/:boothId"
+              element={<Link to="/pub">주막 목록으로</Link>}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "확인했습니다" }));
+    fireEvent.click((await screen.findAllByTestId("booth-card"))[0]);
+    fireEvent.click(screen.getByRole("link", { name: "주막 목록으로" }));
+
+    expect(await screen.findAllByTestId("booth-card")).toHaveLength(3);
+    expect(
+      screen.queryByRole("heading", { name: "주막 이용 안내 사항" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps a permanently dismissed notice closed on the next render", async () => {
     const firstRender = renderPage();
 
-    fireEvent.click(screen.getByRole("button", { name: "다시 보지 않기" }));
+    fireEvent.click(await screen.findByRole("button", { name: "다시 보지 않기" }));
     firstRender.unmount();
     renderPage();
 
+    await screen.findByText("일렉트로닉 나이트");
     expect(
       screen.queryByRole("heading", { name: "주막 이용 안내 사항" }),
     ).not.toBeInTheDocument();

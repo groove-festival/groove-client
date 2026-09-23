@@ -1,10 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
+import { personalInfoCollectionUrl, serviceTermsUrl } from "@/shared/config";
+import { AgreementCheckbox } from "@/shared/ui";
+
 import { colleges, storyFormSchema, type StoryFormValues } from "../model/storyForm";
 
 interface StoryFormProps {
+  isSubmitting?: boolean;
   onSubmit: (values: StoryFormValues) => Promise<void>;
+  submitErrorMessage?: string;
 }
 
 const fieldClass =
@@ -22,7 +27,11 @@ const placeholder = (label: string) => (
   </span>
 );
 
-export function StoryForm({ onSubmit }: StoryFormProps) {
+export function StoryForm({
+  isSubmitting = false,
+  onSubmit,
+  submitErrorMessage,
+}: StoryFormProps) {
   const {
     register,
     handleSubmit,
@@ -38,9 +47,13 @@ export function StoryForm({ onSubmit }: StoryFormProps) {
       nickname: "",
       title: "",
       content: "",
+      termsAgreed: false,
+      personalInfoCollectionAgreed: false,
     },
   });
   const college = watch("college");
+  const termsAgreed = watch("termsAgreed");
+  const personalInfoCollectionAgreed = watch("personalInfoCollectionAgreed");
 
   const input = (
     name: "department" | "studentNumber" | "name" | "nickname" | "title",
@@ -67,10 +80,7 @@ export function StoryForm({ onSubmit }: StoryFormProps) {
   );
 
   return (
-    <section
-      aria-labelledby="story-form-heading"
-      className="mx-auto mt-20 w-full max-w-[361px] px-0"
-    >
+    <section aria-labelledby="story-form-heading" className="mx-auto mt-20 w-full px-0">
       <h1 className="text-2xl font-bold" id="story-form-heading">
         사연 신청하기
       </h1>
@@ -122,11 +132,45 @@ export function StoryForm({ onSubmit }: StoryFormProps) {
             </p>
           )}
         </div>
+        <div className="flex flex-col gap-3 rounded-2xl border border-[#3a3a3a] bg-[#232323] p-4">
+          <AgreementCheckbox
+            accent="pink"
+            inputId="story-terms-agreed"
+            label="GROOVE 웹서비스 이용약관에 동의합니다."
+            linkHref={serviceTermsUrl}
+            linkLabel="약관 전문 보기"
+            {...register("termsAgreed")}
+          />
+          <AgreementCheckbox
+            accent="pink"
+            inputId="story-personal-info-collection-agreed"
+            label="개인정보 수집 및 이용에 동의합니다."
+            linkHref={personalInfoCollectionUrl}
+            linkLabel="동의서 전문 보기"
+            {...register("personalInfoCollectionAgreed")}
+          />
+        </div>
+        {errors.termsAgreed && (
+          <p className="-mt-4 text-xs leading-[15px] text-[#ff5b5b]" role="alert">
+            {errors.termsAgreed.message}
+          </p>
+        )}
+        {errors.personalInfoCollectionAgreed && (
+          <p className="-mt-4 text-xs leading-[15px] text-[#ff5b5b]" role="alert">
+            {errors.personalInfoCollectionAgreed.message}
+          </p>
+        )}
+        {submitErrorMessage && (
+          <p className="text-xs leading-[15px] text-[#ff5b5b]" role="alert">
+            {submitErrorMessage}
+          </p>
+        )}
         <button
-          className="h-14 rounded-2xl bg-[#ff0080] text-base font-semibold"
+          className="h-14 rounded-2xl bg-[#ff0080] text-base font-semibold disabled:cursor-not-allowed disabled:bg-[#cfcfcf]"
+          disabled={isSubmitting || !termsAgreed || !personalInfoCollectionAgreed}
           type="submit"
         >
-          접수 완료 화면 미리보기
+          사연 접수하기
         </button>
       </form>
     </section>

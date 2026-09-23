@@ -4,15 +4,21 @@ interface GoogleIdCredentialResponse {
   credential: string;
 }
 
+interface GoogleButtonOptions {
+  type: "standard";
+  shape?: "pill" | "rectangular" | "circle" | "square";
+  size?: "large" | "medium" | "small";
+  text?: "signin_with" | "signup_with" | "continue_with" | "signin";
+  theme?: "outline" | "filled_blue" | "filled_black";
+  width?: number;
+}
+
 interface GoogleAccountsId {
   initialize: (config: {
     client_id: string;
     callback: (response: GoogleIdCredentialResponse) => void;
   }) => void;
-  renderButton: (
-    parent: HTMLElement,
-    options: { type: "standard"; width?: number },
-  ) => void;
+  renderButton: (parent: HTMLElement, options: GoogleButtonOptions) => void;
 }
 
 declare global {

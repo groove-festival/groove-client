@@ -24,10 +24,6 @@ export const PlaylistStatusError = ({ onRetry }: PlaylistStatusErrorProps) => {
           다시 시도
         </button>
       </div>
-
-      <p className="absolute bottom-[40px] left-1/2 -translate-x-1/2 text-[10px] leading-3 whitespace-nowrap text-[#a2a2a2]">
-        자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요.
-      </p>
     </section>
   );
 };

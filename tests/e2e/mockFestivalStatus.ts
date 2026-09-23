@@ -8,11 +8,11 @@ const submissionStatus = {
     festivalEndAt: "2099-02-03T00:00:00+09:00",
     stage: {
       storyPhase: "BEFORE",
-      storyCollectionStartAt: null,
-      storyCollectionEndAt: null,
+      storyCollectionStartAt: "2099-01-01T00:00:00+09:00",
+      storyCollectionEndAt: "2099-01-15T00:00:00+09:00",
       contestPhase: "BEFORE",
-      contestStartAt: null,
-      contestEndAt: null,
+      contestStartAt: "2099-02-01T18:00:00+09:00",
+      contestEndAt: "2099-02-01T21:00:00+09:00",
     },
     playlist: {
       phase: "SUBMISSION",

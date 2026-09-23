@@ -1,6 +1,7 @@
 export {
   type AdminAccount,
   type AdminRole,
+  isGoogleParticipant,
   isPromoAdmin,
   PROMO_ADMIN_ROLE,
 } from "./model/account";
@@ -12,4 +13,5 @@ export {
   loginWithGoogle,
   useLoginWithGoogle,
 } from "./api/loginWithGoogle";
+export { loadGoogleIdentityScript } from "./lib/googleIdentity";
 export { useGoogleSignIn } from "./lib/useGoogleSignIn";

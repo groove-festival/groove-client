@@ -38,11 +38,11 @@ const buildStatus = (
   festivalEndAt: "2026-10-03T00:00:00+09:00",
   stage: {
     storyPhase: "BEFORE",
-    storyCollectionStartAt: null,
-    storyCollectionEndAt: null,
+    storyCollectionStartAt: "2026-09-20T00:00:00+09:00",
+    storyCollectionEndAt: "2026-09-30T00:00:00+09:00",
     contestPhase: "BEFORE",
-    contestStartAt: null,
-    contestEndAt: null,
+    contestStartAt: "2026-10-01T18:00:00+09:00",
+    contestEndAt: "2026-10-01T21:00:00+09:00",
   },
   playlist: {
     phase,
@@ -232,6 +232,14 @@ describe("PlaylistPage", () => {
         phase: "BEFORE",
         festivalStartAt: "2026-10-01T00:00:00+09:00",
         festivalEndAt: "2026-10-03T00:00:00+09:00",
+        stage: {
+          storyPhase: "BEFORE",
+          storyCollectionStartAt: "2026-09-20T00:00:00+09:00",
+          storyCollectionEndAt: "2026-09-30T00:00:00+09:00",
+          contestPhase: "BEFORE",
+          contestStartAt: "2026-10-01T18:00:00+09:00",
+          contestEndAt: "2026-10-01T21:00:00+09:00",
+        },
       } as FestivalStatusResponseBody,
     });
     renderPage();

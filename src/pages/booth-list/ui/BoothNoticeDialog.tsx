@@ -29,14 +29,14 @@ export const BoothNoticeDialog = ({
   }, []);
 
   return (
-    <div className="absolute inset-0 z-40 bg-[rgba(28,28,28,0.5)] backdrop-blur-[4px]">
+    <div className="fixed top-0 left-1/2 z-[70] flex h-dvh w-full max-w-[600px] -translate-x-1/2 items-center justify-center overflow-y-auto bg-[rgba(28,28,28,0.5)] p-4 backdrop-blur-[4px]">
       <section
         aria-labelledby="booth-notice-title"
         aria-modal="true"
-        className="absolute top-[179px] left-1/2 flex w-80 -translate-x-1/2 flex-col items-center gap-2.5 rounded-[36px] bg-[rgba(252,252,252,0.5)] px-7 py-8 backdrop-blur-[24px]"
+        className="flex max-h-[calc(100dvh-32px)] w-full max-w-[320px] flex-col items-center gap-2.5 overflow-y-auto rounded-[36px] bg-[rgba(252,252,252,0.5)] px-5 py-8 backdrop-blur-[24px]"
         role="dialog"
       >
-        <div className="flex w-64 flex-col gap-10">
+        <div className="flex w-full flex-col gap-10">
           <div className="flex flex-col items-center gap-7 text-[#fcfcfc]">
             <div className="flex flex-col items-center gap-3">
               <img alt="" className="size-20" src={cheersIcon} />
@@ -48,7 +48,7 @@ export const BoothNoticeDialog = ({
               </h1>
             </div>
 
-            <ul className="w-[244px] list-disc space-y-[15px] pl-[18px] text-xs leading-[15px]">
+            <ul className="w-full list-disc space-y-[15px] pl-[18px] text-xs leading-[15px]">
               {noticeItems.map((item) => (
                 <li key={item}>{item}</li>
               ))}

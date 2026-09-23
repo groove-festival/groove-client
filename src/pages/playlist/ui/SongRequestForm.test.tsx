@@ -140,23 +140,6 @@ describe("SongRequestForm", () => {
     expect(submitButton).toBeEnabled();
   });
 
-  it("shows the playlist footer policy links", () => {
-    renderForm();
-
-    expect(screen.getByRole("link", { name: "개인정보처리방침" })).toHaveAttribute(
-      "href",
-      "https://knu-cse-sysdev.notion.site/festival-personal-info-processing-policy",
-    );
-    expect(screen.getByRole("link", { name: "서비스 이용약관" })).toHaveAttribute(
-      "href",
-      "https://knu-cse-sysdev.notion.site/festival-terms-of-services",
-    );
-    expect(screen.getByRole("link", { name: "이메일무단수집거부" })).toHaveAttribute(
-      "href",
-      "https://knu-cse-sysdev.notion.site/email-address-harvesting-prohibited",
-    );
-  });
-
   it("shows a search-service message when the search request fails", async () => {
     httpGet.mockRejectedValueOnce(errorResponse("PLST005", 502));
     renderForm();

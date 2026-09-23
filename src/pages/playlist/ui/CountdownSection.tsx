@@ -2,7 +2,6 @@ import { useMemo } from "react";
 
 import { useCountdown } from "../model/useCountdown";
 import { PLAYLIST_BOTTOM_ANCHOR_ID } from "../model/playlistAnchors";
-import { PlaylistLegalFooter } from "./PlaylistLegalFooter";
 
 interface CountdownSectionProps {
   // 접수 시작 시각(ISO). festival/status의 playlist.submissionStartAt.
@@ -60,8 +59,6 @@ export const CountdownSection = ({ targetIso }: CountdownSectionProps) => {
           노래를 신청하고 GROOVE에 참여하세요!
         </p>
       </div>
-
-      <PlaylistLegalFooter />
     </section>
   );
 };
