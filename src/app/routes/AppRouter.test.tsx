@@ -30,6 +30,35 @@ describe("AppRouter", () => {
       "/",
     );
     expect(screen.queryByRole("button", { name: "메뉴 열기" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("contentinfo")).toHaveLength(1);
+    expect(screen.getByRole("link", { name: "개인정보처리방침" })).toHaveAttribute(
+      "href",
+      "https://knu-cse-sysdev.notion.site/festival-personal-info-processing-policy",
+    );
+    expect(screen.getByRole("link", { name: "서비스 이용약관" })).toHaveAttribute(
+      "href",
+      "https://knu-cse-sysdev.notion.site/festival-terms-of-services",
+    );
+    expect(screen.getByRole("link", { name: "이메일무단수집거부" })).toHaveAttribute(
+      "href",
+      "https://knu-cse-sysdev.notion.site/email-address-harvesting-prohibited",
+    );
+  });
+
+  it("renders the shared header and one policy footer on a normal route", () => {
+    const router = createMemoryRouter(routes, { initialEntries: ["/coming-soon"] });
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByRole("button", { name: "메뉴 열기" })).toBeInTheDocument();
+    expect(screen.getAllByRole("contentinfo")).toHaveLength(1);
+    expect(screen.getByText(/공식 SNS에서 확인해 주세요/)).toBeInTheDocument();
   });
 
   it("renders the table order page outside the shared layout", () => {

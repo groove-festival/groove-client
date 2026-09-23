@@ -97,10 +97,6 @@ export default function CreditsPage() {
             </section>
           ))}
         </div>
-
-        <p className="mt-14 text-center text-[10px] leading-3 text-[#a2a2a2]">
-          자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요.
-        </p>
       </div>
     </main>
   );
