@@ -86,6 +86,11 @@ React Hook Form, Zod, TanStack Query를 사용한다는 이유만으로 전역 w
 별도 레이어를 만들지 않는다. 폼 스키마와 요청은 해당 기능 slice에 두고,
 여러 slice에 정말 공통인 기반만 `shared`로 내린다.
 
+`features/google-auth`는 가요제 사연 신청과 향후 가요제 투표에서 같은 Google
+로그인·세션 기능을 사용하기 위해 먼저 분리했다. 투표 화면 구현 전에는 참조하는
+page slice가 하나이므로 `fsd/insignificant-slice`만 이 slice에 한정해 제외한다.
+투표 화면이 이 기능을 사용하게 되면 `steiger.config.ts`의 예외를 제거한다.
+
 ## 5. `/groove` 경로와 분석 데이터
 
 - Vite `base`와 React Router `basename`은 `/groove`를 기준으로 한다.
