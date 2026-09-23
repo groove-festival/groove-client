@@ -32,6 +32,8 @@
   --animate-groove-dot-pulse: groove-dot-pulse 0.9s ease-in-out infinite;
   /* 메인 가요제 배지처럼 작은 요소가 제자리에서 살짝 떠다니는 효과. */
   --animate-badge-float: badge-float 2.4s ease-in-out infinite;
+  /* 고른 카드의 화살표처럼 "여기를 누르라"고 알리는 좌우 흔들림. */
+  --animate-arrow-nudge: arrow-nudge 1.4s ease-in-out infinite;
 
   @keyframes float {
     0%,
@@ -50,6 +52,16 @@
     }
     50% {
       transform: translateY(-3px);
+    }
+  }
+
+  @keyframes arrow-nudge {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(3px);
     }
   }
 
