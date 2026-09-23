@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   BoothCard,
@@ -9,16 +9,30 @@ import {
 } from "@/entities/booth";
 import { LoadingFallback, NetworkErrorFallback } from "@/shared/ui";
 
-import boothMap from "../festival-visuals/booth-map.png";
+import { getBoothsByArea, type PubMapArea } from "../model/pubMap";
+
 import filterChevron from "../festival-visuals/filter-chevron.svg";
 import { BoothNoticeDialog } from "./BoothNoticeDialog";
+import { PubBoothMap } from "./PubBoothMap";
+
+// 지도에서 고른 주막 카드를 화면 한가운데로 데려온다. 목록이 길어 카드가
+// 접힌 화면 아래에 있으면 색만 바뀌어서는 고른 것을 볼 수 없다.
+const scrollCardIntoView = (card: HTMLElement) => {
+  const prefersReducedMotion = window.matchMedia?.(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+
+  // jsdom 등 scrollIntoView 가 없는 환경에서도 선택 자체는 동작해야 한다.
+  card.scrollIntoView?.({
+    behavior: prefersReducedMotion ? "auto" : "smooth",
+    block: "center",
+  });
+};
 
 const NOTICE_DISMISSED_STORAGE_KEY = "groove:booth-notice-dismissed";
 // 확인한 안내는 같은 탭에서 다시 띄우지 않는다. 상세에서 뒤로 돌아올 때마다
 // 목록이 새로 마운트되며 안내가 다시 뜨는 것을 막는다.
 const NOTICE_CONFIRMED_SESSION_KEY = "groove:booth-notice-confirmed";
-
-const mapZoneLabels = ["전체", "학생주차장", "복지관"];
 
 const hasDismissedNotice = () => {
   try {
@@ -29,31 +43,6 @@ const hasDismissedNotice = () => {
   } catch {
     return false;
   }
-};
-
-const BoothMapPreview = () => {
-  return (
-    <section aria-label="주막 지도" className="flex w-full flex-col gap-3">
-      <div className="grid h-[59px] grid-cols-[1fr_1.35fr_1fr] gap-2 rounded-full border border-[#767676] bg-[rgba(252,252,252,0.1)] p-2">
-        {mapZoneLabels.map((label, index) => (
-          <span
-            aria-current={index === 0 ? "true" : undefined}
-            className={`flex min-w-0 items-center justify-center rounded-full px-1 text-base font-semibold whitespace-nowrap ${
-              index === 0 ? "bg-[rgba(207,255,4,0.8)] text-[#1c1c1c]" : "text-[#767676]"
-            }`}
-            key={label}
-          >
-            {label}
-          </span>
-        ))}
-      </div>
-      <img
-        alt="학생주차장과 복지관의 주막 위치 지도"
-        className="aspect-[361/448] w-full rounded-3xl object-cover"
-        src={boothMap}
-      />
-    </section>
-  );
 };
 
 const BoothFilterMenu = ({
@@ -110,12 +99,40 @@ const BoothFilterMenu = ({
 
 const BoothListPage = () => {
   const [selectedFilter, setSelectedFilter] = useState<BoothFilter>("all");
+  const [selectedArea, setSelectedArea] = useState<PubMapArea>("all");
+  // 지도에서 고른 주막. 카드 한 장을 표시하는 값이라 목록 쪽에서 들고 있는다.
+  const [selectedBoothCode, setSelectedBoothCode] = useState<string | null>(null);
+  const cardRefs = useRef(new Map<string, HTMLLIElement>());
   const [isNoticeOpen, setIsNoticeOpen] = useState(() => !hasDismissedNotice());
   const boothsQuery = useBooths();
+  const booths = useMemo(() => boothsQuery.data ?? [], [boothsQuery.data]);
+  // 구역과 단대를 모두 통과한 주막. 지도 색과 목록이 늘 같은 묶음을 가리킨다.
   const filteredBooths = useMemo(
-    () => getBoothsByFilter(boothsQuery.data ?? [], selectedFilter),
-    [boothsQuery.data, selectedFilter],
+    () => getBoothsByArea(getBoothsByFilter(booths, selectedFilter), selectedArea),
+    [booths, selectedArea, selectedFilter],
   );
+  const highlightedCodes = useMemo(
+    () => new Set(filteredBooths.map(({ boothCode }) => boothCode)),
+    [filteredBooths],
+  );
+
+  useEffect(() => {
+    if (selectedBoothCode === null) return;
+
+    const card = cardRefs.current.get(selectedBoothCode);
+    if (card) scrollCardIntoView(card);
+  }, [selectedBoothCode]);
+
+  // 필터를 바꾸면 고른 주막이 목록에서 사라질 수 있어 선택을 함께 푼다.
+  const changeFilter = (filter: BoothFilter) => {
+    setSelectedFilter(filter);
+    setSelectedBoothCode(null);
+  };
+
+  const changeArea = (area: PubMapArea) => {
+    setSelectedArea(area);
+    setSelectedBoothCode(null);
+  };
 
   if (boothsQuery.isPending) {
     return <LoadingFallback />;
@@ -145,10 +162,16 @@ const BoothListPage = () => {
 
   return (
     <main className="relative min-h-dvh bg-[#1c1c1c] px-4 pt-[100px] text-[#fcfcfc]">
-      <BoothMapPreview />
+      <PubBoothMap
+        booths={booths}
+        highlightedCodes={highlightedCodes}
+        onSelectArea={changeArea}
+        onSelectBooth={setSelectedBoothCode}
+        selectedArea={selectedArea}
+      />
 
       <div className="mt-4">
-        <BoothFilterMenu onChange={setSelectedFilter} selectedFilter={selectedFilter} />
+        <BoothFilterMenu onChange={changeFilter} selectedFilter={selectedFilter} />
       </div>
 
       <ul
@@ -161,8 +184,18 @@ const BoothListPage = () => {
           </li>
         )}
         {filteredBooths.map((booth) => (
-          <li key={booth.boothCode}>
-            <BoothCard booth={booth} to={`/pub/${booth.boothCode}`} />
+          <li
+            key={booth.boothCode}
+            ref={(node) => {
+              if (node) cardRefs.current.set(booth.boothCode, node);
+              else cardRefs.current.delete(booth.boothCode);
+            }}
+          >
+            <BoothCard
+              booth={booth}
+              isSelected={booth.boothCode === selectedBoothCode}
+              to={`/pub/${booth.boothCode}`}
+            />
           </li>
         ))}
       </ul>
