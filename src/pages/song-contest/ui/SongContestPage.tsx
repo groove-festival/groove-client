@@ -1,12 +1,22 @@
-import { useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 
+import { useVotes } from "@/entities/contest";
+import { useFestivalStatus } from "@/entities/festival";
+import { useScheduledRefetch } from "@/shared/lib/scheduling";
 import { lockIllustration } from "@/shared/ui";
 
 import hourglass from "../festival-visuals/hourglass.png";
 import letter from "../festival-visuals/letter.png";
 import microphone from "../festival-visuals/microphone.png";
+import { nextContestBoundaryAt } from "../model/nextContestBoundaryAt";
+import { formatRemainingMinutes } from "../model/remainingMinutes";
+import { BracketMatchRow } from "./BracketMatchRow";
+import { ContestBeforeNotice } from "./ContestBeforeNotice";
+import { ContestClosedNotice } from "./ContestClosedNotice";
+import { ContestResults } from "./ContestResults";
 import { StoryForm } from "./StoryForm";
+import { VoteCastingPanel } from "./VoteCastingPanel";
 
 type Tab = "timetable" | "votes";
 type StoryView = "list" | "form" | "success";
@@ -28,9 +38,13 @@ const timetable = [
 function ContestOverview({
   tab,
   onTabChange,
+  votesTabLabel,
+  votesTabContent,
 }: {
   tab: Tab;
   onTabChange: (tab: Tab) => void;
+  votesTabLabel: string;
+  votesTabContent: ReactNode;
 }) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -71,13 +85,13 @@ function ContestOverview({
             role="tab"
             type="button"
           >
-            {item === "timetable" ? "타임테이블" : "경연 목록"}
+            {item === "timetable" ? "타임테이블" : votesTabLabel}
           </button>
         ))}
       </div>
       <div className="relative mt-5 h-[292px]">
         <div
-          aria-label={tab === "timetable" ? "가요제 타임테이블" : "경연 목록"}
+          aria-label={tab === "timetable" ? "가요제 타임테이블" : votesTabLabel}
           className="h-full touch-pan-y [scrollbar-width:none] overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:hidden"
           id="contest-panel"
           onScroll={handleScroll}
@@ -101,9 +115,7 @@ function ContestOverview({
               ))}
             </ol>
           ) : (
-            <p className="pt-32 text-center text-base">
-              경연 목록은 연동 후 표시됩니다
-            </p>
+            votesTabContent
           )}
         </div>
 
@@ -135,11 +147,52 @@ export default function SongContestPage() {
   const [view, setView] = useState<StoryView>("list");
   const [guideOpen, setGuideOpen] = useState(false);
 
+  const festivalStatus = useFestivalStatus();
+  const contestPhase = festivalStatus.data?.stage.contestPhase;
+  const votesQuery = useVotes();
+  const votes = votesQuery.data ?? [];
+
+  useScheduledRefetch(
+    festivalStatus.data
+      ? nextContestBoundaryAt(contestPhase, festivalStatus.data.stage)
+      : undefined,
+    festivalStatus.refetch,
+  );
+
   const handleSubmit = async () => {
     // 화면 미리보기만 전환한다. 실제 접수 요청은 API 연동 작업에서 연결한다.
     setView("success");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const votesTabLabel = contestPhase === "CLOSED" ? "경연 결과" : "경연 목록";
+
+  const votesTabContent: ReactNode =
+    festivalStatus.isPending || votesQuery.isPending ? (
+      <p className="pt-32 text-center text-base text-[#a2a2a2]">불러오는 중…</p>
+    ) : festivalStatus.isError || votesQuery.isError ? (
+      <p className="pt-32 text-center text-base text-[#a2a2a2]">
+        경연 목록을 불러오지 못했어요.
+      </p>
+    ) : contestPhase === "BEFORE" ? (
+      <p className="pt-32 text-center text-base">아직 경연이 시작되지 않았어요</p>
+    ) : (
+      <ol className="space-y-6">
+        {votes.map((vote) => (
+          <li key={vote.singingVoteId}>
+            <BracketMatchRow
+              metaLabel={
+                vote.status === "OPEN"
+                  ? formatRemainingMinutes(vote.endsAt, new Date())
+                  : undefined
+              }
+              showWinnerBadge={contestPhase === "CLOSED"}
+              vote={vote}
+            />
+          </li>
+        ))}
+      </ol>
+    );
 
   const height =
     view === "form" && phase === "open"
@@ -157,7 +210,12 @@ export default function SongContestPage() {
       className="relative mx-auto w-full max-w-[600px] bg-[#1c1c1c] px-4 text-[#fcfcfc]"
       style={{ minHeight: height }}
     >
-      <ContestOverview onTabChange={setTab} tab={tab} />
+      <ContestOverview
+        onTabChange={setTab}
+        tab={tab}
+        votesTabContent={votesTabContent}
+        votesTabLabel={votesTabLabel}
+      />
 
       {phase === "before" && (
         <section className="mx-auto mt-40 flex w-full max-w-[361px] flex-col items-center gap-12 text-center">
@@ -227,6 +285,17 @@ export default function SongContestPage() {
             사연 신청 목록 보기
           </button>
         </section>
+      )}
+
+      {contestPhase === "BEFORE" && <ContestBeforeNotice />}
+
+      {contestPhase === "CLOSED" && <ContestClosedNotice />}
+
+      {contestPhase === "OPEN" && (
+        <div className="mx-auto mt-10 mb-24 flex w-full max-w-[361px] flex-col gap-6">
+          <VoteCastingPanel />
+          <ContestResults votes={votes} />
+        </div>
       )}
 
       <p className="absolute bottom-10 left-0 w-full text-center text-[10px] leading-3 text-[#a2a2a2]">
