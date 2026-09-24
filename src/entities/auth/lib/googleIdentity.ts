@@ -44,7 +44,9 @@ export function loadGoogleIdentityScript(): Promise<void> {
     );
     if (existing) {
       existing.addEventListener("load", () => resolve());
-      existing.addEventListener("error", () => reject(new Error("GIS script failed to load")));
+      existing.addEventListener("error", () =>
+        reject(new Error("GIS script failed to load")),
+      );
       return;
     }
 

@@ -41,7 +41,9 @@ export function useSubmitBallot() {
   return useMutation({
     mutationFn: submitBallot,
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: songContestQueryKeys.myBallots() });
+      void queryClient.invalidateQueries({
+        queryKey: songContestQueryKeys.myBallots(),
+      });
       void queryClient.invalidateQueries({ queryKey: contestQueryKeys.votes() });
     },
   });

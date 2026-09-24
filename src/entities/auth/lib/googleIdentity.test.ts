@@ -11,7 +11,9 @@ describe("loadGoogleIdentityScript", () => {
     const { loadGoogleIdentityScript } = await import("./googleIdentity");
 
     const promise = loadGoogleIdentityScript();
-    const script = document.querySelector<HTMLScriptElement>(`script[src="${GIS_SRC}"]`);
+    const script = document.querySelector<HTMLScriptElement>(
+      `script[src="${GIS_SRC}"]`,
+    );
     expect(script).not.toBeNull();
 
     script?.dispatchEvent(new Event("load"));
@@ -42,7 +44,9 @@ describe("loadGoogleIdentityScript", () => {
     const { loadGoogleIdentityScript } = await import("./googleIdentity");
 
     const promise = loadGoogleIdentityScript();
-    const script = document.querySelector<HTMLScriptElement>(`script[src="${GIS_SRC}"]`);
+    const script = document.querySelector<HTMLScriptElement>(
+      `script[src="${GIS_SRC}"]`,
+    );
     script?.dispatchEvent(new Event("error"));
 
     await expect(promise).rejects.toThrowError("GIS script failed to load");

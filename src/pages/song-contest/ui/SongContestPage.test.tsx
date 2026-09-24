@@ -4,7 +4,10 @@ import { MemoryRouter } from "react-router";
 
 import { useAuthMe, useLoginWithGoogle } from "@/entities/auth";
 import { useVotes } from "@/entities/contest";
-import { useFestivalStatus, type FestivalStatusResponseBody } from "@/entities/festival";
+import {
+  useFestivalStatus,
+  type FestivalStatusResponseBody,
+} from "@/entities/festival";
 
 import { usePublicContestStories } from "../api/getPublicContestStories";
 import { useSubmitContestStory } from "../api/submitContestStory";
