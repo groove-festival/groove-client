@@ -40,6 +40,11 @@ const timetableCategoryTones: Record<TimetableCategory, TimetableCategoryTone> =
 // Figma 25:2147(점). 진행 중이 아니면 어두운 원.
 const inactiveDotTone = "border-[#a2a2a2] bg-[#1c1c1c]";
 
+// Figma 변수 White/900 · White/600. 진행 중이 아닌 카드는 글자 명도를 낮춰
+// 현재 시간대 카드와 위계를 만든다.
+const activeTextTone = "text-[#fcfcfc]";
+const inactiveTextTone = "text-[#a2a2a2]";
+
 // Figma 25:2152(카드). 카드는 제목과 시간만 보여 준다. 제목 폭은 Figma
 // 컴포넌트처럼 147px이고, 두 줄까지는 80px, 세 줄부터 카드 높이가 늘어난다.
 export const TimetableSection = () => {
@@ -65,6 +70,7 @@ export const TimetableSection = () => {
         const tone = timetableCategoryTones[item.category];
         const cardTone = showActiveTone ? tone.active : tone.default;
         const dotTone = showActiveTone ? tone.active : inactiveDotTone;
+        const textTone = showActiveTone ? activeTextTone : inactiveTextTone;
         const isLast = index === items.length - 1;
 
         return (
@@ -86,7 +92,7 @@ export const TimetableSection = () => {
             />
             <button
               aria-pressed={showActiveTone}
-              className={`festival-glass-border-rim relative flex min-h-20 min-w-0 flex-1 cursor-pointer items-start justify-between gap-3 rounded-2xl border pt-[17px] pr-[18px] pb-[17px] pl-[19px] text-left leading-[normal] text-[#fcfcfc] backdrop-blur-[12px] ${cardTone}`}
+              className={`festival-glass-border-rim relative flex min-h-20 min-w-0 flex-1 cursor-pointer items-start justify-between gap-3 rounded-2xl border pt-[17px] pr-[18px] pb-[17px] pl-[19px] text-left leading-[normal] backdrop-blur-[12px] ${textTone} ${cardTone}`}
               onClick={() =>
                 setToneOverrides((previous) => ({
                   ...previous,
