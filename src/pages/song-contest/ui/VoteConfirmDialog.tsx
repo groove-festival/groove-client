@@ -4,6 +4,8 @@ import { createPortal } from "react-dom";
 interface VoteConfirmDialogProps {
   participantName: string;
   pending: boolean;
+  // 마감·중복 투표 등으로 제출이 실패했을 때만 채워진다.
+  errorMessage?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -13,6 +15,7 @@ interface VoteConfirmDialogProps {
 export function VoteConfirmDialog({
   participantName,
   pending,
+  errorMessage,
   onConfirm,
   onCancel,
 }: VoteConfirmDialogProps) {
@@ -38,22 +41,27 @@ export function VoteConfirmDialog({
       <div
         aria-labelledby={titleId}
         aria-modal="true"
-        className="flex w-64 flex-col items-center gap-9 rounded-[36px] bg-[#fcfcfc]/50 px-7 py-8 backdrop-blur-xl outline-none"
+        className="flex flex-col items-center gap-9 rounded-[36px] bg-[#fcfcfc]/50 px-7 py-8 backdrop-blur-xl outline-none"
         ref={dialogRef}
         role="dialog"
         tabIndex={-1}
       >
-        <div className="flex flex-col items-center gap-7">
+        <div className="flex w-[256px] flex-col items-center gap-7">
           <p className="text-2xl font-semibold text-[#fcfcfc]" id={titleId}>
             투표 완료!
           </p>
-          <div className="flex flex-col items-center gap-3">
+          <div className="flex flex-col items-center gap-4">
             <span
               aria-hidden="true"
               className="size-[135px] shrink-0 rounded-full bg-[#fcfcfc]"
             />
             <p className="text-xl font-semibold text-[#fcfcfc]">{participantName}</p>
           </div>
+          {errorMessage && (
+            <p className="text-center text-xs text-[#ff5b5b]" role="alert">
+              {errorMessage}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-4">
           <button
