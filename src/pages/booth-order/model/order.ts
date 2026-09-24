@@ -1,10 +1,6 @@
 // 주문 상태·결제수단 값은 API 명세 v0.6 §1.5에서 확정된 프론트 계약을 따른다.
 export type OrderStatus =
-  | "PENDING_DEPOSIT"
-  | "DEPOSIT_CLAIMED"
-  | "PAID"
-  | "COMPLETED"
-  | "CANCELED";
+  "PENDING_DEPOSIT" | "DEPOSIT_CLAIMED" | "PAID" | "COMPLETED" | "CANCELED";
 export type PaymentMethod = "TRANSFER" | "CASH";
 
 // 계좌는 주막이 아니라 주문 응답(PUB-4~7)에 담겨 온다.
@@ -34,11 +30,7 @@ export interface PlacedOrder {
 
 // 주문 화면이 보여줄 단계. 상태·결제수단 조합에서 유도한다.
 export type OrderScreen =
-  | "menu"
-  | "depositClaimed"
-  | "cashPending"
-  | "completed"
-  | "canceled";
+  "menu" | "depositClaimed" | "cashPending" | "completed" | "canceled";
 
 export const getOrderScreen = (order: PlacedOrder | null): OrderScreen => {
   if (!order) {

@@ -59,7 +59,13 @@ const canceledOrder = {
   },
   depositorName: "김입금",
   items: [
-    { lineAmount: 15_000, menuId: 4, menuName: "김치전", quantity: 1, unitPrice: 15_000 },
+    {
+      lineAmount: 15_000,
+      menuId: 4,
+      menuName: "김치전",
+      quantity: 1,
+      unitPrice: 15_000,
+    },
   ],
   orderId: ORDER_ID,
   paymentMethod: "TRANSFER",
@@ -116,9 +122,7 @@ test("shows the cancel notice and drops the order token when it is closed", asyn
   const dialog = page.getByRole("dialog", { name: "주문 취소 안내" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText("내 주문이 취소되었어요.")).toBeVisible();
-  await expect(
-    dialog.getByText("자세한 사항은 직원에게 문의해 주세요."),
-  ).toBeVisible();
+  await expect(dialog.getByText("자세한 사항은 직원에게 문의해 주세요.")).toBeVisible();
 
   await waitForStableVisuals(page);
 
@@ -175,5 +179,7 @@ test("shows the cancel notice and drops the order token when it is closed", asyn
   await expect(dialog).toBeHidden();
   await expect(page.getByRole("heading", { name: "일렉트로닉 나이트" })).toBeVisible();
   // 토큰을 남기면 재진입할 때마다 같은 안내가 다시 뜬다.
-  expect(await page.evaluate((key) => window.localStorage.getItem(key), STORAGE_KEY)).toBeNull();
+  expect(
+    await page.evaluate((key) => window.localStorage.getItem(key), STORAGE_KEY),
+  ).toBeNull();
 });

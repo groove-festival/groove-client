@@ -1,11 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import {
-  ApiError,
-  type ApiEnvelope,
-  httpClient,
-  requestData,
-} from "@/shared/api";
+import { ApiError, type ApiEnvelope, httpClient, requestData } from "@/shared/api";
 import {
   type BoothDetailResponseBody,
   type BoothOrderDetail,
@@ -60,7 +55,10 @@ export async function getOrderTable(
   };
 }
 
-export function useOrderTable(boothCode: string | undefined, tableCode: string | undefined) {
+export function useOrderTable(
+  boothCode: string | undefined,
+  tableCode: string | undefined,
+) {
   return useQuery({
     queryKey: orderQueryKeys.table(boothCode ?? "", tableCode ?? ""),
     queryFn: () => getOrderTable(boothCode ?? "", tableCode ?? ""),

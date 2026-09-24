@@ -63,7 +63,11 @@ describe("toPlacedOrder mapping", () => {
     expect(order.lines).toEqual([
       { menuId: 4, name: "닭발", price: 15_000, quantity: 2 },
     ]);
-    expect(order).toMatchObject({ id: 7, pubName: "일렉트로닉 나이트", totalPrice: 30_000 });
+    expect(order).toMatchObject({
+      id: 7,
+      pubName: "일렉트로닉 나이트",
+      totalPrice: 30_000,
+    });
   });
 
   it("treats a missing depositor name as not submitted", async () => {

@@ -1,5 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { AxiosError, AxiosHeaders } from "axios";
 import { MemoryRouter, Route, Routes } from "react-router";
 
@@ -99,8 +106,20 @@ function createOrderBody({
     account,
     depositorName,
     items: [
-      { lineAmount: 2_000, menuId: 14, menuName: "상차림비", quantity: 1, unitPrice: 2_000 },
-      { lineAmount: 25_000, menuId: 1, menuName: "메뉴명", quantity: 1, unitPrice: 25_000 },
+      {
+        lineAmount: 2_000,
+        menuId: 14,
+        menuName: "상차림비",
+        quantity: 1,
+        unitPrice: 2_000,
+      },
+      {
+        lineAmount: 25_000,
+        menuId: 1,
+        menuName: "메뉴명",
+        quantity: 1,
+        unitPrice: 25_000,
+      },
     ],
     orderId: ORDER_ID,
     paymentMethod,
@@ -232,7 +251,9 @@ describe("BoothOrderPage", () => {
 
     const separateCharge = screen.getByRole("list", { name: "상차림비" });
     expect(within(separateCharge).getByText("2,000원")).toBeInTheDocument();
-    expect(within(separateCharge).getByLabelText("상차림비 수량")).toHaveTextContent("1");
+    expect(within(separateCharge).getByLabelText("상차림비 수량")).toHaveTextContent(
+      "1",
+    );
     expect(
       within(separateCharge).getByRole("button", { name: "상차림비 수량 줄이기" }),
     ).toBeDisabled();
@@ -243,9 +264,7 @@ describe("BoothOrderPage", () => {
 
     // 상차림비가 섹션에도 남으면 수량과 합계가 두 번 잡힌다.
     expect(screen.getAllByRole("list", { name: "상차림비" })).toHaveLength(1);
-    expect(
-      screen.queryByRole("heading", { name: "상차림비" }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "상차림비" })).not.toBeInTheDocument();
   });
 
   it("slides the order button in only while a menu is selected", async () => {
@@ -257,10 +276,14 @@ describe("BoothOrderPage", () => {
     addFirstMenu();
     expect(getBottomBar()).not.toHaveAttribute("inert");
     expect(getBottomBar()).toHaveClass("translate-y-0");
-    expect(screen.getByRole("button", { name: "27,000원 주문하기" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "27,000원 주문하기" }),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getAllByRole("button", { name: "메뉴명 수량 늘리기" })[5]);
-    expect(screen.getByRole("button", { name: "42,000원 주문하기" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "42,000원 주문하기" }),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getAllByRole("button", { name: "메뉴명 수량 줄이기" })[0]);
     fireEvent.click(screen.getAllByRole("button", { name: "메뉴명 수량 줄이기" })[5]);
@@ -273,7 +296,12 @@ describe("BoothOrderPage", () => {
 
     expect(httpPost).toHaveBeenCalledWith(
       `/pubs/${BOOTH_ID}/tables/${TABLE_CODE}/orders`,
-      { items: [{ menuId: 14, quantity: 1 }, { menuId: 1, quantity: 1 }] },
+      {
+        items: [
+          { menuId: 14, quantity: 1 },
+          { menuId: 1, quantity: 1 },
+        ],
+      },
       { headers: { "Idempotency-Key": expect.any(String) } },
     );
   });
@@ -335,7 +363,9 @@ describe("BoothOrderPage", () => {
     expect(
       screen.getByRole("button", { name: "입금자명 수정하기" }).closest(".fixed"),
     ).toBeNull();
-    expect(screen.getByRole("button", { name: "입금자명 수정하기" })).toHaveClass("h-16");
+    expect(screen.getByRole("button", { name: "입금자명 수정하기" })).toHaveClass(
+      "h-16",
+    );
 
     depositView.unmount();
     seedOrder({ depositorName: "김입금", status: "PAID" });
@@ -456,9 +486,7 @@ describe("BoothOrderPage", () => {
     renderOrderPage();
 
     const dialog = await screen.findByRole("dialog", { name: "주문 취소 안내" });
-    expect(
-      within(dialog).getByText("내 주문이 취소되었어요."),
-    ).toBeInTheDocument();
+    expect(within(dialog).getByText("내 주문이 취소되었어요.")).toBeInTheDocument();
 
     fireEvent.click(
       within(dialog).getByRole("button", { name: "주문 취소 안내 닫기" }),
@@ -483,7 +511,9 @@ describe("BoothOrderPage", () => {
       await screen.findByText("품절된 메뉴가 있어요. 담은 메뉴를 확인해주세요"),
     ).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "27,000원 주문하기" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "27,000원 주문하기" }),
+    ).toBeInTheDocument();
   });
 
   it("copies the account number from the transfer dialog", async () => {

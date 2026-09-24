@@ -29,7 +29,12 @@ const tableBody = {
   pub: {
     menuBoardImageUrl: "https://example.com/menu.webp",
     menus: [
-      menu(1, { category: "SIDE", name: "상차림비", price: 2_000, separateCharge: true }),
+      menu(1, {
+        category: "SIDE",
+        name: "상차림비",
+        price: 2_000,
+        separateCharge: true,
+      }),
       menu(2, { category: "DRINK", name: "사이다" }),
       menu(3, { category: "SET", name: "세트" }),
     ],
@@ -87,9 +92,9 @@ describe("getOrderTable", () => {
 
     expect(booth.separateChargeItem?.name).toBe("상차림비");
     expect(booth.menuSections.map((section) => section.id)).toEqual(["set", "drink"]);
-    expect(
-      booth.menuSections.flatMap((section) => section.items),
-    ).not.toContainEqual(expect.objectContaining({ separateCharge: true }));
+    expect(booth.menuSections.flatMap((section) => section.items)).not.toContainEqual(
+      expect.objectContaining({ separateCharge: true }),
+    );
   });
 
   it("maps the menu response fields onto the booth menu shape", async () => {
@@ -107,10 +112,14 @@ describe("getOrderTable", () => {
 
   it("treats a missing booth and a missing table the same", async () => {
     httpGet.mockRejectedValueOnce(notFound("PUB002"));
-    await expect(getOrderTable("nope", "table-a")).rejects.toSatisfy(isOrderTableNotFound);
+    await expect(getOrderTable("nope", "table-a")).rejects.toSatisfy(
+      isOrderTableNotFound,
+    );
 
     httpGet.mockRejectedValueOnce(notFound("PUB003"));
-    await expect(getOrderTable("elec-eh", "nope")).rejects.toSatisfy(isOrderTableNotFound);
+    await expect(getOrderTable("elec-eh", "nope")).rejects.toSatisfy(
+      isOrderTableNotFound,
+    );
 
     httpGet.mockRejectedValueOnce(notFound("PUB006"));
     await expect(getOrderTable("elec-eh", "table-a")).rejects.not.toSatisfy(

@@ -146,7 +146,11 @@ const BoothOrderContent = ({
             subtitle="직원이 자리로 가고 있어요. 조금만 기다려 주세요."
             title="현금 준비 안내"
           >
-            <OrderReceipt account={order.account} boothName={booth.name} order={order} />
+            <OrderReceipt
+              account={order.account}
+              boothName={booth.name}
+              order={order}
+            />
           </OrderStatusScreen>
         </main>
       )}
@@ -158,7 +162,11 @@ const BoothOrderContent = ({
             subtitle="조리 중이에요. 잠시만 기다려주세요."
             title="주문이 완료되었어요!"
           >
-            <OrderReceipt account={order.account} boothName={booth.name} order={order} />
+            <OrderReceipt
+              account={order.account}
+              boothName={booth.name}
+              order={order}
+            />
           </OrderStatusScreen>
           <div className="mt-12">
             <OrderActionButton label="추가 주문하기" onClick={startAdditionalOrder} />

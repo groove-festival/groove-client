@@ -4,7 +4,10 @@ import dialogClose from "../festival-visuals/dialog-close.svg";
 import { OrderDialogFrame } from "./OrderDialogFrame";
 
 // 디자인에서 줄을 직접 나눈 문구는 같은 위치에서 줄바꿈한다.
-const canceledNotices = ["내 주문이 취소되었어요.", "자세한 사항은 직원에게 문의해 주세요."];
+const canceledNotices = [
+  "내 주문이 취소되었어요.",
+  "자세한 사항은 직원에게 문의해 주세요.",
+];
 
 // 관리자가 주문을 취소하면 PUB-5가 CANCELED를 내려준다. 닫기는 저장된 주문
 // 토큰까지 버리고 메뉴 화면으로 돌아간다 (남겨두면 재진입할 때마다 다시 뜬다).
