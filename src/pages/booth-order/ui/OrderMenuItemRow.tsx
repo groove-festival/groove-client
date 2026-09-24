@@ -29,7 +29,7 @@ export const OrderMenuItemRow = ({
 
   return (
     <li
-      className={`flex items-center justify-between px-6 py-7 text-[#fcfcfc] ${className}`}
+      className={`flex items-center justify-between px-6 py-4 text-[#fcfcfc] ${className}`}
     >
       <div className="flex min-w-0 flex-col gap-2 font-semibold">
         <p className="text-xl leading-6">{item.name}</p>

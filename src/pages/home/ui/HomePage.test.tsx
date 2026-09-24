@@ -132,49 +132,49 @@ describe("HomePage", () => {
     expect(
       items
         .filter((item) => item.getAttribute("aria-current") === "time")
-        .map((item) => item.querySelector("button span")?.textContent),
-    ).toEqual(["LOVE ZONE 재오픈", "오프닝 & 밴드동아리 축하 공연"]);
+        .map((item) => item.querySelector("div > span")?.textContent),
+    ).toEqual(["LOVE ZONE 재오픈", "주막 오픈", "오프닝 & 밴드동아리 축하 공연"]);
   });
 });
 
-describe("HomePage timetable tone toggle (design QA)", () => {
+describe("HomePage timetable by clock", () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ["Date"] });
-    setKstNow("2026-10-01T12:00:00");
   });
 
   afterEach(() => {
     vi.useRealTimers();
   });
 
-  it("toggles a card's active tone on each click without changing the current time", () => {
+  it("lights only the item whose time range contains now", () => {
+    setKstNow("2026-10-01T12:00:00");
     renderPage();
 
-    const [current, next] = within(
+    const items = within(
       screen.getByRole("list", { name: "2026-10-01 일정" }),
     ).getAllByRole("listitem");
-    const currentCard = within(current).getByRole("button");
-    const nextCard = within(next).getByRole("button");
 
-    expect(currentCard).toHaveAttribute("aria-pressed", "true");
-    expect(nextCard).toHaveAttribute("aria-pressed", "false");
-
-    fireEvent.click(nextCard);
-    expect(nextCard).toHaveAttribute("aria-pressed", "true");
-    expect(next).not.toHaveAttribute("aria-current");
-
-    fireEvent.click(currentCard);
-    expect(currentCard).toHaveAttribute("aria-pressed", "false");
-    expect(current).toHaveAttribute("aria-current", "time");
-
-    fireEvent.click(nextCard);
-    expect(nextCard).toHaveAttribute("aria-pressed", "false");
+    expect(
+      items.filter((item) => item.getAttribute("aria-current") === "time"),
+    ).toHaveLength(1);
+    expect(items[0]).toHaveAttribute("aria-current", "time");
   });
-});
 
-describe("HomePage timetable preview time", () => {
-  it("uses the ?now= KST time on the dev server", () => {
-    renderPage("/?now=2026-10-02T20:50");
+  it("moves the lit item as the clock enters the next range", () => {
+    setKstNow("2026-10-01T15:00:00");
+    renderPage();
+
+    const items = within(
+      screen.getByRole("list", { name: "2026-10-01 일정" }),
+    ).getAllByRole("listitem");
+
+    expect(items[0]).not.toHaveAttribute("aria-current");
+    expect(items[1]).toHaveAttribute("aria-current", "time");
+  });
+
+  it("shows the second day schedule once the clock passes it", () => {
+    setKstNow("2026-10-02T20:50:00");
+    renderPage();
 
     expect(screen.getByRole("list", { name: "2026-10-02 일정" })).toBeInTheDocument();
   });
