@@ -15,7 +15,11 @@ export function ContestResults({ votes }: ContestResultsProps) {
   );
 
   return (
-    <section className="flex w-full flex-col items-start gap-6 rounded-3xl bg-[rgba(252,252,252,0.1)] px-4 py-5">
+    <section
+      className={`flex w-full flex-col items-start gap-6 rounded-3xl border border-[#565656] bg-[rgba(252,252,252,0.1)] px-4 ${
+        finishedVotes.length === 0 ? "pt-5 pb-[51px]" : "py-5"
+      }`}
+    >
       <p className="text-2xl font-bold text-[#fcfcfc]">경연 결과</p>
       {finishedVotes.length === 0 ? (
         <p className="w-full text-center text-xs text-[#fcfcfc]">

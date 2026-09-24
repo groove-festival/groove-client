@@ -15,7 +15,7 @@ export function ParticipantTile({
   return (
     <button
       aria-pressed={selected}
-      className={`flex min-h-[174px] w-[138px] flex-col items-center justify-center gap-6 rounded-3xl border bg-[#767676] px-7 py-8 ${
+      className={`flex min-h-[174px] w-full min-w-0 flex-1 flex-col items-center justify-center gap-6 rounded-3xl border bg-[#767676] px-7 py-8 ${
         selected ? "border-[#fcfcfc]" : "border-[#a2a2a2]"
       } disabled:cursor-default`}
       disabled={disabled}

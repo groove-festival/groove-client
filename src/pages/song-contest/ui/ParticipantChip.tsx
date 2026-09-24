@@ -9,7 +9,7 @@ interface ParticipantChipProps {
 export function ParticipantChip({ name, muted = false }: ParticipantChipProps) {
   return (
     <div
-      className={`flex items-center gap-4 rounded-2xl border bg-[#767676] p-3 ${
+      className={`flex w-full min-w-0 items-center gap-4 rounded-2xl border bg-[#767676] p-3 ${
         muted ? "border-[#a2a2a2]" : "border-[#fcfcfc]"
       }`}
     >

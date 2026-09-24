@@ -1,3 +1,5 @@
+import locationIcon from "../festival-visuals/location-icon.png";
+
 interface VenueOutOfRangeNoticeProps {
   onRetry: () => void;
 }
@@ -5,12 +7,7 @@ interface VenueOutOfRangeNoticeProps {
 export function VenueOutOfRangeNotice({ onRetry }: VenueOutOfRangeNoticeProps) {
   return (
     <div className="flex w-[251px] flex-col items-center gap-10 text-center">
-      <span
-        aria-hidden="true"
-        className="flex size-[120px] items-center justify-center rounded-full bg-[#ff0080]/20"
-      >
-        <span className="size-16 rounded-full bg-[#ff0080]" />
-      </span>
+      <img alt="" className="h-[161px] w-[175px] object-contain" src={locationIcon} />
       <p className="text-base font-medium text-[#fcfcfc]">
         무대 주변으로 이동하면 투표가 가능해요
       </p>

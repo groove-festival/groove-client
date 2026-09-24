@@ -11,7 +11,12 @@ import {
 } from "react";
 import { useSearchParams } from "react-router";
 
-import { authQueryKeys, isGoogleParticipant, useAuthMe, useLoginWithGoogle } from "@/entities/auth";
+import {
+  authQueryKeys,
+  isGoogleParticipant,
+  useAuthMe,
+  useLoginWithGoogle,
+} from "@/entities/auth";
 import { useVotes } from "@/entities/contest";
 import { useFestivalStatus } from "@/entities/festival";
 import { ApiError } from "@/shared/api";
@@ -600,6 +605,12 @@ export default function SongContestPage() {
       </ol>
     );
 
+  // 실제 운영에서는 사연모집이 끝난 뒤에야 경연이 열리도록 일정을 잡지만,
+  // 시각 4개는 독립적으로 설정 가능해 이론상 겹칠 수 있다. 겹치면 투표 화면
+  // 하나만 남기고 사연 섹션은 통째로 숨긴다 — Figma "가요제/투표진행" 프레임도
+  // 진행 중에는 사연 관련 내용을 전혀 보여주지 않는다.
+  const showStorySection = contestPhase !== "OPEN" && contestPhase !== "CLOSED";
+
   const height =
     effectiveView === "form" && storyPhase === "OPEN"
       ? 1764
@@ -623,7 +634,7 @@ export default function SongContestPage() {
         votesTabLabel={votesTabLabel}
       />
 
-      {storyPhase === "BEFORE" && (
+      {showStorySection && storyPhase === "BEFORE" && (
         <section className="mx-auto mt-40 flex w-full flex-col items-center gap-12 text-center">
           <h1 className="text-2xl font-semibold">사연 모집이 아직이에요</h1>
           <img alt="" className="h-[208px] w-[260px] object-contain" src={hourglass} />
@@ -631,7 +642,7 @@ export default function SongContestPage() {
         </section>
       )}
 
-      {storyPhase === "CLOSED" && (
+      {showStorySection && storyPhase === "CLOSED" && (
         <section className="mx-auto mt-40 flex w-full flex-col items-center gap-12 text-center">
           <h1 className="text-2xl font-semibold">사연 모집이 끝났어요</h1>
           <img
@@ -643,7 +654,7 @@ export default function SongContestPage() {
         </section>
       )}
 
-      {storyPhase === "OPEN" && effectiveView === "list" && (
+      {showStorySection && storyPhase === "OPEN" && effectiveView === "list" && (
         <section className="mx-auto mt-20 w-full">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <h1 className="text-2xl font-bold">사연 신청 목록</h1>
@@ -671,27 +682,33 @@ export default function SongContestPage() {
         </section>
       )}
 
-      {storyPhase === "OPEN" && effectiveView === "form" && !isLoggedInContestUser && (
-        <ContestLoginPanel
-          authError={auth.isError}
-          authPending={auth.isPending}
-          isLoginPending={isLoginPending}
-          loginError={loginError}
-          onCredential={handleGoogleCredential}
-          onRetryAuth={() => void auth.refetch()}
-          wrongRole={wrongRole}
-        />
-      )}
+      {showStorySection &&
+        storyPhase === "OPEN" &&
+        effectiveView === "form" &&
+        !isLoggedInContestUser && (
+          <ContestLoginPanel
+            authError={auth.isError}
+            authPending={auth.isPending}
+            isLoginPending={isLoginPending}
+            loginError={loginError}
+            onCredential={handleGoogleCredential}
+            onRetryAuth={() => void auth.refetch()}
+            wrongRole={wrongRole}
+          />
+        )}
 
-      {storyPhase === "OPEN" && effectiveView === "form" && isLoggedInContestUser && (
-        <StoryForm
-          isSubmitting={submitStory.isPending}
-          onSubmit={handleSubmit}
-          submitErrorMessage={submitErrorMessage}
-        />
-      )}
+      {showStorySection &&
+        storyPhase === "OPEN" &&
+        effectiveView === "form" &&
+        isLoggedInContestUser && (
+          <StoryForm
+            isSubmitting={submitStory.isPending}
+            onSubmit={handleSubmit}
+            submitErrorMessage={submitErrorMessage}
+          />
+        )}
 
-      {storyPhase === "OPEN" && effectiveView === "success" && (
+      {showStorySection && storyPhase === "OPEN" && effectiveView === "success" && (
         <section
           aria-live="polite"
           className="mx-auto mt-[120px] flex w-full flex-col items-center gap-10 text-center"
@@ -716,7 +733,7 @@ export default function SongContestPage() {
       {contestPhase === "CLOSED" && <ContestClosedNotice />}
 
       {contestPhase === "OPEN" && (
-        <div className="mx-auto mt-10 mb-24 flex w-full max-w-[361px] flex-col gap-6">
+        <div className="mx-auto mt-10 mb-24 flex w-full flex-col gap-6">
           <VoteCastingPanel />
           <ContestResults votes={votes} />
         </div>

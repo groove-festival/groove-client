@@ -1,3 +1,5 @@
+import { Fragment } from "react";
+
 import type { Vote } from "@/entities/contest";
 
 import { ParticipantTile } from "./ParticipantTile";
@@ -25,39 +27,42 @@ export function VoteMatchPanel({
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <p className="text-xl font-bold text-[#fcfcfc]">{vote.title}</p>
-        {isVoted ? (
-          <span className="rounded-full bg-[#ff0080] px-3 py-2 text-xs font-medium text-[#fcfcfc] shadow-[0_0_2px_#ff0080]">
-            투표 완료
-          </span>
-        ) : (
-          <span className="text-xs font-medium text-[#fcfcfc]">{remainingLabel}</span>
-        )}
-      </div>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xl font-bold text-[#fcfcfc]">{vote.title}</p>
+          {isVoted ? (
+            <span className="rounded-full bg-[#ff0080] px-3 py-2 text-xs font-medium text-[#fcfcfc] shadow-[0_0_2px_#ff0080]">
+              투표 완료
+            </span>
+          ) : (
+            <span className="text-xs font-medium text-[#fcfcfc]">{remainingLabel}</span>
+          )}
+        </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        {vote.participants.map((participant, index) => (
-          <div className="flex items-center gap-3" key={participant.voteParticipantId}>
-            <ParticipantTile
-              disabled={isVoted}
-              name={participant.name}
-              onClick={
-                isVoted
-                  ? undefined
-                  : () => onSelectParticipant(participant.voteParticipantId)
-              }
-              selected={
-                isVoted
-                  ? votedParticipantId === participant.voteParticipantId
-                  : selectedParticipantId === participant.voteParticipantId
-              }
-            />
-            {index < vote.participants.length - 1 && vote.participants.length === 2 && (
-              <span className="text-xl font-semibold text-white">vs</span>
-            )}
-          </div>
-        ))}
+        <div className="flex w-full items-center justify-center gap-3">
+          {vote.participants.map((participant, index) => (
+            <Fragment key={participant.voteParticipantId}>
+              <ParticipantTile
+                disabled={isVoted}
+                name={participant.name}
+                onClick={
+                  isVoted
+                    ? undefined
+                    : () => onSelectParticipant(participant.voteParticipantId)
+                }
+                selected={
+                  isVoted
+                    ? votedParticipantId === participant.voteParticipantId
+                    : selectedParticipantId === participant.voteParticipantId
+                }
+              />
+              {index < vote.participants.length - 1 &&
+                vote.participants.length === 2 && (
+                  <span className="shrink-0 text-xl font-semibold text-white">vs</span>
+                )}
+            </Fragment>
+          ))}
+        </div>
       </div>
 
       {!isVoted && (

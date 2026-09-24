@@ -34,22 +34,24 @@ export function BracketMatchRow({
       ) : isMultiWay ? (
         <div className="flex flex-col gap-2">
           {vote.participants.map((participant) => (
-            <div className="flex items-center gap-2" key={participant.voteParticipantId}>
+            <div className="relative w-full" key={participant.voteParticipantId}>
               <ParticipantChip name={participant.name} />
               {showWinnerBadge && participant.resultRank === 1 && <WinnerBadge />}
             </div>
           ))}
         </div>
       ) : (
-        <div className="flex items-center justify-center gap-3">
-          <div className="flex items-center gap-2">
+        <div className="flex w-full items-center justify-center gap-3">
+          <div className="relative min-w-0 flex-1">
             <ParticipantChip name={vote.participants[0].name} />
             {showWinnerBadge && vote.participants[0].resultRank === 1 && (
               <WinnerBadge />
             )}
           </div>
-          <span className="w-[22px] text-xl font-medium text-[#fcfcfc]">vs</span>
-          <div className="flex items-center gap-2">
+          <span className="w-[22px] shrink-0 text-xl font-medium text-[#fcfcfc]">
+            vs
+          </span>
+          <div className="relative min-w-0 flex-1">
             <ParticipantChip name={vote.participants[1].name} />
             {showWinnerBadge && vote.participants[1].resultRank === 1 && (
               <WinnerBadge />
@@ -61,9 +63,11 @@ export function BracketMatchRow({
   );
 }
 
+// 참가자 칩 우측 상단에 덧대는 우승 배지. flex 행에서 텍스트와 너비를 다투지
+// 않도록 칩 위에 절대 위치로 얹는다(칩·부모에 position: relative 필요).
 function WinnerBadge() {
   return (
-    <span className="rounded-full bg-[#ff0080] px-3 py-2 text-xs font-medium text-[#fcfcfc] shadow-[0_0_2px_#ff0080]">
+    <span className="absolute -top-2 -right-2 rounded-full bg-[#ff0080] px-3 py-2 text-xs font-medium text-[#fcfcfc] shadow-[0_0_2px_#ff0080]">
       우승
     </span>
   );
