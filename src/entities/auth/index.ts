@@ -3,7 +3,9 @@ export {
   type AdminRole,
   isGoogleParticipant,
   isPromoAdmin,
+  isPubAdmin,
   PROMO_ADMIN_ROLE,
+  PUB_ADMIN_ROLE,
 } from "./model/account";
 export { authQueryKeys } from "./api/queryKeys";
 export { getAuthMe, useAuthMe } from "./api/getAuthMe";
