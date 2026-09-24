@@ -45,6 +45,9 @@ const envelope = (data: unknown) => ({
 
 const tokenHeader = { headers: { "X-Order-Token": "token-7" } };
 
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
 afterEach(() => {
   vi.clearAllMocks();
 });
@@ -94,9 +97,39 @@ describe("createOrder", () => {
     const [url, body, config] = httpPost.mock.calls[0];
     expect(url).toBe("/pubs/elec-eh/tables/table-a/orders");
     expect(body).toEqual({ items: [{ menuId: 4, quantity: 2 }] });
-    expect(config?.headers?.["Idempotency-Key"]).toEqual(expect.any(String));
+    // 서버는 UUID 가 아닌 멱등키를 400(C001)으로 거부한다 (실서버 확인).
+    expect(config?.headers?.["Idempotency-Key"]).toMatch(UUID_PATTERN);
     expect(created.orderToken).toBe("token-7");
     expect(created.order.status).toBe("PENDING_DEPOSIT");
+  });
+
+  it("still sends a UUID when the browser has no crypto.randomUUID", async () => {
+    // 구형·인앱 브라우저는 randomUUID 가 없다. 예전 폴백은 UUID 가 아닌
+    // 문자열을 만들어 그런 기기에서는 주문이 전부 400 으로 실패했다.
+    const originalCrypto = globalThis.crypto;
+    const { getRandomValues } = originalCrypto;
+    Object.defineProperty(globalThis, "crypto", {
+      configurable: true,
+      value: { getRandomValues: getRandomValues.bind(originalCrypto) },
+    });
+    httpPost.mockResolvedValueOnce(envelope({ ...orderBody, orderToken: "token-7" }));
+
+    try {
+      await createOrder({
+        boothCode: "elec-eh",
+        items: [{ menuId: 4, quantity: 1 }],
+        tableCode: "table-a",
+      });
+    } finally {
+      Object.defineProperty(globalThis, "crypto", {
+        configurable: true,
+        value: originalCrypto,
+      });
+    }
+
+    expect(httpPost.mock.calls[0][2]?.headers?.["Idempotency-Key"]).toMatch(
+      UUID_PATTERN,
+    );
   });
 
   it("reuses a caller supplied idempotency key so a double tap replays the order", async () => {
