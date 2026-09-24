@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useSearchParams } from "react-router";
 
 import { useFestivalStatus } from "@/entities/festival";
+import { useScheduledRefetch } from "@/shared/lib/scheduling";
 import { LoadingFallback, NetworkErrorFallback } from "@/shared/ui";
 import { FestivalHero } from "@/widgets/festival-hero";
 
@@ -12,7 +13,6 @@ import {
 import { trackPlaylistEvent } from "../model/playlistTelemetry";
 import { usePlaylistEntryScroll } from "../model/usePlaylistEntryScroll";
 import { usePlaylistGuideScroll } from "../model/usePlaylistGuideScroll";
-import { useScheduledRefetch } from "../model/useScheduledRefetch";
 import { ClosedSection } from "./ClosedSection";
 import { CountdownSection } from "./CountdownSection";
 import { PlaylistStatusError } from "./PlaylistStatusError";

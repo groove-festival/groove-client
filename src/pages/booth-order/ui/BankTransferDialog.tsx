@@ -1,16 +1,14 @@
 import { Fragment, useState } from "react";
 
-import { type BoothDepositAccount } from "@/entities/booth";
-
 import currencyCircleDollar from "../festival-visuals/currency-circle-dollar.svg";
 import dialogClose from "../festival-visuals/dialog-close.svg";
-import { normalizeDepositorName } from "../model/order";
+import { normalizeDepositorName, type OrderAccount } from "../model/order";
 import { CopyAccountNumberButton } from "./CopyAccountNumberButton";
 import { DepositorNameField } from "./DepositorNameField";
 import { OrderDialogFrame } from "./OrderDialogFrame";
 
 interface BankTransferDialogProps {
-  account: BoothDepositAccount;
+  account: OrderAccount;
   onChooseCash: () => void;
   onClose: () => void;
   onSubmitDepositorName: (depositorName: string) => void;

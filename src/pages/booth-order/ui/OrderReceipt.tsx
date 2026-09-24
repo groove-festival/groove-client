@@ -1,13 +1,11 @@
 import { type ReactNode } from "react";
 
-import { type BoothDepositAccount } from "@/entities/booth";
-
 import { formatWon } from "../lib/formatWon";
-import { type PlacedOrder } from "../model/order";
+import { type OrderAccount, type PlacedOrder } from "../model/order";
 import { CopyAccountNumberButton } from "./CopyAccountNumberButton";
 
 interface OrderReceiptProps {
-  account: BoothDepositAccount;
+  account: OrderAccount;
   boothName: string;
   canCopyAccountNumber?: boolean;
   order: PlacedOrder;
