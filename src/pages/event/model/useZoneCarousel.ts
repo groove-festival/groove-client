@@ -98,14 +98,11 @@ export const useZoneCarousel = (selectedIndex: number) => {
       return;
     }
 
-    // 스냅이 켜져 있으면 프레임마다 가까운 카드로 끌려가 끊겨 보여서, 이동 중에만 끈다.
-    scroller.style.scrollSnapType = "none";
     let frame = 0;
     let startTime: number | null = null;
 
     const finish = () => {
       window.cancelAnimationFrame(frame);
-      scroller.style.scrollSnapType = "";
       cancelSlideRef.current = null;
     };
 
