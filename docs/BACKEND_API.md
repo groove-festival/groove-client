@@ -2,11 +2,12 @@
 
 **Source**: supplied OpenAPI 3.1 document, `GROOVE Festival API` v0.4  
 **Scope**: frontend deployment and GROOVE PLAYLIST integration planning  
-**Status**: implementation reference with backend confirmation required
+**Status**: historical integration note; confirm current contracts in `groove-docs`
 
-This document summarizes the backend API contract from the supplied OpenAPI
-document and records the frontend work needed before production operation.
-`docs/PRD.md` remains the product behavior source of truth.
+This document is a historical integration note based on the supplied v0.4
+OpenAPI document; its contract details may be outdated. For current product
+behavior and API requirements, follow the PRD and API specification linked from
+`groove-docs/README.md`.
 
 ## 1. Recommended Next Step
 

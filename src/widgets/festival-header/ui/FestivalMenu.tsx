@@ -1,4 +1,6 @@
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
+
+import { useFestivalStatus } from "@/entities/festival";
 
 import { navItems } from "../model/navItems";
 
@@ -8,6 +10,14 @@ interface FestivalMenuProps {
 }
 
 export const FestivalMenu = ({ isOpen, onClose }: FestivalMenuProps) => {
+  const location = useLocation();
+  const { data: festivalStatus } = useFestivalStatus();
+  const previewBadge =
+    location.pathname === "/contest" &&
+    new URLSearchParams(location.search).get("phase") === "open";
+  const storyBadge = previewBadge || festivalStatus?.stage?.storyPhase === "OPEN";
+  const contestBadge = festivalStatus?.stage?.contestPhase === "OPEN";
+
   return (
     <div
       aria-hidden={!isOpen}
@@ -54,12 +64,22 @@ export const FestivalMenu = ({ isOpen, onClose }: FestivalMenuProps) => {
                 key={item.label}
               >
                 <Link
-                  className="flex h-[94px] items-center pl-6 text-2xl font-medium text-[#fcfcfc]"
+                  className="flex h-[94px] items-center gap-3 pl-6 text-2xl font-medium text-[#fcfcfc]"
                   onClick={onClose}
                   tabIndex={isOpen ? undefined : -1}
                   to={item.to}
                 >
                   {item.label}
+                  {item.to === "/contest" && storyBadge && (
+                    <span className="rounded-full bg-[#ff0080] px-3 py-1 text-xs font-semibold whitespace-nowrap">
+                      사연 모집중
+                    </span>
+                  )}
+                  {item.to === "/contest" && contestBadge && (
+                    <span className="rounded-full bg-[#5d00ff] px-3 py-1 text-xs font-semibold whitespace-nowrap">
+                      투표진행중
+                    </span>
+                  )}
                 </Link>
               </li>
             ))}

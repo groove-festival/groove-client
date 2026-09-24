@@ -15,7 +15,14 @@ const statusBody = {
   phase: "BEFORE",
   festivalStartAt: "2026-10-01T00:00:00+09:00",
   festivalEndAt: "2026-10-03T00:00:00+09:00",
-  storyCollectionOpen: false,
+  stage: {
+    storyPhase: "BEFORE",
+    storyCollectionStartAt: "2026-09-20T00:00:00+09:00",
+    storyCollectionEndAt: "2026-09-30T00:00:00+09:00",
+    contestPhase: "BEFORE",
+    contestStartAt: "2026-10-01T18:00:00+09:00",
+    contestEndAt: "2026-10-01T21:00:00+09:00",
+  },
   playlist: {
     phase: "SUBMISSION",
     submissionStartAt: "2026-09-12T00:00:00+09:00",

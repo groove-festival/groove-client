@@ -11,8 +11,12 @@ the request.
   before editing.
 - Read `README.md` for setup, commands, or repository orientation.
 - Read `CONVENTION.md` for implementation, testing, Git, or collaboration rules.
-- Read `docs/PRD.md` only for product behavior, requirements, data contracts, or
-  user flows.
+- For product behavior, requirements, data contracts, or user flows, read
+  the locally checked-out `groove-docs/README.md` and the PRD it identifies.
+  For API contracts, use the API specification identified there. Do not update
+  the submodule automatically; use the version the user has checked out.
+  `docs/PRD.md` is a legacy copy, not the source of truth. If the submodule is
+  unavailable, report that instead of silently falling back to the legacy PRD.
 - Read `docs/FSD_ARCHITECTURE.md` before frontend file placement, movement,
   public API, or import-boundary work.
 

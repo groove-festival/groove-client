@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router";
 
 import { useFestivalStatus } from "@/entities/festival";
 import { LoadingFallback, NetworkErrorFallback } from "@/shared/ui";
+import { FestivalHero } from "@/widgets/festival-hero";
 
 import {
   nextPlaylistBoundaryAt,
@@ -14,7 +15,6 @@ import { usePlaylistGuideScroll } from "../model/usePlaylistGuideScroll";
 import { useScheduledRefetch } from "../model/useScheduledRefetch";
 import { ClosedSection } from "./ClosedSection";
 import { CountdownSection } from "./CountdownSection";
-import { FestivalHero } from "./FestivalHero";
 import { PlaylistStatusError } from "./PlaylistStatusError";
 import { SongRequestForm } from "./SongRequestForm";
 
@@ -40,8 +40,8 @@ export default function PlaylistPage() {
     }
   }, [phase]);
 
-  // BEFORE_OPEN은 카운트다운 높이(3121px), SUBMISSION은 약관 동의와 footer까지
-  // 포함한 신청 폼 높이(3396px), 마감/공개 단계는 기존 안내 섹션 높이(3195px).
+  // BEFORE_OPEN은 카운트다운 높이(3121px), SUBMISSION은 신청 폼 높이(3396px),
+  // 마감/공개 단계는 기존 안내 섹션 높이(3195px).
   // SongRequestForm은 absolute 배치라 자식 높이가 이 컨테이너 높이에 반영되지
   // 않는다 — 검색 결과처럼 늘어나는 콘텐츠는 오버레이로 띄워서 이 고정 높이를
   // 넘지 않게 한다.

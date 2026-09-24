@@ -3,7 +3,6 @@ import { useNavigate } from "react-router";
 import { lockIllustration } from "@/shared/ui";
 
 import { PLAYLIST_BOTTOM_ANCHOR_ID } from "../model/playlistAnchors";
-import { PlaylistLegalFooter } from "./PlaylistLegalFooter";
 
 interface ClosedSectionProps {
   // selection: 신청 마감 · 홍보팀 선정 중 · 최종 목록 비공개 (PLST 단계 SELECTION)
@@ -47,8 +46,6 @@ export const ClosedSection = ({ variant }: ClosedSectionProps) => {
           최종 플레이리스트는 축제 기간에 공개됩니다
         </p>
       )}
-
-      <PlaylistLegalFooter />
     </section>
   );
 };
