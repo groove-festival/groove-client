@@ -52,7 +52,6 @@ interface FestivalMapProps {
   // 바깥 박스(비율·테두리·배경)는 시안이 지도마다 달라 쓰는 쪽이 정한다.
   className?: string;
   controlsClassName?: string;
-  zoomStepButtonSize?: 40 | 44;
   // 지도와 함께 움직이는 레이어. 비율 좌표계(source 크기) 위에 그린다.
   children?: ReactNode;
 }
@@ -70,7 +69,6 @@ export const FestivalMap = ({
   focus = null,
   className = "",
   controlsClassName = "",
-  zoomStepButtonSize = 40,
   children,
 }: FestivalMapProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -214,7 +212,6 @@ export const FestivalMap = ({
         onReset={() => resetView(BUTTON_ANIMATION_MS)}
         onZoomIn={zoomIn}
         onZoomOut={zoomOut}
-        zoomStepButtonSize={zoomStepButtonSize}
       />
     </div>
   );

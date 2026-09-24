@@ -116,14 +116,13 @@ export const PubBoothMap = ({
         <div className="absolute inset-0">
           <FestivalMap
             className="size-full rounded-3xl bg-[#1c1c1c]"
-            controlsClassName="right-[5px] bottom-[7px] gap-4"
+            controlsClassName="right-[5px] bottom-[7px] gap-3"
             focus={focus}
             initialCenter={toCropRatio(getPubsCenter(booths))}
             initialScale={INITIAL_SCALE}
             maxScale={MAX_SCALE}
             minScale={MIN_SCALE}
             source={MAP_SOURCE}
-            zoomStepButtonSize={44}
           >
             <PubBoothLayer
               booths={booths}
