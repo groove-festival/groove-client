@@ -36,7 +36,9 @@ describe("getOrderScreen", () => {
       "depositClaimed",
     );
     expect(getOrderScreen(createOrder({ status: "PAID" }))).toBe("completed");
-    expect(getOrderScreen(createOrder({ status: "COMPLETED" }))).toBe("completed");
+    // 서빙까지 끝난 주문은 조리 중과 같은 화면을 쓰지 않는다 (FR-1.8-0의
+    // 손님 문구 4단계). 합쳐두면 음식을 받은 손님이 계속 "조리 중"을 본다.
+    expect(getOrderScreen(createOrder({ status: "COMPLETED" }))).toBe("served");
   });
 
   it("shows the cancel notice for an order the admin canceled", () => {

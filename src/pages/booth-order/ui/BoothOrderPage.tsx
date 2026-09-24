@@ -174,6 +174,25 @@ const BoothOrderContent = ({
         </main>
       )}
 
+      {screen === "served" && order && (
+        <main className="px-4 pt-[100px] pb-6">
+          <OrderStatusScreen
+            progress={1}
+            subtitle="맛있게 드세요!"
+            title="음식이 나왔어요"
+          >
+            <OrderReceipt
+              account={order.account}
+              boothName={booth.name}
+              order={order}
+            />
+          </OrderStatusScreen>
+          <div className="mt-12">
+            <OrderActionButton label="추가 주문하기" onClick={startAdditionalOrder} />
+          </div>
+        </main>
+      )}
+
       {screen === "canceled" && <OrderCanceledDialog onClose={dismissCanceledOrder} />}
 
       {isTransferDialogOpen && order && (

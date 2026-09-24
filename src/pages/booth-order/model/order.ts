@@ -30,7 +30,7 @@ export interface PlacedOrder {
 
 // 주문 화면이 보여줄 단계. 상태·결제수단 조합에서 유도한다.
 export type OrderScreen =
-  "menu" | "depositClaimed" | "cashPending" | "completed" | "canceled";
+  "menu" | "depositClaimed" | "cashPending" | "completed" | "served" | "canceled";
 
 export const getOrderScreen = (order: PlacedOrder | null): OrderScreen => {
   if (!order) {
@@ -41,8 +41,12 @@ export const getOrderScreen = (order: PlacedOrder | null): OrderScreen => {
     case "CANCELED":
       return "canceled";
     case "PAID":
-    case "COMPLETED":
+      // 결제완료 = 조리 착수. 아직 음식은 안 나갔다.
       return "completed";
+    case "COMPLETED":
+      // 서빙까지 끝난 상태. 여기서 "조리 중"을 계속 보여주면 이미 음식을 받은
+      // 손님이 직원에게 다시 물어보게 된다 (FR-1.8-0의 손님 문구 4단계).
+      return "served";
     case "DEPOSIT_CLAIMED":
       return "depositClaimed";
     case "PENDING_DEPOSIT":
