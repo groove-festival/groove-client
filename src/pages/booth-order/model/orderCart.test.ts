@@ -58,7 +58,6 @@ const booth: BoothOrderDetail = {
     { id: "beverage", title: "음료", items: [cider] },
   ],
   separateChargeItem,
-  depositAccount: { bank: "국민", accountNumber: "000000-00-000000", holder: "홍길동" },
 };
 
 describe("orderCart", () => {

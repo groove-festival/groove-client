@@ -1,44 +1,39 @@
-import { type PlacedOrder } from "./order";
-import { getOrderStorageKey, readStoredOrder, writeStoredOrder } from "./orderStorage";
+import {
+  getOrderStorageKey,
+  readStoredOrderRef,
+  type StoredOrderRef,
+  writeStoredOrderRef,
+} from "./orderStorage";
 
-const storageKey = getOrderStorageKey("electronics-eh", "table-a");
+const storageKey = getOrderStorageKey("elec-eh", "table-a");
 
-const order: PlacedOrder = {
-  depositorName: null,
-  id: "order-1",
-  lines: [{ menuId: "fee", name: "상차림비", price: 2_000, quantity: 1 }],
-  paymentMethod: "TRANSFER",
-  status: "PENDING_DEPOSIT",
-  totalPrice: 2_000,
-};
+const orderRef: StoredOrderRef = { orderId: 1, orderToken: "token-1" };
 
 describe("orderStorage", () => {
   beforeEach(() => {
     window.localStorage.clear();
   });
 
-  it("stores the order per booth and table", () => {
-    writeStoredOrder(storageKey, order);
+  it("stores the order reference per booth and table", () => {
+    writeStoredOrderRef(storageKey, orderRef);
 
-    expect(readStoredOrder(storageKey)).toEqual(order);
-    expect(readStoredOrder(getOrderStorageKey("electronics-eh", "table-b"))).toBeNull();
+    expect(readStoredOrderRef(storageKey)).toEqual(orderRef);
+    expect(readStoredOrderRef(getOrderStorageKey("elec-eh", "table-b"))).toBeNull();
   });
 
-  it("removes the order when cleared", () => {
-    writeStoredOrder(storageKey, order);
-    writeStoredOrder(storageKey, null);
+  it("removes the order reference when cleared", () => {
+    writeStoredOrderRef(storageKey, orderRef);
+    writeStoredOrderRef(storageKey, null);
 
     expect(window.localStorage.getItem(storageKey)).toBeNull();
   });
 
-  it("ignores malformed or unknown stored values", () => {
+  it("ignores malformed or incomplete stored values", () => {
     window.localStorage.setItem(storageKey, "{not json");
-    expect(readStoredOrder(storageKey)).toBeNull();
+    expect(readStoredOrderRef(storageKey)).toBeNull();
 
-    window.localStorage.setItem(
-      storageKey,
-      JSON.stringify({ ...order, status: "CANCELED" }),
-    );
-    expect(readStoredOrder(storageKey)).toBeNull();
+    // 토큰 없이 주문 식별자만 남은 값은 PUB-5를 호출할 수 없다.
+    window.localStorage.setItem(storageKey, JSON.stringify({ orderId: 1 }));
+    expect(readStoredOrderRef(storageKey)).toBeNull();
   });
 });

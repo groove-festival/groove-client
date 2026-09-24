@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 
-import warningIcon from "../festival-visuals/warning.svg";
+import { warningIcon } from "@/shared/ui";
 
 const guidelineEmphasisClassName = "font-black text-[#20f0f0]";
 
