@@ -19,7 +19,7 @@ const boothImages: Record<ZoneType, string> = {
 
 // 배경·부스 SVG 6장과 EventBoothMap 의 CROP 과 반드시 같은 값이어야 한다.
 // 하나라도 다르면 누르는 자리가 도형에서 밀린다.
-const MAP_VIEW_BOX = "540 610 100 88.643";
+const MAP_VIEW_BOX = "527.2 592.6 138 122.327";
 const BOOTH_SHAPE = { width: 8.13116, height: 5.5 } as const;
 // 도형이 아주 작아 그대로는 누를 수 없다. 회전한 좌표계에서 넉넉하게 넓힌다.
 const HIT_AREA = { width: 10, height: 11 } as const;
