@@ -10,7 +10,7 @@ export default function AdminPage() {
 
   return (
     <main
-      className="font-pretendard min-h-screen bg-[#1c1c1c] text-[#fcfcfc]"
+      className="font-pretendard mx-auto min-h-dvh w-full max-w-[600px] bg-[#1c1c1c] text-[#fcfcfc]"
       data-clarity-mask="true"
     >
       {auth.isPending && (
