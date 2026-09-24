@@ -133,11 +133,7 @@ describe("HomePage", () => {
       items
         .filter((item) => item.getAttribute("aria-current") === "time")
         .map((item) => item.querySelector("div > span")?.textContent),
-    ).toEqual([
-      "LOVE ZONE 재오픈",
-      "주막 오픈",
-      "오프닝 & 밴드동아리 축하 공연",
-    ]);
+    ).toEqual(["LOVE ZONE 재오픈", "주막 오픈", "오프닝 & 밴드동아리 축하 공연"]);
   });
 });
 
