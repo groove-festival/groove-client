@@ -154,7 +154,7 @@ export const RivalsSection = ({ scores }: RivalsSectionProps) => {
             />
           ))}
         </ol>
-        <ol aria-label="라이벌스 4위 이하" className="flex w-full flex-col gap-3">
+        <ol aria-label="라이벌스 4위 이하" className="flex w-full flex-col gap-4">
           {others.map((entry) => (
             <StandingRow entry={entry} key={entry.college} />
           ))}
