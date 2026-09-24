@@ -2,6 +2,7 @@ import { useAuthMe } from "@/entities/auth";
 
 import { AdminLoginForm } from "./AdminLoginForm";
 import { PromoAdminDashboard } from "./PromoAdminDashboard";
+import { PubAdminDashboard } from "./PubAdminDashboard";
 import { StageAdminDashboard } from "./StageAdminDashboard";
 import { UnsupportedRoleNotice } from "./UnsupportedRoleNotice";
 
@@ -42,9 +43,13 @@ export default function AdminPage() {
       {auth.data?.loggedIn === true && auth.data.role === "STAGE_ADMIN" && (
         <StageAdminDashboard />
       )}
+      {auth.data?.loggedIn === true && auth.data.role === "PUB_ADMIN" && (
+        <PubAdminDashboard />
+      )}
       {auth.data?.loggedIn === true &&
         auth.data.role !== "PROMO_ADMIN" &&
-        auth.data.role !== "STAGE_ADMIN" && <UnsupportedRoleNotice />}
+        auth.data.role !== "STAGE_ADMIN" &&
+        auth.data.role !== "PUB_ADMIN" && <UnsupportedRoleNotice />}
     </main>
   );
 }

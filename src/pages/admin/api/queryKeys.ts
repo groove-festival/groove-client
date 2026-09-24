@@ -13,3 +13,13 @@ export const stageAdminQueryKeys = {
   voteResults: (singingVoteId: number) =>
     [...stageAdminQueryKeys.all(), "vote-results", singingVoteId] as const,
 };
+
+// 주막(PUB_ADMIN) 대시보드가 캐시하는 데이터의 정체성. 모든 주막 관리자 API는
+// 로그인 계정에 묶인 부스만 다루므로(API 명세 §6) 키에 부스 식별자를 넣지
+// 않는다. 계정이 바뀌면 로그아웃이 auth-me와 함께 이 캐시도 비운다.
+export const pubAdminQueryKeys = {
+  all: () => ["admin-pub"] as const,
+  me: () => [...pubAdminQueryKeys.all(), "me"] as const,
+  orders: () => [...pubAdminQueryKeys.all(), "orders"] as const,
+  tables: () => [...pubAdminQueryKeys.all(), "tables"] as const,
+};
