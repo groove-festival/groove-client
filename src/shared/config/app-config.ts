@@ -9,9 +9,9 @@ const telemetryEnabled = optionalEnv(import.meta.env.VITE_TELEMETRY_ENABLED);
 
 export const appConfig = Object.freeze({
   apiBaseUrl: optionalEnv(import.meta.env.VITE_API_BASE_URL),
+  googleClientId: optionalEnv(import.meta.env.VITE_GOOGLE_CLIENT_ID),
   basePath: normalizeBasePath(import.meta.env.BASE_URL),
   environment: import.meta.env.MODE,
-  googleClientId: optionalEnv(import.meta.env.VITE_GOOGLE_CLIENT_ID),
   telemetry: Object.freeze({
     enabled: import.meta.env.PROD && telemetryEnabled === "true",
     clarityProjectId: optionalEnv(import.meta.env.VITE_CLARITY_PROJECT_ID),

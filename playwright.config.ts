@@ -8,7 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
   use: {
-    baseURL: "http://127.0.0.1:4173/groove/",
+    baseURL: "http://localhost:5173/groove/",
     deviceScaleFactor: 3,
     hasTouch: true,
     isMobile: true,
@@ -22,8 +22,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm preview --port 4173 --strictPort",
-    url: "http://127.0.0.1:4173/groove/",
+    command: "pnpm preview --port 5173 --strictPort",
+    url: "http://localhost:5173/groove/",
     reuseExistingServer: !process.env.CI,
   },
 });

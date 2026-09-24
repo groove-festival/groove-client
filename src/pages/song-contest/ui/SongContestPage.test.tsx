@@ -2,36 +2,43 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 
+import { useAuthMe, useLoginWithGoogle } from "@/entities/auth";
+import { useVotes } from "@/entities/contest";
 import {
   useFestivalStatus,
   type FestivalStatusResponseBody,
 } from "@/entities/festival";
-import { useGoogleAuthMe, useGoogleLogin } from "@/features/google-auth";
 
 import { usePublicContestStories } from "../api/getPublicContestStories";
 import { useSubmitContestStory } from "../api/submitContestStory";
 import SongContestPage from "./SongContestPage";
 
 vi.mock("@/entities/festival", () => ({ useFestivalStatus: vi.fn() }));
-vi.mock("@/features/google-auth", async () => {
-  const actual = await vi.importActual<Record<string, unknown>>(
-    "@/features/google-auth",
-  );
-  return {
-    ...actual,
-    useGoogleAuthMe: vi.fn(),
-    useGoogleLogin: vi.fn(),
-    GoogleSignInButton: ({
-      onCredential,
-    }: {
-      onCredential: (credential: string) => void;
-    }) => (
-      <button onClick={() => onCredential("test-id-token")} type="button">
-        Google 계정으로 로그인
-      </button>
-    ),
-  };
+vi.mock("@/entities/auth", async () => {
+  const actual = await vi.importActual<Record<string, unknown>>("@/entities/auth");
+  return { ...actual, useAuthMe: vi.fn(), useLoginWithGoogle: vi.fn() };
 });
+vi.mock("@/entities/contest", async () => {
+  const actual = await vi.importActual<Record<string, unknown>>("@/entities/contest");
+  return { ...actual, useVotes: vi.fn() };
+});
+// VoteCastingPanel은 로그인·위치·투표 상태를 자체적으로 조회하는 무거운
+// 컴포넌트라, 여기서는 렌더 여부만 확인하고 내부 동작은
+// VoteCastingPanel.test.tsx에서 검증한다.
+vi.mock("./VoteCastingPanel", () => ({
+  VoteCastingPanel: () => <div>진행 중인 투표 패널</div>,
+}));
+vi.mock("./GoogleSignInButton", () => ({
+  GoogleSignInButton: ({
+    onCredential,
+  }: {
+    onCredential: (credential: string) => void;
+  }) => (
+    <button onClick={() => onCredential("test-id-token")} type="button">
+      Google 계정으로 로그인
+    </button>
+  ),
+}));
 vi.mock("../api/getPublicContestStories", () => ({
   usePublicContestStories: vi.fn(),
 }));
@@ -43,9 +50,10 @@ vi.mock("../api/submitContestStory", async () => {
 });
 
 const useFestivalStatusMock = vi.mocked(useFestivalStatus);
-const useGoogleAuthMeMock = vi.mocked(useGoogleAuthMe);
+const useAuthMeMock = vi.mocked(useAuthMe);
+const useVotesMock = vi.mocked(useVotes);
 const usePublicContestStoriesMock = vi.mocked(usePublicContestStories);
-const useGoogleLoginMock = vi.mocked(useGoogleLogin);
+const useLoginWithGoogleMock = vi.mocked(useLoginWithGoogle);
 const useSubmitContestStoryMock = vi.mocked(useSubmitContestStory);
 
 const submitStoryMutateAsync = vi.fn();
@@ -53,6 +61,7 @@ const submitStoryReset = vi.fn();
 
 function statusBody(
   storyPhase: FestivalStatusResponseBody["stage"]["storyPhase"],
+  contestPhase: FestivalStatusResponseBody["stage"]["contestPhase"] = "BEFORE",
 ): FestivalStatusResponseBody {
   return {
     phase: "BEFORE",
@@ -62,7 +71,7 @@ function statusBody(
       storyPhase,
       storyCollectionStartAt: "2026-09-20T00:00:00+09:00",
       storyCollectionEndAt: "2026-09-30T00:00:00+09:00",
-      contestPhase: "BEFORE",
+      contestPhase,
       contestStartAt: "2026-10-01T18:00:00+09:00",
       contestEndAt: "2026-10-01T21:00:00+09:00",
     },
@@ -106,12 +115,17 @@ beforeEach(() => {
     isPending: false,
     refetch: vi.fn(),
   } as unknown as ReturnType<typeof useFestivalStatus>);
-  useGoogleAuthMeMock.mockReturnValue({
+  useAuthMeMock.mockReturnValue({
     data: { loggedIn: true, role: "USER", displayName: "홍길동", pubId: null },
     isError: false,
     isPending: false,
     refetch: vi.fn(),
-  } as unknown as ReturnType<typeof useGoogleAuthMe>);
+  } as unknown as ReturnType<typeof useAuthMe>);
+  useVotesMock.mockReturnValue({
+    isPending: true,
+    isError: false,
+    data: undefined,
+  } as unknown as ReturnType<typeof useVotes>);
   usePublicContestStoriesMock.mockReturnValue({
     data: [
       {
@@ -140,11 +154,11 @@ beforeEach(() => {
     isPending: false,
     refetch: vi.fn(),
   } as unknown as ReturnType<typeof usePublicContestStories>);
-  useGoogleLoginMock.mockReturnValue({
+  useLoginWithGoogleMock.mockReturnValue({
     error: null,
     isPending: false,
     mutate: vi.fn(),
-  } as unknown as ReturnType<typeof useGoogleLogin>);
+  } as unknown as ReturnType<typeof useLoginWithGoogle>);
   useSubmitContestStoryMock.mockReturnValue({
     isPending: false,
     mutateAsync: submitStoryMutateAsync,
@@ -161,24 +175,18 @@ afterEach(() => {
 describe("SongContestPage", () => {
   it("requires Google login before showing the form and forwards the credential", () => {
     const login = vi.fn();
-    useGoogleAuthMeMock.mockReturnValue({
+    useAuthMeMock.mockReturnValue({
       data: { loggedIn: false, role: null, displayName: null, pubId: null },
       isError: false,
       isPending: false,
       refetch: vi.fn(),
-    } as unknown as ReturnType<typeof useGoogleAuthMe>);
-    useGoogleLoginMock.mockReturnValue({
+    } as unknown as ReturnType<typeof useAuthMe>);
+    useLoginWithGoogleMock.mockReturnValue({
       error: null,
       isPending: false,
       mutate: login,
-    } as unknown as ReturnType<typeof useGoogleLogin>);
-    render(
-      <QueryClientProvider client={new QueryClient()}>
-        <MemoryRouter initialEntries={["/contest?phase=open"]}>
-          <SongContestPage />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
+    } as unknown as ReturnType<typeof useLoginWithGoogle>);
+    renderPage("/contest?phase=open");
     fireEvent.click(screen.getByRole("button", { name: "신청하기" }));
     fireEvent.click(screen.getByRole("button", { name: "사연 작성하기" }));
 
@@ -208,7 +216,7 @@ describe("SongContestPage", () => {
     ).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Google 계정으로 로그인" }));
-    expect(login).toHaveBeenCalledWith({ idToken: "test-id-token" });
+    expect(login).toHaveBeenCalledWith("test-id-token");
   });
 
   it("shows a closed form before collection and after collection", () => {
@@ -225,7 +233,7 @@ describe("SongContestPage", () => {
   it("switches the two overview tabs without leaving the page", () => {
     renderPage("/contest?phase=open");
     fireEvent.click(screen.getByRole("tab", { name: "경연 목록" }));
-    expect(screen.getByText("경연 목록은 연동 후 표시됩니다")).toBeInTheDocument();
+    expect(screen.getByText("불러오는 중…")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: "타임테이블" }));
     expect(screen.getByText("가요제 오프닝")).toBeInTheDocument();
   });
@@ -415,5 +423,108 @@ describe("SongContestPage", () => {
       }),
     );
     expect(await screen.findByText("사연이 접수되었어요")).toBeInTheDocument();
+  });
+});
+
+describe("SongContestPage contest phase", () => {
+  it("shows the before-contest notice and keeps the 경연 목록 tab label", () => {
+    useFestivalStatusMock.mockReturnValue({
+      data: statusBody("CLOSED", "BEFORE"),
+      isError: false,
+      isPending: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useFestivalStatus>);
+    useVotesMock.mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: [],
+    } as unknown as ReturnType<typeof useVotes>);
+
+    renderPage("/contest");
+    expect(screen.getByRole("tab", { name: "경연 목록" })).toBeInTheDocument();
+    expect(screen.getByText("가요제 투표가 아직이에요")).toBeInTheDocument();
+    expect(screen.queryByText("진행 중인 투표 패널")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "경연 목록" }));
+    expect(screen.getByText("아직 경연이 시작되지 않았어요")).toBeInTheDocument();
+  });
+
+  it("shows the vote-casting panel and results while the contest is open", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-01T18:20:00+09:00"));
+    const openVote = {
+      singingVoteId: 1,
+      title: "가요제 예선 1라운드",
+      round: "ROUND_1",
+      roundLabel: "예선",
+      roundKeyword: "자유로움",
+      matchOrder: 1,
+      status: "OPEN" as const,
+      endsAt: "2026-10-01T18:30:00+09:00",
+      createdAt: "2026-09-01T00:00:00+09:00",
+      participants: [
+        { voteParticipantId: 1, name: "IT대학", resultRank: null },
+        { voteParticipantId: 2, name: "간호대학", resultRank: null },
+      ],
+    };
+    useFestivalStatusMock.mockReturnValue({
+      data: statusBody("CLOSED", "OPEN"),
+      isError: false,
+      isPending: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useFestivalStatus>);
+    useVotesMock.mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: [openVote],
+    } as unknown as ReturnType<typeof useVotes>);
+
+    renderPage("/contest");
+    expect(screen.getByText("진행 중인 투표 패널")).toBeInTheDocument();
+    expect(screen.getByText("경연 결과")).toBeInTheDocument();
+    expect(screen.queryByText("가요제 투표가 끝났어요")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "경연 목록" }));
+    expect(screen.getByText("가요제 예선 1라운드")).toBeInTheDocument();
+    expect(screen.getByText("10분 남음")).toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  it("renames the tab to 경연 결과, shows the closed notice, and hides the voting panel once closed", () => {
+    const finishedVote = {
+      singingVoteId: 1,
+      title: "가요제 결선",
+      round: "ROUND_3",
+      roundLabel: "결선",
+      roundKeyword: "폭발",
+      matchOrder: 1,
+      status: "CLOSED" as const,
+      endsAt: "2026-10-01T20:00:00+09:00",
+      createdAt: "2026-09-01T00:00:00+09:00",
+      participants: [
+        { voteParticipantId: 1, name: "IT대학", resultRank: 1 },
+        { voteParticipantId: 2, name: "간호대학", resultRank: 2 },
+      ],
+    };
+    useFestivalStatusMock.mockReturnValue({
+      data: statusBody("CLOSED", "CLOSED"),
+      isError: false,
+      isPending: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useFestivalStatus>);
+    useVotesMock.mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: [finishedVote],
+    } as unknown as ReturnType<typeof useVotes>);
+
+    renderPage("/contest");
+    expect(screen.getByRole("tab", { name: "경연 결과" })).toBeInTheDocument();
+    expect(screen.getByText("가요제 투표가 끝났어요")).toBeInTheDocument();
+    expect(screen.queryByText("진행 중인 투표 패널")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "경연 결과" }));
+    expect(screen.getByText("가요제 결선")).toBeInTheDocument();
+    expect(screen.getByText("우승")).toBeInTheDocument();
   });
 });

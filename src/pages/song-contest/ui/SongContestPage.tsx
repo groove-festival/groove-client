@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  type ReactNode,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -10,16 +11,16 @@ import {
 } from "react";
 import { useSearchParams } from "react-router";
 
-import { useFestivalStatus } from "@/entities/festival";
 import {
-  GoogleSignInButton,
-  googleAuthQueryKeys,
-  googleLoginErrorMessage,
+  authQueryKeys,
   isGoogleParticipant,
-  useGoogleAuthMe,
-  useGoogleLogin,
-} from "@/features/google-auth";
+  useAuthMe,
+  useLoginWithGoogle,
+} from "@/entities/auth";
+import { useVotes } from "@/entities/contest";
+import { useFestivalStatus } from "@/entities/festival";
 import { ApiError } from "@/shared/api";
+import { useScheduledRefetch } from "@/shared/lib/scheduling";
 import { LoadingFallback, NetworkErrorFallback, lockIllustration } from "@/shared/ui";
 
 import {
@@ -35,6 +36,9 @@ import hourglass from "../festival-visuals/hourglass.png";
 import letter from "../festival-visuals/letter.png";
 import microphone from "../festival-visuals/microphone.png";
 import { contestStorySubmitErrorMessage } from "../model/contestStoryErrorMessages";
+import { googleLoginErrorMessage } from "../model/googleLoginErrorMessage";
+import { nextContestBoundaryAt } from "../model/nextContestBoundaryAt";
+import { formatRemainingMinutes } from "../model/remainingMinutes";
 import { scatterStoryTitles } from "../model/scatterStoryTitles";
 import { nextStoryBoundaryAt, parseStoryPhaseOverride } from "../model/storyPhase";
 import {
@@ -42,8 +46,13 @@ import {
   nextTimetableBoundary,
   timetable,
 } from "../model/timetable";
-import { useScheduledRefetch } from "../model/useScheduledRefetch";
+import { BracketMatchRow } from "./BracketMatchRow";
+import { ContestBeforeNotice } from "./ContestBeforeNotice";
+import { ContestClosedNotice } from "./ContestClosedNotice";
+import { ContestResults } from "./ContestResults";
+import { GoogleSignInButton } from "./GoogleSignInButton";
 import { StoryForm } from "./StoryForm";
+import { VoteCastingPanel } from "./VoteCastingPanel";
 
 type Tab = "timetable" | "votes";
 type StoryView = "list" | "form" | "success";
@@ -121,9 +130,13 @@ function storyTitleStyle(story: PublicContestStory): StoryTitleStyle {
 function ContestOverview({
   tab,
   onTabChange,
+  votesTabLabel,
+  votesTabContent,
 }: {
   tab: Tab;
   onTabChange: (tab: Tab) => void;
+  votesTabLabel: string;
+  votesTabContent: ReactNode;
 }) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const scrollContentRef = useRef<HTMLDivElement>(null);
@@ -231,13 +244,13 @@ function ContestOverview({
             role="tab"
             type="button"
           >
-            {item === "timetable" ? "타임테이블" : "경연 목록"}
+            {item === "timetable" ? "타임테이블" : votesTabLabel}
           </button>
         ))}
       </div>
       <div className="relative mt-5 h-[292px]">
         <div
-          aria-label={tab === "timetable" ? "가요제 타임테이블" : "경연 목록"}
+          aria-label={tab === "timetable" ? "가요제 타임테이블" : votesTabLabel}
           className="h-full touch-pan-y [scrollbar-width:none] overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:hidden"
           id="contest-panel"
           onScroll={handleScroll}
@@ -270,9 +283,7 @@ function ContestOverview({
                 ))}
               </ol>
             ) : (
-              <p className="pt-32 text-center text-base">
-                경연 목록은 연동 후 표시됩니다
-              </p>
+              votesTabContent
             )}
           </div>
         </div>
@@ -498,32 +509,40 @@ export default function SongContestPage() {
   const queryClient = useQueryClient();
   const status = useFestivalStatus();
   const override = parseStoryPhaseOverride(searchParams.get("phase"));
-  const phase = override ?? status.data?.stage?.storyPhase;
+  const storyPhase = override ?? status.data?.stage?.storyPhase;
   const isStoryPreview =
     import.meta.env.DEV &&
-    phase === "OPEN" &&
+    storyPhase === "OPEN" &&
     searchParams.get("preview") === "stories";
-  const stories = usePublicContestStories(phase === "OPEN" && !isStoryPreview);
-  const auth = useGoogleAuthMe(phase === "OPEN");
+  const stories = usePublicContestStories(storyPhase === "OPEN" && !isStoryPreview);
+  const auth = useAuthMe();
   const {
     mutate: loginWithGoogle,
     isPending: isLoginPending,
     error: loginError,
-  } = useGoogleLogin();
+  } = useLoginWithGoogle();
   const submitStory = useSubmitContestStory();
   const [tab, setTab] = useState<Tab>("timetable");
   const [view, setView] = useState<StoryView>("list");
   const [guideOpen, setGuideOpen] = useState(false);
   const [submitErrorMessage, setSubmitErrorMessage] = useState<string | undefined>();
 
+  const contestPhase = status.data?.stage.contestPhase;
+  const votesQuery = useVotes();
+  const votes = votesQuery.data ?? [];
+
   useScheduledRefetch(
-    override ? undefined : nextStoryBoundaryAt(phase, status.data?.stage),
+    override ? undefined : nextStoryBoundaryAt(storyPhase, status.data?.stage),
+    status.refetch,
+  );
+  useScheduledRefetch(
+    status.data ? nextContestBoundaryAt(contestPhase, status.data.stage) : undefined,
     status.refetch,
   );
 
   const handleGoogleCredential = useCallback(
     (idToken: string) => {
-      loginWithGoogle({ idToken });
+      loginWithGoogle(idToken);
     },
     [loginWithGoogle],
   );
@@ -539,7 +558,7 @@ export default function SongContestPage() {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       if (error instanceof ApiError && error.code === "C003") {
-        void queryClient.invalidateQueries({ queryKey: googleAuthQueryKeys.me() });
+        void queryClient.invalidateQueries({ queryKey: authQueryKeys.me() });
       }
       setSubmitErrorMessage(contestStorySubmitErrorMessage(error));
     }
@@ -547,24 +566,59 @@ export default function SongContestPage() {
 
   const isLoggedInContestUser = isGoogleParticipant(auth.data);
   const wrongRole = auth.data?.loggedIn === true && auth.data.role !== "USER";
-  const effectiveView = phase === "OPEN" ? view : "list";
+  const effectiveView = storyPhase === "OPEN" ? view : "list";
 
-  if (!phase && status.isPending) {
+  if (!storyPhase && status.isPending) {
     return <LoadingFallback />;
   }
 
-  if (!phase && status.isError) {
+  if (!storyPhase && status.isError) {
     return <NetworkErrorFallback />;
   }
 
+  const votesTabLabel = contestPhase === "CLOSED" ? "경연 결과" : "경연 목록";
+
+  const votesTabContent: ReactNode =
+    status.isPending || votesQuery.isPending ? (
+      <p className="pt-32 text-center text-base text-[#a2a2a2]">불러오는 중…</p>
+    ) : status.isError || votesQuery.isError ? (
+      <p className="pt-32 text-center text-base text-[#a2a2a2]">
+        경연 목록을 불러오지 못했어요.
+      </p>
+    ) : contestPhase === "BEFORE" ? (
+      <p className="pt-32 text-center text-base">아직 경연이 시작되지 않았어요</p>
+    ) : (
+      <ol className="space-y-6">
+        {votes.map((vote) => (
+          <li key={vote.singingVoteId}>
+            <BracketMatchRow
+              metaLabel={
+                vote.status === "OPEN"
+                  ? formatRemainingMinutes(vote.endsAt, new Date())
+                  : undefined
+              }
+              showWinnerBadge={contestPhase === "CLOSED"}
+              vote={vote}
+            />
+          </li>
+        ))}
+      </ol>
+    );
+
+  // 실제 운영에서는 사연모집이 끝난 뒤에야 경연이 열리도록 일정을 잡지만,
+  // 시각 4개는 독립적으로 설정 가능해 이론상 겹칠 수 있다. 겹치면 투표 화면
+  // 하나만 남기고 사연 섹션은 통째로 숨긴다 — Figma "가요제/투표진행" 프레임도
+  // 진행 중에는 사연 관련 내용을 전혀 보여주지 않는다.
+  const showStorySection = contestPhase !== "OPEN" && contestPhase !== "CLOSED";
+
   const height =
-    effectiveView === "form" && phase === "OPEN"
+    effectiveView === "form" && storyPhase === "OPEN"
       ? 1764
-      : effectiveView === "success" && phase === "OPEN"
+      : effectiveView === "success" && storyPhase === "OPEN"
         ? 1157
-        : phase === "BEFORE"
+        : storyPhase === "BEFORE"
           ? 1216
-          : phase === "CLOSED"
+          : storyPhase === "CLOSED"
             ? 1228
             : 1352;
 
@@ -573,9 +627,14 @@ export default function SongContestPage() {
       className="relative mx-auto w-full max-w-[600px] bg-[#1c1c1c] px-4 text-[#fcfcfc]"
       style={{ minHeight: height }}
     >
-      <ContestOverview onTabChange={setTab} tab={tab} />
+      <ContestOverview
+        onTabChange={setTab}
+        tab={tab}
+        votesTabContent={votesTabContent}
+        votesTabLabel={votesTabLabel}
+      />
 
-      {phase === "BEFORE" && (
+      {showStorySection && storyPhase === "BEFORE" && (
         <section className="mx-auto mt-40 flex w-full flex-col items-center gap-12 text-center">
           <h1 className="text-2xl font-semibold">사연 모집이 아직이에요</h1>
           <img alt="" className="h-[208px] w-[260px] object-contain" src={hourglass} />
@@ -583,7 +642,7 @@ export default function SongContestPage() {
         </section>
       )}
 
-      {phase === "CLOSED" && (
+      {showStorySection && storyPhase === "CLOSED" && (
         <section className="mx-auto mt-40 flex w-full flex-col items-center gap-12 text-center">
           <h1 className="text-2xl font-semibold">사연 모집이 끝났어요</h1>
           <img
@@ -595,7 +654,7 @@ export default function SongContestPage() {
         </section>
       )}
 
-      {phase === "OPEN" && effectiveView === "list" && (
+      {showStorySection && storyPhase === "OPEN" && effectiveView === "list" && (
         <section className="mx-auto mt-20 w-full">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <h1 className="text-2xl font-bold">사연 신청 목록</h1>
@@ -623,27 +682,33 @@ export default function SongContestPage() {
         </section>
       )}
 
-      {phase === "OPEN" && effectiveView === "form" && !isLoggedInContestUser && (
-        <ContestLoginPanel
-          authError={auth.isError}
-          authPending={auth.isPending}
-          isLoginPending={isLoginPending}
-          loginError={loginError}
-          onCredential={handleGoogleCredential}
-          onRetryAuth={() => void auth.refetch()}
-          wrongRole={wrongRole}
-        />
-      )}
+      {showStorySection &&
+        storyPhase === "OPEN" &&
+        effectiveView === "form" &&
+        !isLoggedInContestUser && (
+          <ContestLoginPanel
+            authError={auth.isError}
+            authPending={auth.isPending}
+            isLoginPending={isLoginPending}
+            loginError={loginError}
+            onCredential={handleGoogleCredential}
+            onRetryAuth={() => void auth.refetch()}
+            wrongRole={wrongRole}
+          />
+        )}
 
-      {phase === "OPEN" && effectiveView === "form" && isLoggedInContestUser && (
-        <StoryForm
-          isSubmitting={submitStory.isPending}
-          onSubmit={handleSubmit}
-          submitErrorMessage={submitErrorMessage}
-        />
-      )}
+      {showStorySection &&
+        storyPhase === "OPEN" &&
+        effectiveView === "form" &&
+        isLoggedInContestUser && (
+          <StoryForm
+            isSubmitting={submitStory.isPending}
+            onSubmit={handleSubmit}
+            submitErrorMessage={submitErrorMessage}
+          />
+        )}
 
-      {phase === "OPEN" && effectiveView === "success" && (
+      {showStorySection && storyPhase === "OPEN" && effectiveView === "success" && (
         <section
           aria-live="polite"
           className="mx-auto mt-[120px] flex w-full flex-col items-center gap-10 text-center"
@@ -663,7 +728,22 @@ export default function SongContestPage() {
         </section>
       )}
 
-      {guideOpen && phase === "OPEN" && (
+      {contestPhase === "BEFORE" && <ContestBeforeNotice />}
+
+      {contestPhase === "CLOSED" && <ContestClosedNotice />}
+
+      {contestPhase === "OPEN" && (
+        <div className="mx-auto mt-10 mb-24 flex w-full flex-col gap-6">
+          <VoteCastingPanel />
+          <ContestResults votes={votes} />
+        </div>
+      )}
+
+      <p className="absolute bottom-10 left-0 w-full text-center text-[10px] leading-3 text-[#a2a2a2]">
+        자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요.
+      </p>
+
+      {guideOpen && storyPhase === "OPEN" && (
         <div
           className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4"
           onMouseDown={(event) => {
