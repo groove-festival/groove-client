@@ -1,6 +1,3 @@
-import { useState } from "react";
-import { useSearchParams } from "react-router";
-
 import { useNow } from "@/shared/lib/clock";
 
 import {
@@ -8,7 +5,6 @@ import {
   formatTimetableTime,
   getTimetableDateKey,
   isTimetableItemActive,
-  parseTimetableNowOverride,
   type TimetableCategory,
 } from "../model/timetable";
 
@@ -48,29 +44,18 @@ const inactiveTextTone = "text-[#a2a2a2]";
 // Figma 25:2152(카드). 카드는 제목과 시간만 보여 준다. 제목 폭은 Figma
 // 컴포넌트처럼 147px이고, 두 줄까지는 80px, 세 줄부터 카드 높이가 늘어난다.
 export const TimetableSection = () => {
-  const [searchParams] = useSearchParams();
-  const currentTime = useNow(30_000);
-  // 시각 덮어쓰기는 개발 서버에서만 허용한다.
-  const nowOverride = import.meta.env.DEV
-    ? parseTimetableNowOverride(searchParams.get("now"))
-    : null;
-  const now = nowOverride ?? currentTime;
+  const now = useNow(30_000);
   const dateKey = getTimetableDateKey(now);
   const items = festivalTimetable[dateKey];
-  // 임시(디자인 QA용): 카드를 누를 때마다 활성/비활성 색을 켜고 끈다. 처음에는
-  // 실제 시간 기준이고, 누른 카드만 덮어쓴다. 현재 시간대 판정(aria-current)은
-  // 그대로다. 일정 API 연동 때 이 상태와 버튼을 걷어낸다.
-  const [toneOverrides, setToneOverrides] = useState<Record<string, boolean>>({});
 
   return (
     <ol aria-label={`${dateKey} 일정`} className="flex w-full flex-col gap-4">
       {items.map((item, index) => {
         const isActive = isTimetableItemActive(item, dateKey, now);
-        const showActiveTone = toneOverrides[item.id] ?? isActive;
         const tone = timetableCategoryTones[item.category];
-        const cardTone = showActiveTone ? tone.active : tone.default;
-        const dotTone = showActiveTone ? tone.active : inactiveDotTone;
-        const textTone = showActiveTone ? activeTextTone : inactiveTextTone;
+        const cardTone = isActive ? tone.active : tone.default;
+        const dotTone = isActive ? tone.active : inactiveDotTone;
+        const textTone = isActive ? activeTextTone : inactiveTextTone;
         const isLast = index === items.length - 1;
 
         return (
@@ -90,16 +75,8 @@ export const TimetableSection = () => {
               aria-hidden="true"
               className={`relative size-4 shrink-0 rounded-full border ${dotTone}`}
             />
-            <button
-              aria-pressed={showActiveTone}
-              className={`festival-glass-border-rim relative flex min-h-20 min-w-0 flex-1 cursor-pointer items-start justify-between gap-3 rounded-2xl border pt-[17px] pr-[18px] pb-[17px] pl-[19px] text-left leading-[normal] backdrop-blur-[12px] ${textTone} ${cardTone}`}
-              onClick={() =>
-                setToneOverrides((previous) => ({
-                  ...previous,
-                  [item.id]: !showActiveTone,
-                }))
-              }
-              type="button"
+            <div
+              className={`festival-glass-border-rim relative flex min-h-20 min-w-0 flex-1 items-start justify-between gap-3 rounded-2xl border pt-[17px] pr-[18px] pb-[17px] pl-[19px] text-left leading-[normal] backdrop-blur-[12px] ${textTone} ${cardTone}`}
             >
               <span className="block w-[147px] max-w-full text-base leading-[normal] font-bold break-keep">
                 {item.title}
@@ -107,7 +84,7 @@ export const TimetableSection = () => {
               <span className="block shrink-0 text-right text-base leading-[normal] font-bold">
                 {formatTimetableTime(item)}
               </span>
-            </button>
+            </div>
           </li>
         );
       })}
