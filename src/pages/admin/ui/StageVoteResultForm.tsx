@@ -28,7 +28,10 @@ export function StageVoteResultForm({ vote }: StageVoteResultFormProps) {
   };
 
   return (
-    <form className="flex flex-col gap-2 rounded-lg bg-[#1c1c1c] p-3" onSubmit={onSubmit}>
+    <form
+      className="flex flex-col gap-2 rounded-lg bg-[#1c1c1c] p-3"
+      onSubmit={onSubmit}
+    >
       {vote.participants.map((participant) => (
         <label
           className="flex items-center justify-between gap-2 text-xs"
@@ -54,6 +57,9 @@ export function StageVoteResultForm({ vote }: StageVoteResultFormProps) {
         <p className="text-xs text-[#ff5b5b]">
           {submitVoteResultErrorMessage(submitResult.error)}
         </p>
+      )}
+      {submitResult.isSuccess && (
+        <p className="text-xs text-[#7bffb0]">결과를 저장했어요.</p>
       )}
 
       <button

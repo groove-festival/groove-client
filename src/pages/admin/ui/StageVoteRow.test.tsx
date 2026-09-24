@@ -64,6 +64,59 @@ describe("StageVoteRow", () => {
     );
   });
 
+  it("hides the open/result controls until every participant slot is filled", () => {
+    renderRow({
+      ...scheduledVote,
+      participants: [{ voteParticipantId: 1, name: "IT대학", resultRank: null }],
+    });
+
+    expect(
+      screen.getByText("앞 라운드 결과가 입력되면 참가팀이 자동으로 채워져요."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "경기 열기" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "결과 입력" })).not.toBeInTheDocument();
+  });
+
+  it("requires the final round's third slot before allowing it to open", () => {
+    renderRow({
+      ...scheduledVote,
+      round: "ROUND_3",
+      participants: [
+        { voteParticipantId: 1, name: "IT대학", resultRank: null },
+        { voteParticipantId: 2, name: "간호대학", resultRank: null },
+      ],
+    });
+
+    expect(screen.queryByRole("button", { name: "경기 열기" })).not.toBeInTheDocument();
+  });
+
+  it("confirms before reopening an already-closed match", async () => {
+    httpPatch.mockResolvedValueOnce({
+      data: { success: true, data: { ...scheduledVote, status: "OPEN" }, error: null },
+      status: 200,
+    });
+    renderRow({
+      ...scheduledVote,
+      status: "CLOSED",
+      endsAt: "2026-10-02T19:10:00+09:00",
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "경기 재오픈" }));
+    expect(httpPatch).not.toHaveBeenCalled();
+
+    expect(
+      screen.getByRole("dialog", { name: "경기를 다시 열까요?" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "확인" }));
+
+    await waitFor(() =>
+      expect(httpPatch).toHaveBeenCalledWith("/admin/stage/votes/1/status", {
+        status: "OPEN",
+        extendMinutes: 10,
+      }),
+    );
+  });
+
   it("closes an open vote", async () => {
     httpPatch.mockResolvedValueOnce({
       data: {
@@ -113,5 +166,6 @@ describe("StageVoteRow", () => {
         ],
       }),
     );
+    expect(await screen.findByText("결과를 저장했어요.")).toBeInTheDocument();
   });
 });
