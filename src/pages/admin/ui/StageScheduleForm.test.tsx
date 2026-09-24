@@ -19,16 +19,16 @@ vi.mock("@/shared/api", async () => {
 const useFestivalStatusMock = vi.mocked(useFestivalStatus);
 const httpPut = vi.mocked(httpClient.put);
 
-const renderForm = () => {
+const renderForm = (section: "stories" | "votes" = "votes") => {
   useFestivalStatusMock.mockReturnValue({
     data: {
       stage: {
         storyPhase: "BEFORE",
-        storyCollectionStartAt: null,
-        storyCollectionEndAt: null,
+        storyCollectionStartAt: "2026-09-20T10:00:00",
+        storyCollectionEndAt: "2026-09-25T18:00:00",
         contestPhase: "BEFORE",
         contestStartAt: null,
-        contestEndAt: null,
+        contestEndAt: "2026-10-02T22:30:00",
       },
     },
     isPending: false,
@@ -41,23 +41,59 @@ const renderForm = () => {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
-  return render(<StageScheduleForm />, { wrapper });
+  return render(<StageScheduleForm section={section} />, { wrapper });
 };
 
 afterEach(() => {
+  Reflect.deleteProperty(HTMLInputElement.prototype, "showPicker");
   vi.clearAllMocks();
 });
 
 describe("StageScheduleForm", () => {
-  it("submits the four fields with seconds appended, no offset", async () => {
+  it("shows only the selected section's schedule fields", () => {
+    renderForm("stories");
+
+    expect(screen.getByLabelText("사연모집 시작")).toHaveAttribute(
+      "type",
+      "datetime-local",
+    );
+    expect(screen.getByLabelText("사연모집 종료")).toHaveAttribute(
+      "type",
+      "datetime-local",
+    );
+    expect(
+      screen.getByRole("button", { name: "사연모집 시작 달력 열기" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "사연모집 종료 달력 열기" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("가요제 시작")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("가요제 종료")).not.toBeInTheDocument();
+  });
+
+  it("opens the browser date-time picker from the calendar button", () => {
+    const showPicker = vi.fn();
+    Object.defineProperty(HTMLInputElement.prototype, "showPicker", {
+      configurable: true,
+      value: showPicker,
+    });
+    renderForm("votes");
+
+    fireEvent.click(screen.getByRole("button", { name: "가요제 시작 달력 열기" }));
+    fireEvent.click(screen.getByRole("button", { name: "가요제 종료 달력 열기" }));
+
+    expect(showPicker).toHaveBeenCalledTimes(2);
+  });
+
+  it("preserves the other section's fields when saving", async () => {
     httpPut.mockResolvedValueOnce({
       data: {
         success: true,
         data: {
-          storyCollectionStartAt: null,
-          storyCollectionEndAt: null,
+          storyCollectionStartAt: "2026-09-20T10:00:00",
+          storyCollectionEndAt: "2026-09-25T18:00:00",
           contestStartAt: "2026-10-02T19:00:00",
-          contestEndAt: null,
+          contestEndAt: "2026-10-02T22:30:00",
         },
         error: null,
       },
@@ -68,14 +104,16 @@ describe("StageScheduleForm", () => {
     fireEvent.change(screen.getByLabelText("가요제 시작"), {
       target: { value: "2026-10-02T19:00" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "일정 저장" }));
+    fireEvent.click(screen.getByRole("button", { name: "가요제 일정 저장" }));
 
     await waitFor(() =>
-      expect(httpPut).toHaveBeenCalledWith(
-        "/admin/stage/schedule",
-        expect.objectContaining({ contestStartAt: "2026-10-02T19:00:00" }),
-      ),
+      expect(httpPut).toHaveBeenCalledWith("/admin/stage/schedule", {
+        storyCollectionStartAt: "2026-09-20T10:00:00",
+        storyCollectionEndAt: "2026-09-25T18:00:00",
+        contestStartAt: "2026-10-02T19:00:00",
+        contestEndAt: "2026-10-02T22:30:00",
+      }),
     );
-    expect(await screen.findByText("일정을 저장했어요.")).toBeInTheDocument();
+    expect(await screen.findByText("가요제 일정을 저장했어요.")).toBeInTheDocument();
   });
 });

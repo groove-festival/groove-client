@@ -104,6 +104,34 @@ describe("AppRouter", () => {
     expect(screen.getByText(/공식 SNS에서 확인해 주세요/)).toBeInTheDocument();
   });
 
+  it("renders the admin page without the festival header and footer", async () => {
+    const get = vi.spyOn(httpClient, "get").mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: {
+          account: {
+            loggedIn: false,
+            role: null,
+            displayName: null,
+            pubId: null,
+          },
+        },
+        error: null,
+      },
+      status: 200,
+    });
+
+    renderRoute("/admin");
+
+    expect(
+      await screen.findByRole("heading", { name: "GROOVE 관리자" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "메뉴 열기" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("contentinfo")).not.toBeInTheDocument();
+
+    get.mockRestore();
+  });
+
   it("renders the table order page outside the shared layout", async () => {
     Object.defineProperty(window, "scrollTo", { configurable: true, value: vi.fn() });
     const get = vi.spyOn(httpClient, "get").mockResolvedValue(orderTableEnvelope);

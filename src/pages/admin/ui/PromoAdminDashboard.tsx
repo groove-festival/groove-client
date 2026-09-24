@@ -5,11 +5,13 @@ import { SongRequestList } from "./SongRequestList";
 
 export function PromoAdminDashboard() {
   return (
-    <div className="flex flex-col gap-4 px-4 pt-20 pb-6">
+    <div className="min-h-dvh">
       <AdminHeader title="GROOVE PLAYLIST 관리자" />
-      <PhaseOverridePanel />
-      <DisplayOrderEditor />
-      <SongRequestList />
+      <div className="flex flex-col gap-4 px-4 py-6">
+        <PhaseOverridePanel />
+        <DisplayOrderEditor />
+        <SongRequestList />
+      </div>
     </div>
   );
 }
