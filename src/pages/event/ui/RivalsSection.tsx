@@ -144,7 +144,7 @@ export const RivalsSection = ({ scores }: RivalsSectionProps) => {
       <div className="flex w-full flex-col gap-5 pr-px pl-[5px]">
         <ol
           aria-label="라이벌스 1~3위"
-          className="flex items-end justify-center gap-10"
+          className="flex items-end justify-center gap-4 min-[393px]:gap-10"
         >
           {podium.map((entry, index) => (
             <PodiumItem
