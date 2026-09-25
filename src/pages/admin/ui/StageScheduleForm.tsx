@@ -1,7 +1,7 @@
 import { CalendarDays } from "lucide-react";
 import { useRef, useState } from "react";
 
-import { useFestivalStatus } from "@/entities/festival";
+import { type StagePhase, useFestivalStatus } from "@/entities/festival";
 
 import { useSetStageSchedule } from "../api/setStageSchedule";
 import { stageScheduleErrorMessage } from "../model/adminErrorMessages";
@@ -17,22 +17,41 @@ const fieldLabels = {
 type FieldKey = keyof typeof fieldLabels;
 export type StageScheduleSection = "stories" | "votes";
 
-const sectionContent: Record<
-  StageScheduleSection,
-  { fields: FieldKey[]; title: string; submitLabel: string; successMessage: string }
-> = {
+interface StageScheduleSectionContent {
+  fields: FieldKey[];
+  phaseKey: "storyPhase" | "contestPhase";
+  phaseLabels: Record<StagePhase, string>;
+  statusLabel: string;
+  title: string;
+  submitLabel: string;
+  successMessage: string;
+}
+
+const sectionContent: Record<StageScheduleSection, StageScheduleSectionContent> = {
   stories: {
     fields: ["storyCollectionStartAt", "storyCollectionEndAt"],
+    phaseKey: "storyPhase",
+    phaseLabels: { BEFORE: "모집 전", OPEN: "모집 중", CLOSED: "모집 종료" },
+    statusLabel: "사연 모집",
     title: "사연 모집 일정",
     submitLabel: "사연 모집 일정 저장",
     successMessage: "사연 모집 일정을 저장했어요.",
   },
   votes: {
     fields: ["contestStartAt", "contestEndAt"],
+    phaseKey: "contestPhase",
+    phaseLabels: { BEFORE: "시작 전", OPEN: "진행 중", CLOSED: "종료" },
+    statusLabel: "가요제 진행",
     title: "가요제 진행 일정",
     submitLabel: "가요제 일정 저장",
     successMessage: "가요제 일정을 저장했어요.",
   },
+};
+
+const phaseTextTones: Record<StagePhase, string> = {
+  BEFORE: "bg-[#3a3a3a] text-[#cfcfcf]",
+  OPEN: "bg-[rgba(207,255,4,0.14)] text-[#cfff04]",
+  CLOSED: "bg-[rgba(255,0,128,0.14)] text-[#ff9acb]",
 };
 
 // SING-A4. 네 값 모두 선택이며, 비어 있는 쪽의 단계는 fail-closed로
@@ -47,6 +66,19 @@ export function StageScheduleForm({ section }: { section: StageScheduleSection }
   const [draft, setDraft] = useState<Record<FieldKey, string> | null>(null);
 
   const stage = status.data?.stage;
+  const phase = stage?.[content.phaseKey];
+  const phaseLabel = status.isPending
+    ? "확인 중"
+    : status.isError
+      ? "확인 실패"
+      : phase
+        ? content.phaseLabels[phase]
+        : "확인 불가";
+  const phaseTone = status.isError
+    ? "bg-[rgba(255,91,91,0.14)] text-[#ff9ab0]"
+    : phase
+      ? phaseTextTones[phase]
+      : "bg-[#3a3a3a] text-[#a2a2a2]";
   const values: Record<FieldKey, string> =
     draft ??
     (stage
@@ -76,7 +108,16 @@ export function StageScheduleForm({ section }: { section: StageScheduleSection }
   return (
     <section className="flex flex-col gap-3 rounded-2xl bg-[#262626] p-4">
       <div className="flex flex-col gap-1">
-        <h2 className="text-sm font-bold text-[#fcfcfc]">{content.title}</h2>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <h2 className="text-sm font-bold text-[#fcfcfc]">{content.title}</h2>
+          <span
+            aria-label={`${content.statusLabel} 현재 상태`}
+            className={`rounded-full px-2 py-1 text-[11px] font-semibold ${phaseTone}`}
+            role="status"
+          >
+            현재 상태 : {phaseLabel}
+          </span>
+        </div>
         <p className="text-xs text-[#a2a2a2]">
           {status.isPending && "현재 일정을 불러오는 중…"}
           {status.isError && "현재 일정을 불러오지 못했어요."}
