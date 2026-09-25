@@ -2,7 +2,7 @@ import { lockIllustration } from "@/shared/ui";
 
 export function ContestClosedNotice() {
   return (
-    <section className="mx-auto mt-12 flex w-full max-w-[361px] flex-col items-center gap-12 text-center">
+    <section className="mx-auto mt-12 flex w-full flex-col items-center gap-12 text-center">
       <h2 className="text-2xl font-semibold text-[#fcfcfc]">가요제 투표가 끝났어요</h2>
       <img
         alt=""
