@@ -470,15 +470,28 @@ describe("BoothOrderPage", () => {
     ).toBeNull();
   });
 
-  it("shows a completed cash order with the cash receipt rows", async () => {
+  it("shows a served cash order with the cash receipt rows", async () => {
     seedOrder({ paymentMethod: "CASH", status: "COMPLETED" });
     renderOrderPage();
 
     expect(
-      await screen.findByRole("heading", { name: "주문이 완료되었어요!" }),
+      await screen.findByRole("heading", { name: "음식이 나왔어요" }),
     ).toBeInTheDocument();
     expect(screen.queryByText("입금자명")).not.toBeInTheDocument();
     expect(screen.queryByText("계좌 번호")).not.toBeInTheDocument();
+  });
+
+  it("stops telling a served customer to keep waiting", async () => {
+    // PAID(조리 착수)와 COMPLETED(서빙 완료)가 한 화면을 쓰던 탓에, 음식을 받은
+    // 손님에게도 "조리 중이에요. 잠시만 기다려주세요."가 계속 떠 있었다.
+    seedOrder({ depositorName: "김입금", status: "COMPLETED" });
+    renderOrderPage();
+
+    expect(
+      await screen.findByRole("heading", { name: "음식이 나왔어요" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("맛있게 드세요!")).toBeInTheDocument();
+    expect(screen.queryByText(/조리 중이에요/)).not.toBeInTheDocument();
   });
 
   it("announces a canceled order and drops the token when the notice is closed", async () => {

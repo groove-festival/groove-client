@@ -114,7 +114,7 @@ const BoothOrderContent = ({
       )}
 
       {screen === "depositClaimed" && order && (
-        <main className="px-4 pt-32 pb-6">
+        <main className="px-4 pt-[100px] pb-6">
           <OrderStatusScreen
             progress={DEPOSIT_PENDING_PROGRESS}
             subtitle="곧 조리가 시작 돼요. 조금만 기다려주세요."
@@ -140,7 +140,7 @@ const BoothOrderContent = ({
       )}
 
       {screen === "cashPending" && order && (
-        <main className="px-4 pt-32 pb-12">
+        <main className="px-4 pt-[100px] pb-12">
           <OrderStatusScreen
             progress={DEPOSIT_PENDING_PROGRESS}
             subtitle="직원이 자리로 가고 있어요. 조금만 기다려 주세요."
@@ -156,11 +156,30 @@ const BoothOrderContent = ({
       )}
 
       {screen === "completed" && order && (
-        <main className="px-4 pt-32 pb-6">
+        <main className="px-4 pt-[100px] pb-6">
           <OrderStatusScreen
             progress={1}
             subtitle="조리 중이에요. 잠시만 기다려주세요."
             title="주문이 완료되었어요!"
+          >
+            <OrderReceipt
+              account={order.account}
+              boothName={booth.name}
+              order={order}
+            />
+          </OrderStatusScreen>
+          <div className="mt-12">
+            <OrderActionButton label="추가 주문하기" onClick={startAdditionalOrder} />
+          </div>
+        </main>
+      )}
+
+      {screen === "served" && order && (
+        <main className="px-4 pt-[100px] pb-6">
+          <OrderStatusScreen
+            progress={1}
+            subtitle="맛있게 드세요!"
+            title="음식이 나왔어요"
           >
             <OrderReceipt
               account={order.account}

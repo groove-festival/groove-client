@@ -30,11 +30,12 @@ export const routes: RouteObject[] = [
           { path: "playlist", element: <GroovePlaylistPage /> },
           { path: "contest", element: <SongContestPage /> },
           { path: "event", element: <EventPage /> },
-          { path: "admin", element: <AdminPage /> },
           { path: "credits", element: <CreditsPage /> },
           { path: "coming-soon", element: <ComingSoonPage /> },
         ],
       },
+      // 관리 화면은 축제 참여자용 헤더·내비게이션과 분리한다.
+      { path: "admin", element: <AdminPage /> },
       // 테이블 QR 주문은 전역 레이아웃 밖의 별도 흐름이다. 페이지가 상단바를
       // 직접 그리고(미완료 주문 배너 포함) 단계 전환 시 스크롤도 직접 올린다.
       { path: "pub/:boothId/:tableCode", element: <BoothOrderPage /> },

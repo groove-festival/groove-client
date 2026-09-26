@@ -132,11 +132,13 @@ export const ZoneCarousel = ({ zones, selectedZone, onSelect }: ZoneCarouselProp
     <div className="flex w-full flex-col gap-3">
       <ul
         aria-label="체험존 목록"
-        className="relative flex w-full snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto overscroll-x-contain [&::-webkit-scrollbar]:hidden"
+        // 스냅을 걸지 않아야 사용자가 넘긴 정도대로 멈춘다. 지도에서 부스를
+        // 고를 때만 useZoneCarousel이 카드를 가운데로 옮긴다.
+        className="relative flex w-full [scrollbar-width:none] gap-3 overflow-x-auto overscroll-x-contain [&::-webkit-scrollbar]:hidden"
         ref={scrollerRef}
       >
         {zones.map((zone) => (
-          <li className="shrink-0 snap-center" key={zone.type}>
+          <li className="shrink-0" key={zone.type}>
             <ZoneCard
               isSelected={zone.type === selectedZone}
               onSelect={() => onSelect(zone.type)}

@@ -233,12 +233,9 @@ describe("EventPage", () => {
     act(() => void vi.advanceTimersByTime(CAROUSEL_SLIDE_DURATION_MS / 2));
     expect(scroller.scrollLeft).toBeGreaterThan(0);
     expect(scroller.scrollLeft).toBeLessThan(CENTERED_LEFT(1));
-    // 이동 중에는 스냅을 꺼서 카드 사이에서 끊기지 않게 한다.
-    expect(scroller.style.scrollSnapType).toBe("none");
 
     act(() => void vi.advanceTimersByTime(CAROUSEL_SLIDE_DURATION_MS));
     expect(scroller.scrollLeft).toBe(CENTERED_LEFT(1));
-    expect(scroller.style.scrollSnapType).toBe("");
   });
 
   it("does not change the selection by scrolling or swiping", async () => {
@@ -247,6 +244,8 @@ describe("EventPage", () => {
     fireEvent.pointerDown(scroller);
     scroller.scrollLeft = CENTERED_LEFT(2);
     fireEvent.scroll(scroller);
+    // 스냅을 걸지 않아 사용자가 넘긴 자리에 그대로 멈춘다.
+    expect(scroller.className).not.toMatch(/snap-/);
     act(() => void vi.advanceTimersByTime(1000));
 
     expect(screen.queryAllByRole("button", { pressed: true })).toHaveLength(0);

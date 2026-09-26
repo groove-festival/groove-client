@@ -27,7 +27,7 @@ export default function EventPage() {
   const { data: zones, isPending, isError, refetch } = useZones();
 
   return (
-    <main className="flex flex-1 flex-col overflow-x-hidden bg-[#1c1c1c] pb-[208px] text-[#fcfcfc]">
+    <main className="flex flex-1 flex-col overflow-x-hidden bg-[#1c1c1c] pb-[100px] text-[#fcfcfc]">
       <div className="flex w-full flex-col gap-20 px-4 pt-[100px]">
         <section aria-labelledby="event-zone-heading" className="flex flex-col gap-4">
           <h2 className="text-2xl leading-[normal] font-bold" id="event-zone-heading">

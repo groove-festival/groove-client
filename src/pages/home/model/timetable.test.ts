@@ -3,7 +3,6 @@ import {
   formatTimetableTime,
   getTimetableDateKey,
   isTimetableItemActive,
-  parseTimetableNowOverride,
 } from "./timetable";
 
 const kst = (dateTime: string) => new Date(`${dateTime}+09:00`);
@@ -58,25 +57,19 @@ describe("festival timetable", () => {
     expect(activeTitles("2026-10-01T14:00:00")).toEqual(["LOVE ZONE 브레이크 타임"]);
     expect(activeTitles("2026-10-02T18:30:00")).toEqual([
       "LOVE ZONE 재오픈",
+      "주막 오픈",
       "오프닝 & 밴드동아리 축하 공연",
     ]);
     expect(activeTitles("2026-10-02T22:45:00")).toEqual([
+      "주막 오픈",
       "그루브 라이벌스 + GROOVE TICKET (인스타팅)",
     ]);
   });
 
   it("does not highlight point-in-time items or times outside the festival", () => {
-    expect(activeTitles("2026-10-02T00:30:00")).toEqual([]);
+    // 주막 오픈은 마감 직전까지 켜 둔다. 한 시점 항목은 주막 마감이다.
+    expect(activeTitles("2026-10-02T00:30:00")).toEqual(["주막 오픈"]);
     expect(activeTitles("2026-09-30T12:00:00")).toEqual([]);
-  });
-
-  it("parses a KST preview time and ignores malformed values", () => {
-    expect(parseTimetableNowOverride("2026-10-02T20:50")?.toISOString()).toBe(
-      "2026-10-02T11:50:00.000Z",
-    );
-    expect(parseTimetableNowOverride("2026-10-02")).toBeNull();
-    expect(parseTimetableNowOverride("tomorrow")).toBeNull();
-    expect(parseTimetableNowOverride(null)).toBeNull();
   });
 
   it("formats ranges and single times", () => {

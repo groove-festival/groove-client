@@ -7,6 +7,9 @@ export interface TimetableItem {
   // "HH:mm" (KST). 06시 이전 시각은 다음 날 새벽으로 본다.
   startTime: string;
   endTime?: string;
+  // 표시 문구에는 쓰지 않고 강조만 이 시각까지 유지한다.
+  // 주막 오픈처럼 시작 시각만 보여 주지만 문 닫을 때까지 켜두는 항목에 쓴다.
+  activeUntil?: string;
   category: TimetableCategory;
   title: string;
 }
@@ -38,6 +41,7 @@ export const festivalTimetable: Record<TimetableDateKey, TimetableItem[]> = {
     {
       id: "d1-pub-open",
       startTime: "18:00",
+      activeUntil: "01:00",
       category: "operation",
       title: "주막 오픈",
     },
@@ -80,6 +84,7 @@ export const festivalTimetable: Record<TimetableDateKey, TimetableItem[]> = {
     {
       id: "d2-pub-open",
       startTime: "18:00",
+      activeUntil: "01:00",
       category: "operation",
       title: "주막 오픈",
     },
@@ -162,17 +167,6 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 // 10/1 일정의 마지막 항목(01:00 주막 마감)까지는 10/1 목록을 유지한다.
 const SECOND_DAY_STARTS_AFTER = Date.parse(`2026-10-02T01:00:00${KST_OFFSET}`);
 
-// 개발 서버에서 `?now=2026-10-02T20:50`처럼 KST 시각을 넘겨 타임테이블을
-// 미리 볼 때 쓴다. 형식이 맞지 않으면 무시한다.
-export function parseTimetableNowOverride(value: string | null): Date | null {
-  if (!value || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value.trim())) {
-    return null;
-  }
-
-  const time = Date.parse(`${value.trim()}:00${KST_OFFSET}`);
-  return Number.isNaN(time) ? null : new Date(time);
-}
-
 export function getTimetableDateKey(now: Date): TimetableDateKey {
   return now.getTime() > SECOND_DAY_STARTS_AFTER ? "2026-10-02" : "2026-10-01";
 }
@@ -183,21 +177,23 @@ function toTimestamp(dateKey: TimetableDateKey, time: string): number {
   return hour < NEXT_DAY_CUTOFF_HOUR ? base + DAY_MS : base;
 }
 
-// 시작~종료 구간 안에 있는 항목만 진행 중으로 본다. 종료 시각이 없는 항목
-// (주막 오픈·마감 같은 한 시점)은 강조하지 않는다.
+// 시작~종료 구간 안에 있는 항목만 진행 중으로 본다. 종료 시각은 endTime을
+// 먼저 보고, 시작 시각만 표시하는 항목은 activeUntil을 쓴다. 둘 다 없는
+// 한 시점 항목(주막 마감)은 강조하지 않는다.
 export function isTimetableItemActive(
   item: TimetableItem,
   dateKey: TimetableDateKey,
   now: Date,
 ): boolean {
-  if (!item.endTime) {
+  const until = item.endTime ?? item.activeUntil;
+  if (!until) {
     return false;
   }
 
   const current = now.getTime();
   return (
     toTimestamp(dateKey, item.startTime) <= current &&
-    current < toTimestamp(dateKey, item.endTime)
+    current < toTimestamp(dateKey, until)
   );
 }
 

@@ -40,7 +40,7 @@ export const BoothCard = ({ booth, isSelected = false, to }: BoothCardProps) => 
 
   return (
     <Link
-      className={`flex h-[98px] w-full items-center justify-between rounded-3xl bg-[#767676] px-6 py-5 text-[#fcfcfc] transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none ${
+      className={`flex h-[90px] w-full items-center justify-between rounded-3xl bg-[#767676] px-6 py-5 text-[#fcfcfc] transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none ${
         isSelected ? "border-2 border-[#cfff04]" : "border border-[#fcfcfc]"
       }`}
       data-testid="booth-card"
@@ -51,7 +51,7 @@ export const BoothCard = ({ booth, isSelected = false, to }: BoothCardProps) => 
         <div className="min-w-0 leading-none font-semibold">
           <p className="truncate text-xl">{displayName}</p>
           {displayName !== departments && (
-            <p className="mt-1 truncate text-base">{departments}</p>
+            <p className="mt-1 truncate text-sm font-medium">{departments}</p>
           )}
         </div>
       </div>

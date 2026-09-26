@@ -54,7 +54,7 @@ const shortcuts: Shortcut[] = [
 
 // 전체메뉴(FestivalMenu)의 핑크 배지와 다른 메인 전용 배지 (Figma 25:2168).
 const ContestStatusBadge = ({ status }: { status: ContestBadgeStatus }) => (
-  <span className="animate-badge-float flex shrink-0 items-center justify-center rounded-full bg-[#5d00ff] px-2 py-1 text-[8px] leading-[normal] font-semibold whitespace-nowrap text-[#fcfcfc] drop-shadow-[0_0_2px_#5d00ff] motion-reduce:animate-none">
+  <span className="animate-badge-float flex shrink-0 items-center justify-center rounded-full bg-[#5d00ff] px-2 py-1 text-[10px] leading-[normal] font-semibold whitespace-nowrap text-[#fcfcfc] drop-shadow-[0_0_2px_#5d00ff] motion-reduce:animate-none">
     {contestBadgeLabels[status]}
   </span>
 );
@@ -67,23 +67,23 @@ const ShortcutCard = ({
   badgeStatus?: ContestBadgeStatus;
 }) => (
   <Link
-    className="flex h-[105px] w-full items-center gap-5 rounded-3xl border border-[#fcfcfc] bg-[#767676] py-5 pr-[21px] pl-5 text-[#fcfcfc] transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
+    className="flex min-h-[96px] w-full items-center gap-2 rounded-3xl border border-[#fcfcfc] bg-[#767676] py-4 pr-4 pl-3 text-[#fcfcfc] transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none min-[393px]:h-[96px] min-[393px]:py-6 min-[393px]:pr-6 min-[393px]:pl-4"
     to={shortcut.to}
   >
     <img
       alt=""
-      className="h-[63px] w-[73px] shrink-0 object-cover"
+      className="h-14 w-16 shrink-0 object-cover min-[393px]:h-[63px] min-[393px]:w-[73px]"
       src={shortcut.icon}
     />
     <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
-      <div className="flex min-w-0 flex-col gap-1.5">
-        <span className="flex items-center gap-2">
-          <span className="text-xl leading-[normal] font-bold whitespace-nowrap">
+      <div className="flex min-w-0 flex-col gap-1">
+        <span className="flex flex-wrap items-center gap-1">
+          <span className="text-lg leading-[normal] font-bold min-[393px]:text-xl">
             {shortcut.title}
           </span>
           {badgeStatus && <ContestStatusBadge status={badgeStatus} />}
         </span>
-        <span className="w-[164px] max-w-full text-xs leading-[normal] text-[#cfcfcf]">
+        <span className="w-full max-w-[220px] text-xs leading-[normal] text-[#cfcfcf] min-[393px]:w-[164px]">
           {shortcut.description}
         </span>
       </div>
