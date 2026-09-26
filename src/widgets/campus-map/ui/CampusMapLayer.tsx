@@ -64,8 +64,11 @@ const ShapePath = ({
 
 export interface CampusMapLayerProps {
   places: readonly CampusPlace[];
-  // 색을 켜고 누를 수 있게 둘 장소. 꺼진 장소는 배경 회색으로 보이고 눌리지 않는다.
+  // 색을 켤 장소. 꺼진 장소는 배경 회색으로 보인다.
   isLit: (place: CampusPlace) => boolean;
+  // 누를 수 있는 장소. 없으면 켜진 장소만 누를 수 있다. 회색이어도 골라 바꿀 수 있어야
+  // 하는 화면(주막 지도에서 한 주막만 남긴 상태)이 따로 넘긴다.
+  isSelectable?: (place: CampusPlace) => boolean;
   selectedId: string | null;
   // 장소가 아닌 빈 곳을 누르면 null 이 온다.
   onSelect: (place: CampusPlace | null) => void;
@@ -87,6 +90,7 @@ const defaultActionLabel = (place: CampusPlace) => `${place.label} 위치 보기
 export const CampusMapLayer = ({
   places,
   isLit,
+  isSelectable = isLit,
   selectedId,
   onSelect,
   getActionLabel = defaultActionLabel,
@@ -95,6 +99,7 @@ export const CampusMapLayer = ({
   const pressPoint = useRef<{ x: number; y: number } | null>(null);
   const litPlaces = places.filter(isLit);
   const litIds = new Set(litPlaces.map(({ id }) => id));
+  const selectablePlaces = places.filter(isSelectable);
   const labeledPlaces = litPlaces.filter(({ group }) => alwaysLabeledGroups.has(group));
   // 지명이 적힌 장소는 골라도 핀을 한 번 더 띄우지 않는다.
   const selectedPlace = litPlaces.find(
@@ -187,7 +192,7 @@ export const CampusMapLayer = ({
           width="100%"
         />
 
-        {litPlaces.map((place) => (
+        {selectablePlaces.map((place) => (
           <ShapePath
             aria-label={getActionLabel(place)}
             aria-pressed={place.id === selectedId}

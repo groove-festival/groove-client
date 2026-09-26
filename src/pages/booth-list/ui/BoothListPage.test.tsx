@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { Link, MemoryRouter, Route, Routes } from "react-router";
 
@@ -55,7 +55,27 @@ const envelope = (data: unknown) => ({
   status: 200,
 });
 
-const boothShape = (boothCode: string) => screen.getByTestId(`pub-booth-${boothCode}`);
+// PLAN-1 응답 일부. 주막 지도에서도 체험존은 늘 켜 둔다.
+const zones = [
+  {
+    type: "RECOVER",
+    name: "RECOVER ZONE",
+    description: "실팔찌를 만드는 프로그램",
+    xRatio: 0.6074,
+    yRatio: 0.5923,
+  },
+];
+
+// 켜진 주막은 회색 덮개를 걷어 색 레이어가 보인다.
+const isBoothLit = (boothCode: string) =>
+  screen.getByTestId(`campus-map-cover-pub:${boothCode}`).style.opacity === "0";
+const boothButton = (boothCode: string) =>
+  screen.queryByTestId(`campus-map-place-pub:${boothCode}`);
+// 고른 주막은 지도 이름표에도 이름이 떠서 목록 안에서만 찾는다.
+const boothCard = (name: string) =>
+  within(screen.getByRole("list", { name: /주막 목록$/ }))
+    .getByText(name)
+    .closest("a");
 
 const createQueryClient = () =>
   new QueryClient({
@@ -77,7 +97,13 @@ beforeEach(() => {
   vi.clearAllMocks();
   window.localStorage.clear();
   window.sessionStorage.clear();
-  httpGet.mockResolvedValue(envelope(booths));
+  httpGet.mockImplementation((url: string) =>
+    Promise.resolve(
+      url === "/zones"
+        ? envelope({ totalCount: zones.length, zones })
+        : envelope(booths),
+    ),
+  );
 });
 
 describe("BoothListPage", () => {
@@ -134,18 +160,18 @@ describe("BoothListPage", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "확인했습니다" }));
 
-    expect(boothShape("elec-eh")).toHaveStyle("opacity: 1");
-    expect(boothShape("elec-b-design")).toHaveStyle("opacity: 1");
-    expect(boothShape("nursing")).toHaveStyle("opacity: 1");
+    expect(isBoothLit("elec-eh")).toBe(true);
+    expect(isBoothLit("elec-b-design")).toBe(true);
+    expect(isBoothLit("nursing")).toBe(true);
     // 응답에 없는 주막은 배경의 회색 도형만 남는다.
-    expect(boothShape("cse")).toHaveStyle("opacity: 0");
+    expect(isBoothLit("cse")).toBe(false);
 
     fireEvent.click(screen.getByRole("button", { name: "전체" }));
     fireEvent.click(screen.getByRole("option", { name: "간호대학" }));
 
-    expect(boothShape("nursing")).toHaveStyle("opacity: 1");
-    expect(boothShape("elec-eh")).toHaveStyle("opacity: 0");
-    expect(boothShape("elec-b-design")).toHaveStyle("opacity: 0");
+    expect(isBoothLit("nursing")).toBe(true);
+    expect(isBoothLit("elec-eh")).toBe(false);
+    expect(isBoothLit("elec-b-design")).toBe(false);
   });
 
   it("narrows the map and the list to the picked area", async () => {
@@ -167,14 +193,14 @@ describe("BoothListPage", () => {
     // 학생주차장 주막만 남고, 복지관 주막은 목록에서도 지도에서도 빠진다.
     expect(screen.getAllByTestId("booth-card")).toHaveLength(2);
     expect(screen.queryByText("나이팅게일")).not.toBeInTheDocument();
-    expect(boothShape("elec-eh")).toHaveStyle("opacity: 1");
-    expect(boothShape("elec-b-design")).toHaveStyle("opacity: 1");
-    expect(boothShape("nursing")).toHaveStyle("opacity: 0");
+    expect(isBoothLit("elec-eh")).toBe(true);
+    expect(isBoothLit("elec-b-design")).toBe(true);
+    expect(isBoothLit("nursing")).toBe(false);
 
     fireEvent.click(screen.getByRole("button", { name: "지도에서 전체 보기" }));
 
     expect(screen.getAllByTestId("booth-card")).toHaveLength(3);
-    expect(boothShape("nursing")).toHaveStyle("opacity: 1");
+    expect(isBoothLit("nursing")).toBe(true);
   });
 
   it("keeps both filters on when an area and a college are picked together", async () => {
@@ -187,7 +213,7 @@ describe("BoothListPage", () => {
 
     // 간호대학 주막은 복지관에 있어 학생주차장과 겹치는 주막이 없다.
     expect(screen.getByText("등록된 주막이 아직 없어요.")).toBeInTheDocument();
-    expect(boothShape("nursing")).toHaveStyle("opacity: 0");
+    expect(isBoothLit("nursing")).toBe(false);
   });
 
   it("filters the list to the picked booth and restores the base filters", async () => {
@@ -205,9 +231,9 @@ describe("BoothListPage", () => {
     expect(screen.getByRole("link", { name: /일렉트로닉 나이트/ })).toHaveClass(
       "border-[#cfff04]",
     );
-    expect(boothShape("elec-eh")).toHaveStyle("opacity: 1");
-    expect(boothShape("elec-b-design")).toHaveStyle("opacity: 0");
-    expect(boothShape("elec-b-design")).toBeEnabled();
+    expect(isBoothLit("elec-eh")).toBe(true);
+    expect(isBoothLit("elec-b-design")).toBe(false);
+    expect(boothButton("elec-b-design")).toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -234,9 +260,9 @@ describe("BoothListPage", () => {
     expect(
       screen.getByRole("link", { name: /전자공학부B • 디자인학과/ }).closest("li"),
     ).toHaveClass("animate-booth-filter-result-in");
-    expect(boothShape("elec-eh")).toHaveStyle("opacity: 0");
-    expect(boothShape("elec-eh")).toBeEnabled();
-    expect(boothShape("elec-b-design")).toHaveStyle("opacity: 1");
+    expect(isBoothLit("elec-eh")).toBe(false);
+    expect(boothButton("elec-eh")).toBeInTheDocument();
+    expect(isBoothLit("elec-b-design")).toBe(true);
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -249,7 +275,7 @@ describe("BoothListPage", () => {
     expect(screen.getByRole("link", { name: /일렉트로닉 나이트/ })).toHaveClass(
       "border-[#fcfcfc]",
     );
-    expect(boothShape("elec-b-design")).toHaveStyle("opacity: 1");
+    expect(isBoothLit("elec-b-design")).toBe(true);
     expect(
       screen.getByRole("button", { name: "지도에서 학생주차장 보기" }),
     ).toHaveAttribute("aria-pressed", "true");
@@ -262,9 +288,9 @@ describe("BoothListPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "지도에서 학생주차장 보기" }));
 
     // 복지관 주막은 꺼져 있어 누를 수 없다.
-    expect(boothShape("nursing")).toBeDisabled();
+    expect(boothButton("nursing")).not.toBeInTheDocument();
 
-    fireEvent.click(boothShape("elec-eh"));
+    fireEvent.click(boothButton("elec-eh")!);
     expect(screen.getAllByTestId("booth-card")).toHaveLength(1);
     expect(
       screen.getByRole("button", { name: "일렉트로닉 나이트 주막 필터 해제" }),
@@ -278,9 +304,35 @@ describe("BoothListPage", () => {
     expect(
       screen.queryByRole("button", { name: "일렉트로닉 나이트 주막 필터 해제" }),
     ).not.toBeInTheDocument();
-    const card = screen.getByText("일렉트로닉 나이트").closest("a");
+    const card = boothCard("일렉트로닉 나이트");
     expect(card).toHaveClass("border-[#fcfcfc]");
     expect(card).not.toHaveClass("border-[#cfff04]");
+  });
+
+  it("keeps the other places lit and pins the one that was tapped", async () => {
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: "확인했습니다" }));
+    fireEvent.click(screen.getByRole("button", { name: "지도에서 복지관 보기" }));
+
+    // 주막 필터와 상관없이 체험존·랜드마크는 늘 켜져 있어 누를 수 있다.
+    const recover = await screen.findByRole("button", {
+      name: "RECOVER ZONE 위치 보기",
+    });
+    fireEvent.click(recover);
+    expect(recover).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("RECOVER ZONE")).toBeInTheDocument();
+
+    // 랜드마크는 누르기 전부터 이름표가 떠 있고, 눌러도 한 번 더 띄우지 않는다.
+    expect(screen.getAllByText("IT1호관")).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "IT1호관 위치 보기" }));
+    expect(screen.queryByText("RECOVER ZONE")).not.toBeInTheDocument();
+    expect(screen.getAllByText("IT1호관")).toHaveLength(1);
+
+    // 주막을 누르면 그 주막만 남기면서 지도에도 이름표를 띄운다 (카드, 필터 칩, 핀).
+    fireEvent.click(screen.getByRole("button", { name: "나이팅게일 주막만 보기" }));
+    expect(screen.getByText("IT1호관")).toBeInTheDocument();
+    expect(screen.getAllByText("나이팅게일")).toHaveLength(3);
   });
 
   it("shows an empty state when PUB-1 has no booths", async () => {
