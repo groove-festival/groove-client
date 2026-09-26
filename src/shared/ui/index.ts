@@ -7,6 +7,7 @@ export {
 } from "./FallbackScreen";
 export {
   FestivalMap,
+  MapPin,
   MapZoomControls,
   type FestivalMapFocus,
   type FestivalMapSource,
