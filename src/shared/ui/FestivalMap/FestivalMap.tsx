@@ -16,6 +16,7 @@ import {
 import {
   clampScale,
   getContainSize,
+  getFillScale,
   getFocusPosition,
   type MapRatioPoint,
   type MapSize,
@@ -29,7 +30,10 @@ const ZOOM_STEP = 1.6;
 const BUTTON_ANIMATION_MS = 200;
 
 export interface FestivalMapSource {
-  src: string;
+  // 없으면 배치도 그림도 children 레이어가 직접 그린다. 크게 확대하면 브라우저가
+  // <img> 를 레이어의 인라인 SVG 와 몇 px 어긋나게 그려, 도형을 겹쳐 그리는
+  // 지도는 배치도까지 같은 SVG 안에 넣어야 가장자리가 맞는다.
+  src?: string;
   // 원본 지도의 좌표계 크기. 비율 좌표는 이 크기에 대한 0.0~1.0이다.
   width: number;
   height: number;
@@ -44,6 +48,8 @@ interface FestivalMapProps {
   source: FestivalMapSource;
   // 배율 1은 지도 한 장이 컨테이너에 전부 들어오는 상태다.
   initialScale?: number;
+  // 지도와 컨테이너의 비율이 달라도 빈 띠가 보이지 않도록, 실제 최소 배율은
+  // 이 값과 컨테이너를 덮는 배율 중 큰 쪽이다.
   minScale?: number;
   maxScale?: number;
   // 처음 화면의 중심. 지도마다 보여줄 자리가 달라 쓰는 쪽이 정한다.
@@ -99,6 +105,11 @@ export const FestivalMap = ({
     [containerWidth, containerHeight, sourceWidth, sourceHeight],
   );
 
+  const effectiveMinScale = Math.max(
+    minScale,
+    getFillScale({ width: containerWidth, height: containerHeight }, contentSize),
+  );
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -123,11 +134,11 @@ export const FestivalMap = ({
       if (contentSize.width <= 0) return;
 
       const container: MapSize = { width: containerWidth, height: containerHeight };
-      const target = clampScale(scale, minScale, maxScale);
+      const target = clampScale(scale, effectiveMinScale, maxScale);
       const { x, y } = getFocusPosition(container, contentSize, point, target);
       void transformRef.current?.setTransform(x, y, target, animationMs, "easeOut");
     },
-    [containerWidth, containerHeight, contentSize, maxScale, minScale],
+    [containerWidth, containerHeight, contentSize, effectiveMinScale, maxScale],
   );
 
   const resetView = (animationMs: number) =>
@@ -192,7 +203,7 @@ export const FestivalMap = ({
         doubleClick={{ disabled: true }}
         initialScale={initialScale}
         maxScale={maxScale}
-        minScale={minScale}
+        minScale={effectiveMinScale}
         onTransform={(_, state) => {
           viewRef.current = state;
           scaleRef.current = state.scale;
@@ -209,12 +220,14 @@ export const FestivalMap = ({
           }}
           wrapperStyle={{ width: "100%", height: "100%" }}
         >
-          <img
-            alt={source.alt}
-            className="pointer-events-none size-full select-none"
-            draggable={false}
-            src={source.src}
-          />
+          {source.src && (
+            <img
+              alt={source.alt}
+              className="pointer-events-none size-full select-none"
+              draggable={false}
+              src={source.src}
+            />
+          )}
           {children && (
             <div
               className="absolute inset-0"
