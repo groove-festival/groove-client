@@ -18,7 +18,7 @@ import {
   useLoginWithGoogle,
 } from "@/entities/auth";
 import { useVotes } from "@/entities/contest";
-import { useFestivalStatus } from "@/entities/festival";
+import { type StagePhase, useFestivalStatus } from "@/entities/festival";
 import { ApiError } from "@/shared/api";
 import { useScheduledRefetch } from "@/shared/lib/scheduling";
 import { LoadingFallback, NetworkErrorFallback, lockIllustration } from "@/shared/ui";
@@ -428,6 +428,22 @@ function PublicStoryTitleCloud({
   return <StoryTitleTokens stories={stories} />;
 }
 
+const contestSequenceMessages: Record<StagePhase, string> = {
+  BEFORE: "사연 모집이 먼저 시작되고,\n모집이 끝난 뒤 가요제 당일에 투표가 열려요.",
+  OPEN: "지금은 사연 모집 기간이에요. 투표는 모집 종료 후 가요제 경연이 시작되면 열려요.",
+  CLOSED: "사연 모집이 종료됐어요. 투표는 가요제 경연이 시작되면 열려요.",
+};
+
+function ContestSequenceNotice({ storyPhase }: { storyPhase: StagePhase }) {
+  return (
+    <section aria-label="가요제 진행 순서" className="mt-16 w-full px-2 text-center">
+      <p className="text-base leading-6 font-medium break-keep whitespace-pre-line text-[#fcfcfc]">
+        {contestSequenceMessages[storyPhase]}
+      </p>
+    </section>
+  );
+}
+
 function ContestLoginPanel({
   authError,
   authPending,
@@ -624,7 +640,7 @@ export default function SongContestPage() {
 
   return (
     <main
-      className="relative mx-auto w-full max-w-[600px] bg-[#1c1c1c] px-4 text-[#fcfcfc]"
+      className="relative w-full bg-[#1c1c1c] px-4 text-[#fcfcfc]"
       style={{ minHeight: height }}
     >
       <ContestOverview
@@ -636,9 +652,11 @@ export default function SongContestPage() {
 
       {showStorySection && storyPhase === "BEFORE" && (
         <section className="mx-auto mt-40 flex w-full flex-col items-center gap-12 text-center">
-          <h1 className="text-2xl font-semibold">사연 모집이 아직이에요</h1>
+          <h1 className="text-2xl font-semibold">사연 모집을 준비하고 있어요</h1>
           <img alt="" className="h-[208px] w-[260px] object-contain" src={hourglass} />
-          <p className="text-base font-medium">곧 사연 모집이 시작 됩니다!</p>
+          <p className="text-base font-medium">
+            모집이 열리면 무대에서 소개될 이야기를 남길 수 있어요.
+          </p>
         </section>
       )}
 
@@ -728,6 +746,10 @@ export default function SongContestPage() {
         </section>
       )}
 
+      {showStorySection && contestPhase === "BEFORE" && storyPhase && (
+        <ContestSequenceNotice storyPhase={storyPhase} />
+      )}
+
       {contestPhase === "BEFORE" && <ContestBeforeNotice />}
 
       {contestPhase === "CLOSED" && <ContestClosedNotice />}
@@ -738,10 +760,6 @@ export default function SongContestPage() {
           <ContestResults votes={votes} />
         </div>
       )}
-
-      <p className="absolute bottom-10 left-0 w-full text-center text-[10px] leading-3 text-[#a2a2a2]">
-        자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요.
-      </p>
 
       {guideOpen && storyPhase === "OPEN" && (
         <div

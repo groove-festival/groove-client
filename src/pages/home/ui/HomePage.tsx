@@ -23,9 +23,7 @@ const scrollToFestivalMap = () => {
 export default function HomePage() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#1c1c1c] pb-40 text-[#fcfcfc]">
-      <div className="relative h-[2224px] w-full" id="top">
-        <FestivalHero onBottomArrowClick={scrollToFestivalMap} />
-      </div>
+      <FestivalHero id="top" onBottomArrowClick={scrollToFestivalMap} />
 
       <div className="relative z-10 flex flex-col gap-20 px-4">
         <RevealSection id={FESTIVAL_MAP_SECTION_ID} label="축제 전체 지도">

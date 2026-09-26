@@ -221,13 +221,46 @@ describe("SongContestPage", () => {
 
   it("shows a closed form before collection and after collection", () => {
     const before = renderPage("/contest");
-    expect(screen.getByText("사연 모집이 아직이에요")).toBeInTheDocument();
+    expect(screen.getByText("사연 모집을 준비하고 있어요")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "신청하기" })).not.toBeInTheDocument();
     before.unmount();
 
     renderPage("/contest?phase=closed");
     expect(screen.getByText("사연 모집이 끝났어요")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "신청하기" })).not.toBeInTheDocument();
+  });
+
+  it.each([
+    [
+      "BEFORE",
+      "사연 모집이 먼저 시작되고, 모집이 끝난 뒤 가요제 당일에 투표가 열려요.",
+    ],
+    [
+      "OPEN",
+      "지금은 사연 모집 기간이에요. 투표는 모집 종료 후 가요제 경연이 시작되면 열려요.",
+    ],
+    ["CLOSED", "사연 모집이 종료됐어요. 투표는 가요제 경연이 시작되면 열려요."],
+  ] as const)("explains the %s story-to-vote sequence", (storyPhase, message) => {
+    useFestivalStatusMock.mockReturnValue({
+      data: statusBody(storyPhase, "BEFORE"),
+      isError: false,
+      isPending: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useFestivalStatus>);
+
+    renderPage("/contest");
+
+    expect(screen.getByRole("region", { name: "가요제 진행 순서" })).toHaveTextContent(
+      message,
+    );
+    expect(
+      screen.getByRole("region", { name: "가요제 투표는 경연 당일에 열려요" }),
+    ).toHaveTextContent("현장에서 진행 중인 경기에만 투표할 수 있어요.");
+    expect(
+      screen.queryByText(
+        "자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요.",
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it("switches the two overview tabs without leaving the page", () => {
@@ -442,7 +475,7 @@ describe("SongContestPage contest phase", () => {
 
     renderPage("/contest");
     expect(screen.getByRole("tab", { name: "경연 목록" })).toBeInTheDocument();
-    expect(screen.getByText("가요제 투표가 아직이에요")).toBeInTheDocument();
+    expect(screen.getByText("가요제 투표는 경연 당일에 열려요")).toBeInTheDocument();
     expect(screen.queryByText("진행 중인 투표 패널")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "경연 목록" }));
