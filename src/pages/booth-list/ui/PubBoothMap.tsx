@@ -83,14 +83,16 @@ export const PubBoothMap = ({
   };
 
   const selectPlace = (place: CampusPlace | null) => {
-    setSelectedPlaceId(place?.id ?? null);
-    if (!place) return;
-
-    // 주막은 목록과 지도에 그 주막만 남기므로 지도는 그대로 둔다.
-    if (place.group === "pub") {
+    // 주막은 목록과 지도에 그 주막만 남기고 필터 칩에 이름을 띄우므로, 지도에는
+    // 핀을 따로 띄우지 않고 보던 자리도 그대로 둔다.
+    if (place?.group === "pub") {
+      setSelectedPlaceId(null);
       onSelectBooth(place.boothCode);
       return;
     }
+
+    setSelectedPlaceId(place?.id ?? null);
+    if (!place) return;
 
     setFocus({ ...place.point, width: getPlaceFocusWidth(place, SELECTED_WIDTH) });
   };
@@ -137,6 +139,7 @@ export const PubBoothMap = ({
         isLit={(place) =>
           place.group === "pub" ? highlightedCodes.has(place.boothCode) : true
         }
+        keepDimmedPubNumbers
         isSelectable={(place) =>
           place.group === "pub" ? selectableCodes.has(place.boothCode) : true
         }

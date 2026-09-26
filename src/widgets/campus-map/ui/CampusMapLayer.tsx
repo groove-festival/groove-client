@@ -3,6 +3,7 @@ import { type SVGProps, useRef } from "react";
 import { MapLabel, MapPin } from "@/shared/ui";
 
 import campusBase from "../festival-visuals/campus-base.svg";
+import pubNumbersLayer from "../festival-visuals/campus-pub-numbers.svg";
 import pubsLayer from "../festival-visuals/campus-pubs.svg";
 import zonesLayer from "../festival-visuals/campus-zones.svg";
 import {
@@ -77,6 +78,9 @@ export interface CampusMapLayerProps {
   // 늘 적어 두는 지명이 [사라지는 배율, 다 보이는 배율]. 박스 비율에 따라 값이 달라
   // CampusMap 이 계산해 넘긴다.
   labelVisibleScale?: readonly [hidden: number, shown: number];
+  // 꺼진 주막에도 번호를 남긴다. 주막 지도는 회색 주막도 번호로 찾아 고르므로 켠다.
+  // 끄면 번호는 켜진 주막에만 보인다.
+  keepDimmedPubNumbers?: boolean;
 }
 
 const defaultActionLabel = (place: CampusPlace) => `${place.label} 위치 보기`;
@@ -95,6 +99,7 @@ export const CampusMapLayer = ({
   onSelect,
   getActionLabel = defaultActionLabel,
   labelVisibleScale,
+  keepDimmedPubNumbers = false,
 }: CampusMapLayerProps) => {
   const pressPoint = useRef<{ x: number; y: number } | null>(null);
   const litPlaces = places.filter(isLit);
@@ -104,6 +109,17 @@ export const CampusMapLayer = ({
   // 지명이 적힌 장소는 골라도 핀을 한 번 더 띄우지 않는다.
   const selectedPlace = litPlaces.find(
     ({ id, group }) => id === selectedId && !alwaysLabeledGroups.has(group),
+  );
+
+  // 주막 번호. 라임 레이어와 따로 두어 덮개의 위나 아래 중 한쪽에 그린다.
+  const pubNumbers = (
+    <image
+      aria-hidden="true"
+      className="pointer-events-none select-none"
+      height={CAMPUS_MAP_SIZE.height}
+      href={pubNumbersLayer}
+      width={CAMPUS_MAP_SIZE.width}
+    />
   );
 
   const rememberPress = (event: { clientX: number; clientY: number }) => {
@@ -151,6 +167,8 @@ export const CampusMapLayer = ({
         ))}
 
         {/* 디자인에 그려졌지만 켜지 않은 주막·체험존. 목록에 없는 부스도 여기서 꺼진다. */}
+        {!keepDimmedPubNumbers && pubNumbers}
+
         {campusCoverShapes.map(({ id, shape }) => (
           <ShapePath
             className={`pointer-events-none ${fadeClassName}`}
@@ -163,6 +181,9 @@ export const CampusMapLayer = ({
             style={{ opacity: litIds.has(id) ? 0 : 1 }}
           />
         ))}
+
+        {/* 덮개보다 위에 그리면 회색 주막에도 번호가 남는다. */}
+        {keepDimmedPubNumbers && pubNumbers}
 
         {places.map((place) => {
           const color = overlayColors[place.group];

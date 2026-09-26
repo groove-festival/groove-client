@@ -329,10 +329,10 @@ describe("BoothListPage", () => {
     expect(screen.queryByText("RECOVER ZONE")).not.toBeInTheDocument();
     expect(screen.getAllByText("IT1호관")).toHaveLength(1);
 
-    // 주막을 누르면 그 주막만 남기면서 지도에도 이름표를 띄운다 (카드, 필터 칩, 핀).
+    // 주막을 누르면 그 주막만 남기고, 이름은 카드와 필터 칩에만 뜬다 (지도 핀 없음).
     fireEvent.click(screen.getByRole("button", { name: "나이팅게일 주막만 보기" }));
     expect(screen.getByText("IT1호관")).toBeInTheDocument();
-    expect(screen.getAllByText("나이팅게일")).toHaveLength(3);
+    expect(screen.getAllByText("나이팅게일")).toHaveLength(2);
   });
 
   it("shows an empty state when PUB-1 has no booths", async () => {
