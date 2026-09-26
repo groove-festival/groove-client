@@ -34,6 +34,9 @@
   --animate-badge-float: badge-float 2.4s ease-in-out infinite;
   /* 고른 카드의 화살표처럼 "여기를 누르라"고 알리는 좌우 흔들림. */
   --animate-arrow-nudge: arrow-nudge 1.4s ease-in-out infinite;
+  /* 지도에서 고른 주막의 필터 칩과 한 장만 남은 결과 카드 전환. */
+  --animate-booth-filter-chip-in: booth-filter-chip-in 180ms ease-out;
+  --animate-booth-filter-result-in: booth-filter-result-in 220ms ease-out;
 
   @keyframes float {
     0%,
@@ -75,6 +78,28 @@
     40% {
       opacity: 1;
       transform: scale(1);
+    }
+  }
+
+  @keyframes booth-filter-chip-in {
+    from {
+      opacity: 0;
+      transform: translateX(-6px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  @keyframes booth-filter-result-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
   }
 }

@@ -1,16 +1,27 @@
-import hanNaYoungProfile from "../festival-visuals/profile-hannayoung.png";
-import jeonByeongJinProfile from "../festival-visuals/profile-jeonbyeongjin.jpg";
-import kimJiAnProfile from "../festival-visuals/profile-kimjian.png";
-import kimJiHunProfile from "../festival-visuals/profile-kimjihun.jpg";
+import hanNaYoungProfile1x from "../festival-visuals/profile-hannayoung-64.png";
+import hanNaYoungProfile2x from "../festival-visuals/profile-hannayoung-128.png";
+import hanNaYoungProfile3x from "../festival-visuals/profile-hannayoung-192.png";
+import jeonByeongJinProfile1x from "../festival-visuals/profile-jeonbyeongjin-64.png";
+import jeonByeongJinProfile2x from "../festival-visuals/profile-jeonbyeongjin-128.png";
+import jeonByeongJinProfile3x from "../festival-visuals/profile-jeonbyeongjin-192.png";
+import kimJiAnProfile1x from "../festival-visuals/profile-kimjian-64.png";
+import kimJiAnProfile2x from "../festival-visuals/profile-kimjian-128.png";
+import kimJiAnProfile3x from "../festival-visuals/profile-kimjian-192.png";
+import kimJiHunProfile1x from "../festival-visuals/profile-kimjihun-64.png";
+import kimJiHunProfile2x from "../festival-visuals/profile-kimjihun-128.png";
+import kimJiHunProfile3x from "../festival-visuals/profile-kimjihun-192.png";
 import kimTaeHuiProfile from "../festival-visuals/profile-kimtaehui.png";
 import seoHyeongCheolProfile from "../festival-visuals/profile-seohyeongcheol.png";
-import yunJiMinProfile from "../festival-visuals/profile-yunjimin.jpg";
+import yunJiMinProfile1x from "../festival-visuals/profile-yunjimin-64.png";
+import yunJiMinProfile2x from "../festival-visuals/profile-yunjimin-128.png";
+import yunJiMinProfile3x from "../festival-visuals/profile-yunjimin-192.png";
 
 export interface TeamMember {
   name: string;
   affiliation: string | null;
   /** 실데이터가 제공되면 채운다. 없으면 빈 프로필 원을 표시한다. */
   profileImage?: string;
+  profileImageSrcSet?: string;
   instagram?: string | null;
   github?: string | null;
 }
@@ -35,7 +46,8 @@ export const creditSections: CreditSection[] = [
       {
         name: "윤지민",
         affiliation: "글로벌SW융합전공 22학번",
-        profileImage: yunJiMinProfile,
+        profileImage: yunJiMinProfile2x,
+        profileImageSrcSet: `${yunJiMinProfile1x} 1x, ${yunJiMinProfile2x} 2x, ${yunJiMinProfile3x} 3x`,
         instagram: "1a._supernova",
         github: "Y-jimin",
       },
@@ -47,7 +59,8 @@ export const creditSections: CreditSection[] = [
       {
         name: "김지훈",
         affiliation: "글로벌SW융합전공 20학번",
-        profileImage: kimJiHunProfile,
+        profileImage: kimJiHunProfile2x,
+        profileImageSrcSet: `${kimJiHunProfile1x} 1x, ${kimJiHunProfile2x} 2x, ${kimJiHunProfile3x} 3x`,
         instagram: "hoon_ground",
         github: "hoon-ground",
       },
@@ -60,7 +73,8 @@ export const creditSections: CreditSection[] = [
       {
         name: "한나영",
         affiliation: "심화컴퓨터공학전공 24학번",
-        profileImage: hanNaYoungProfile,
+        profileImage: hanNaYoungProfile2x,
+        profileImageSrcSet: `${hanNaYoungProfile1x} 1x, ${hanNaYoungProfile2x} 2x, ${hanNaYoungProfile3x} 3x`,
         instagram: "7o78_8",
         github: "nyoeng",
       },
@@ -79,7 +93,8 @@ export const creditSections: CreditSection[] = [
       {
         name: "윤지민",
         affiliation: "글로벌SW융합전공 22학번",
-        profileImage: yunJiMinProfile,
+        profileImage: yunJiMinProfile2x,
+        profileImageSrcSet: `${yunJiMinProfile1x} 1x, ${yunJiMinProfile2x} 2x, ${yunJiMinProfile3x} 3x`,
         instagram: "1a._supernova",
         github: "Y-jimin",
       },
@@ -109,13 +124,15 @@ export const creditSections: CreditSection[] = [
       {
         name: "김지안",
         affiliation: "디자인학과 25학번",
-        profileImage: kimJiAnProfile,
+        profileImage: kimJiAnProfile2x,
+        profileImageSrcSet: `${kimJiAnProfile1x} 1x, ${kimJiAnProfile2x} 2x, ${kimJiAnProfile3x} 3x`,
         instagram: "khehhaz",
       },
       {
         name: "전병진",
         affiliation: "디자인학과 24학번",
-        profileImage: jeonByeongJinProfile,
+        profileImage: jeonByeongJinProfile2x,
+        profileImageSrcSet: `${jeonByeongJinProfile1x} 1x, ${jeonByeongJinProfile2x} 2x, ${jeonByeongJinProfile3x} 3x`,
         instagram: "twojwithinun",
       },
     ],

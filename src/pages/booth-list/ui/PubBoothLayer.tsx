@@ -11,9 +11,11 @@ const TAP_SLOP_PX = 6;
 
 interface PubBoothLayerProps {
   booths: readonly Booth[];
-  // 지금 색을 남길 주막들. 구역·단대 필터를 모두 거친 결과가 그대로 들어온다.
+  // 지금 색을 남길 주막들. 단일 주막을 고르면 그 한 곳만 들어온다.
   highlightedCodes: ReadonlySet<string>;
-  // 색이 들어온 주막을 눌렀을 때만 불린다. 꺼진 주막은 눌리지 않는다.
+  // 현재 구역·단대 필터에 들어 있어 회색이어도 선택할 수 있는 주막들.
+  selectableCodes: ReadonlySet<string>;
+  // 선택할 수 있는 주막을 눌렀을 때 불린다.
   onSelect: (boothCode: string) => void;
 }
 
@@ -27,6 +29,7 @@ export const PubBoothLayer = ({
   booths,
   highlightedCodes,
   onSelect,
+  selectableCodes,
 }: PubBoothLayerProps) => {
   const pressPoint = useRef<{ x: number; y: number } | null>(null);
 
@@ -49,15 +52,16 @@ export const PubBoothLayer = ({
       {Object.entries(pubShapes).map(([boothCode, shape]) => {
         const booth = booths.find((item) => item.boothCode === boothCode);
         const isLit = highlightedCodes.has(boothCode);
+        const isSelectable = selectableCodes.has(boothCode);
 
         return (
           <button
-            aria-label={booth && `${getBoothDisplayName(booth)} 카드로 이동`}
-            className={`absolute inset-0 size-full transition-opacity duration-300 ease-out outline-none motion-reduce:transition-none ${
-              isLit ? "cursor-pointer" : "pointer-events-none"
+            aria-label={booth && `${getBoothDisplayName(booth)} 주막만 보기`}
+            className={`absolute inset-0 size-full transition-opacity duration-300 ease-in-out outline-none motion-reduce:transition-none ${
+              isSelectable ? "cursor-pointer" : "pointer-events-none"
             }`}
             data-testid={`pub-booth-${boothCode}`}
-            disabled={!isLit}
+            disabled={!isSelectable}
             key={boothCode}
             onClick={(event) => {
               if (isTap(event)) onSelect(boothCode);
