@@ -1,7 +1,6 @@
 import type { Booth, BoothArea } from "@/entities/booth";
 import type { MapRatioPoint } from "@/shared/ui";
-
-import { pubShapes } from "./pubShapes";
+import { getPubDesignPoint } from "@/widgets/campus-map";
 
 // 지도 위 구역 버튼. "전체"는 구역이 아니라 두 구역을 모두 보여주는 상태다.
 export type PubMapArea = "all" | BoothArea;
@@ -31,10 +30,7 @@ export const getPubPoint = (
     return { xRatio: booth.xRatio, yRatio: booth.yRatio };
   }
 
-  const shape = pubShapes[booth.boothCode];
-  if (!shape) return null;
-
-  return { xRatio: shape.xRatio, yRatio: shape.yRatio };
+  return getPubDesignPoint(booth.boothCode);
 };
 
 const BOOTH_LIST_CENTER: MapRatioPoint = { xRatio: 0.5, yRatio: 0.5 };

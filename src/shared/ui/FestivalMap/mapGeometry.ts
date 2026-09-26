@@ -32,6 +32,15 @@ export const getContainSize = (container: MapSize, source: MapSize): MapSize => 
   return { width: source.width * scale, height: source.height * scale };
 };
 
+// 지도가 컨테이너를 빈틈없이 덮는 가장 작은 배율. 지도와 컨테이너의 비율이 다르면
+// 배율 1(전부 들어오는 크기)에서 위아래나 좌우에 빈 띠가 생기므로 이보다 작게는
+// 줄이지 않는다. 비율이 같으면 1이다.
+export const getFillScale = (container: MapSize, content: MapSize) => {
+  if (content.width <= 0 || content.height <= 0) return 1;
+
+  return Math.max(container.width / content.width, container.height / content.height);
+};
+
 // 비율 좌표가 컨테이너 한가운데 오도록 하는 콘텐츠 왼쪽 위 위치.
 // react-zoom-pan-pinch의 setTransform이 받는 positionX·positionY다.
 export const getFocusPosition = (

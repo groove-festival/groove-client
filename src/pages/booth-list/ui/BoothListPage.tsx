@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { X } from "lucide-react";
 
 import {
   BoothCard,
   boothFilterOptions,
+  getBoothDisplayName,
   getBoothsByFilter,
   type BoothFilter,
   useBooths,
@@ -14,20 +16,6 @@ import { getBoothsByArea, type PubMapArea } from "../model/pubMap";
 import filterChevron from "../festival-visuals/filter-chevron.svg";
 import { BoothNoticeDialog } from "./BoothNoticeDialog";
 import { PubBoothMap } from "./PubBoothMap";
-
-// 지도에서 고른 주막 카드를 화면 한가운데로 데려온다. 목록이 길어 카드가
-// 접힌 화면 아래에 있으면 색만 바뀌어서는 고른 것을 볼 수 없다.
-const scrollCardIntoView = (card: HTMLElement) => {
-  const prefersReducedMotion = window.matchMedia?.(
-    "(prefers-reduced-motion: reduce)",
-  ).matches;
-
-  // jsdom 등 scrollIntoView 가 없는 환경에서도 선택 자체는 동작해야 한다.
-  card.scrollIntoView?.({
-    behavior: prefersReducedMotion ? "auto" : "smooth",
-    block: "center",
-  });
-};
 
 // 펼친 단대 목록과 화면 아래 끝 사이에 남길 여백.
 const MENU_BOTTOM_MARGIN_PX = 16;
@@ -130,28 +118,38 @@ const BoothFilterMenu = ({
 const BoothListPage = () => {
   const [selectedFilter, setSelectedFilter] = useState<BoothFilter>("all");
   const [selectedArea, setSelectedArea] = useState<PubMapArea>("all");
-  // 지도에서 고른 주막. 카드 한 장을 표시하는 값이라 목록 쪽에서 들고 있는다.
+  // 지도에서 고른 주막. 구역·단대 필터 위에 한 주막만 남기는 추가 필터다.
   const [selectedBoothCode, setSelectedBoothCode] = useState<string | null>(null);
-  const cardRefs = useRef(new Map<string, HTMLLIElement>());
   const [isNoticeOpen, setIsNoticeOpen] = useState(() => !hasDismissedNotice());
   const boothsQuery = useBooths();
   const booths = useMemo(() => boothsQuery.data ?? [], [boothsQuery.data]);
-  // 구역과 단대를 모두 통과한 주막. 지도 색과 목록이 늘 같은 묶음을 가리킨다.
-  const filteredBooths = useMemo(
+  // 구역과 단대를 모두 통과한 기본 목록. 주막 한 곳을 고르기 전과 선택을
+  // 해제한 뒤에는 이 목록을 그대로 보여준다.
+  const baseFilteredBooths = useMemo(
     () => getBoothsByArea(getBoothsByFilter(booths, selectedFilter), selectedArea),
     [booths, selectedArea, selectedFilter],
+  );
+  const selectedBooth = useMemo(
+    () =>
+      selectedBoothCode === null
+        ? null
+        : (baseFilteredBooths.find(
+            ({ boothCode }) => boothCode === selectedBoothCode,
+          ) ?? null),
+    [baseFilteredBooths, selectedBoothCode],
+  );
+  const filteredBooths = useMemo(
+    () => (selectedBooth ? [selectedBooth] : baseFilteredBooths),
+    [baseFilteredBooths, selectedBooth],
+  );
+  const selectableCodes = useMemo(
+    () => new Set(baseFilteredBooths.map(({ boothCode }) => boothCode)),
+    [baseFilteredBooths],
   );
   const highlightedCodes = useMemo(
     () => new Set(filteredBooths.map(({ boothCode }) => boothCode)),
     [filteredBooths],
   );
-
-  useEffect(() => {
-    if (selectedBoothCode === null) return;
-
-    const card = cardRefs.current.get(selectedBoothCode);
-    if (card) scrollCardIntoView(card);
-  }, [selectedBoothCode]);
 
   // 필터를 바꾸면 고른 주막이 목록에서 사라질 수 있어 선택을 함께 푼다.
   const changeFilter = (filter: BoothFilter) => {
@@ -197,11 +195,28 @@ const BoothListPage = () => {
         highlightedCodes={highlightedCodes}
         onSelectArea={changeArea}
         onSelectBooth={setSelectedBoothCode}
+        selectableCodes={selectableCodes}
         selectedArea={selectedArea}
       />
 
-      <div className="mt-4">
+      <div className="mt-4 flex min-w-0 items-center gap-2">
         <BoothFilterMenu onChange={changeFilter} selectedFilter={selectedFilter} />
+        {selectedBooth && (
+          <div
+            className="animate-booth-filter-chip-in flex h-[37px] min-w-0 items-center gap-1 rounded-full border border-[#cfff04] bg-[rgba(207,255,4,0.12)] py-1 pr-1 pl-4 text-sm font-medium text-[#cfff04] motion-reduce:animate-none"
+            key={selectedBooth.boothCode}
+          >
+            <span className="truncate">{getBoothDisplayName(selectedBooth)}</span>
+            <button
+              aria-label={`${getBoothDisplayName(selectedBooth)} 주막 필터 해제`}
+              className="flex size-7 shrink-0 items-center justify-center rounded-full transition-[background-color,transform] duration-150 hover:bg-[rgba(207,255,4,0.14)] active:scale-90 active:bg-[rgba(207,255,4,0.24)] motion-reduce:transition-none"
+              onClick={() => setSelectedBoothCode(null)}
+              type="button"
+            >
+              <X aria-hidden="true" className="size-4" strokeWidth={2.25} />
+            </button>
+          </div>
+        )}
       </div>
 
       <ul
@@ -217,11 +232,12 @@ const BoothListPage = () => {
         )}
         {filteredBooths.map((booth) => (
           <li
+            className={
+              selectedBooth
+                ? "animate-booth-filter-result-in motion-reduce:animate-none"
+                : ""
+            }
             key={booth.boothCode}
-            ref={(node) => {
-              if (node) cardRefs.current.set(booth.boothCode, node);
-              else cardRefs.current.delete(booth.boothCode);
-            }}
           >
             <BoothCard
               booth={booth}

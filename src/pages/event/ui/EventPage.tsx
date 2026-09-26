@@ -1,9 +1,9 @@
 import { useState } from "react";
 
+import { useZones } from "@/entities/zone";
 import { LoadingFallback, NetworkErrorFallback } from "@/shared/ui";
 
 import { useRivalScores } from "../api/getRivalScores";
-import { useZones } from "../api/getZones";
 import { type ZoneType } from "../model/zones";
 import { EventBoothMap } from "./EventBoothMap";
 import { RivalsSection } from "./RivalsSection";

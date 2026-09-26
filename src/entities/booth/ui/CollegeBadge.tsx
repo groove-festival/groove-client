@@ -65,7 +65,8 @@ export const CollegeBadge = ({ college, size = "large" }: CollegeBadgeProps) => 
   return (
     <span
       aria-hidden="true"
-      className={`flex items-center justify-center overflow-hidden rounded-full p-2 ${
+      // 옆 글자가 길어도 원이 눌리지 않도록 줄어들지 않게 둔다.
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full p-2 ${
         size === "large" ? "size-14" : "size-[37.333px]"
       }`}
       style={{ background: visual.background }}
