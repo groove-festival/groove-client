@@ -91,8 +91,24 @@ interface RespondOptions {
   rivalsFail?: boolean;
 }
 
+// PUB-1 응답 일부. 이벤트 지도에서는 주막을 늘 켜 둔다.
+const pubs = [
+  {
+    area: "PARKING",
+    boothCode: "nursing",
+    colleges: ["NURSING"],
+    departments: ["간호학과"],
+    description: null,
+    name: "간호학과 주막",
+    status: "OPEN",
+    xRatio: 0.7221,
+    yRatio: 0.6786,
+  },
+];
+
 const respond = ({ zoneList = zones, zonesFail, rivalsFail }: RespondOptions = {}) => {
   httpGet.mockImplementation((url: string) => {
+    if (url === "/pubs") return Promise.resolve(envelope(pubs));
     if (url === "/zones") {
       return zonesFail
         ? Promise.reject(new Error("network"))
@@ -108,9 +124,12 @@ const zoneList = () => screen.getByRole("list", { name: "체험존 목록" });
 const card = (name: string) =>
   within(zoneList()).getByRole("button", { name: new RegExp(name) });
 const booth = (name: string) =>
-  screen.getByRole("button", { name: `${name} 위치 선택` });
-const boothShapes = () => screen.queryAllByTestId(/^zone-booth-[A-Z]+$/);
-const boothColours = () => screen.queryAllByTestId(/^zone-booth-color-/);
+  screen.getByRole("button", { name: `${name} 위치 보기` });
+const boothShapes = () => screen.queryAllByTestId(/^campus-map-place-zone:/);
+// 켜진 부스는 회색 덮개를 걷어 색 레이어가 보인다.
+const isZoneLit = (type: string) =>
+  screen.getByTestId(`campus-map-cover-zone:${type}`).style.opacity === "0";
+const ZONE_TYPES = ["MOVE", "LOVE", "PROVE", "RECOVER", "GROOVE"];
 
 const mockCarouselLayout = () => {
   const scroller = zoneList();
@@ -187,7 +206,7 @@ describe("EventPage", () => {
 
     expect(screen.queryAllByRole("button", { pressed: true })).toHaveLength(0);
     expect(boothShapes()).toHaveLength(5);
-    boothColours().forEach((colour) => expect(colour).toHaveStyle("opacity: 1"));
+    ZONE_TYPES.forEach((type) => expect(isZoneLit(type)).toBe(true));
   });
 
   it("keeps only the selected booth coloured and dims the rest to the map grey", async () => {
@@ -195,22 +214,46 @@ describe("EventPage", () => {
 
     fireEvent.click(booth("LOVE ZONE"));
 
-    expect(screen.getByTestId("zone-booth-color-LOVE")).toHaveStyle("opacity: 1");
+    expect(isZoneLit("LOVE")).toBe(true);
     ["MOVE", "PROVE", "RECOVER", "GROOVE"].forEach((type) =>
-      expect(screen.getByTestId(`zone-booth-color-${type}`)).toHaveStyle("opacity: 0"),
+      expect(isZoneLit(type)).toBe(false),
     );
+    // 체험존 선택과 상관없이 주막은 늘 켜져 있다.
+    expect(screen.getByTestId("campus-map-cover-pub:nursing").style.opacity).toBe("0");
   });
 
   it("clears the selection when an empty part of the map is tapped", async () => {
     await renderLoadedPage();
 
     fireEvent.click(booth("LOVE ZONE"));
-    expect(screen.getByTestId("zone-booth-color-MOVE")).toHaveStyle("opacity: 0");
+    expect(isZoneLit("MOVE")).toBe(false);
 
-    fireEvent.click(screen.getByTestId("zone-map-background"));
+    fireEvent.click(screen.getByTestId("campus-map-background"));
 
     expect(screen.queryAllByRole("button", { pressed: true })).toHaveLength(0);
-    boothColours().forEach((colour) => expect(colour).toHaveStyle("opacity: 1"));
+    ZONE_TYPES.forEach((type) => expect(isZoneLit(type)).toBe(true));
+  });
+
+  it("pins the selected zone and moves the pin to another place without a zone", async () => {
+    await renderLoadedPage();
+
+    // 이름표는 지도 레이어 안에 뜬다. 카드에도 같은 이름이 있어 레이어 안에서 찾는다.
+    const mapLayer = () =>
+      within(screen.getByRole("group", { name: "축제 장소 위치" }).parentElement!);
+
+    fireEvent.click(booth("LOVE ZONE"));
+    expect(mapLayer().getByText("LOVE ZONE")).toBeInTheDocument();
+
+    // 체험존이 아닌 곳을 누르면 체험존 선택이 풀리고 그 자리에만 이름표가 뜬다.
+    fireEvent.click(booth("간호학과 주막"));
+    expect(mapLayer().queryByText("LOVE ZONE")).not.toBeInTheDocument();
+    expect(screen.getByText("간호학과 주막")).toBeInTheDocument();
+    expect(card("LOVE ZONE")).toHaveAttribute("aria-pressed", "false");
+    ZONE_TYPES.forEach((type) => expect(isZoneLit(type)).toBe(true));
+
+    // 카드에서 체험존을 고르면 다른 장소의 이름표는 닫힌다.
+    fireEvent.click(card("MOVE ZONE"));
+    expect(screen.queryByText("간호학과 주막")).not.toBeInTheDocument();
   });
 
   it("shares one selection between the map and the cards", async () => {
@@ -262,9 +305,9 @@ describe("EventPage", () => {
     // 카드는 그대로 5장이고 지도에만 그리지 않는다.
     expect(within(zoneList()).getAllByRole("button")).toHaveLength(5);
     expect(boothShapes()).toHaveLength(4);
-    expect(screen.queryByTestId("zone-booth-PROVE")).not.toBeInTheDocument();
+    expect(isZoneLit("PROVE")).toBe(false);
     expect(
-      screen.queryByRole("button", { name: "PROVE ZONE 위치 선택" }),
+      screen.queryByRole("button", { name: "PROVE ZONE 위치 보기" }),
     ).not.toBeInTheDocument();
   });
 

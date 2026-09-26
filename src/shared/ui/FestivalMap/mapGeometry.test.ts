@@ -1,4 +1,9 @@
-import { clampScale, getContainSize, getFocusPosition } from "./mapGeometry";
+import {
+  clampScale,
+  getContainSize,
+  getFillScale,
+  getFocusPosition,
+} from "./mapGeometry";
 
 // 이벤트 지도 기준값. 컨테이너는 393 폭 화면의 지도 박스, 원본은 배치도 SVG다.
 const CONTAINER = { width: 361, height: 320 };
@@ -62,5 +67,19 @@ describe("clampScale", () => {
     expect(clampScale(16, 8, 48)).toBe(16);
     expect(clampScale(2, 8, 48)).toBe(8);
     expect(clampScale(100, 8, 48)).toBe(48);
+  });
+});
+
+describe("getFillScale", () => {
+  it("zooms until the map covers the container without empty bands", () => {
+    const content = getContainSize(CONTAINER, SOURCE);
+
+    // 높이에 맞춰진 지도는 폭이 모자라 폭을 채우는 만큼 키워야 한다.
+    expect(getFillScale(CONTAINER, content)).toBeCloseTo(361 / 276.88, 3);
+  });
+
+  it("stays at 1 when the map already has the container's proportions", () => {
+    expect(getFillScale(CONTAINER, CONTAINER)).toBe(1);
+    expect(getFillScale(CONTAINER, { width: 0, height: 0 })).toBe(1);
   });
 });

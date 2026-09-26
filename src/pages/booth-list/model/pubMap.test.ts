@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 
+import { getPubDesignPoint } from "@/widgets/campus-map";
+
 import {
   getBoothsByArea,
   getPubAreaCenter,
   getPubPoint,
   getPubsCenter,
 } from "./pubMap";
-import { pubShapes } from "./pubShapes";
 
 const booth = (
   boothCode: string,
@@ -23,29 +24,6 @@ const booth = (
   yRatio: overrides.yRatio ?? null,
 });
 
-// 잘라내기 값이 조금이라도 어긋나면 브라우저가 clip-path 를 통째로 버린다.
-// 그러면 레이어 한 장이 그대로 보여 주막 22개가 전부 켜진 것처럼 된다.
-describe("pubShapes", () => {
-  it("draws every pub with a four-corner clip the browser can parse", () => {
-    const codes = Object.keys(pubShapes);
-    expect(codes).toHaveLength(22);
-
-    codes.forEach((code) => {
-      const { clipPath, xRatio, yRatio } = pubShapes[code];
-      const corners = clipPath.split(",");
-
-      expect(corners).toHaveLength(4);
-      corners.forEach((corner) =>
-        expect(corner.trim()).toMatch(/^\d+\.\d+% \d+\.\d+%$/),
-      );
-      expect(xRatio).toBeGreaterThan(0);
-      expect(xRatio).toBeLessThan(1);
-      expect(yRatio).toBeGreaterThan(0);
-      expect(yRatio).toBeLessThan(1);
-    });
-  });
-});
-
 describe("getPubPoint", () => {
   it("uses the PUB-1 coordinates when the backend has them", () => {
     expect(getPubPoint(booth("nursing", { xRatio: 0.11, yRatio: 0.22 }))).toEqual({
@@ -55,10 +33,7 @@ describe("getPubPoint", () => {
   });
 
   it("falls back to the design shape centre while the coordinates are empty", () => {
-    expect(getPubPoint(booth("nursing"))).toEqual({
-      xRatio: pubShapes.nursing.xRatio,
-      yRatio: pubShapes.nursing.yRatio,
-    });
+    expect(getPubPoint(booth("nursing"))).toEqual(getPubDesignPoint("nursing"));
   });
 
   it("has no place to point at for a booth the design does not draw", () => {

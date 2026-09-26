@@ -1,4 +1,5 @@
 import {
+  type CSSProperties,
   type ReactNode,
   useCallback,
   useEffect,
@@ -15,6 +16,7 @@ import {
 import {
   clampScale,
   getContainSize,
+  getFillScale,
   getFocusPosition,
   type MapRatioPoint,
   type MapSize,
@@ -28,7 +30,10 @@ const ZOOM_STEP = 1.6;
 const BUTTON_ANIMATION_MS = 200;
 
 export interface FestivalMapSource {
-  src: string;
+  // 없으면 배치도 그림도 children 레이어가 직접 그린다. 크게 확대하면 브라우저가
+  // <img> 를 레이어의 인라인 SVG 와 몇 px 어긋나게 그려, 도형을 겹쳐 그리는
+  // 지도는 배치도까지 같은 SVG 안에 넣어야 가장자리가 맞는다.
+  src?: string;
   // 원본 지도의 좌표계 크기. 비율 좌표는 이 크기에 대한 0.0~1.0이다.
   width: number;
   height: number;
@@ -43,18 +48,28 @@ interface FestivalMapProps {
   source: FestivalMapSource;
   // 배율 1은 지도 한 장이 컨테이너에 전부 들어오는 상태다.
   initialScale?: number;
+  // 지도와 컨테이너의 비율이 달라도 빈 띠가 보이지 않도록, 실제 최소 배율은
+  // 이 값과 컨테이너를 덮는 배율 중 큰 쪽이다.
   minScale?: number;
   maxScale?: number;
   // 처음 화면의 중심. 지도마다 보여줄 자리가 달라 쓰는 쪽이 정한다.
   initialCenter?: MapRatioPoint;
   // 값이 바뀔 때마다 그 자리로 확대·이동한다. null이면 그대로 둔다.
   focus?: FestivalMapFocus | null;
+  // 되돌리기 버튼이 돌아갈 자리. 없으면 처음 화면(initialCenter·initialScale)이다.
+  // 필터마다 보는 자리가 달라지는 지도가 처음 화면을 흔들지 않고 넘긴다.
+  resetTo?: FestivalMapFocus | null;
   // 바깥 박스(비율·테두리·배경)는 시안이 지도마다 달라 쓰는 쪽이 정한다.
   className?: string;
   controlsClassName?: string;
   // 지도와 함께 움직이는 레이어. 비율 좌표계(source 크기) 위에 그린다.
+  // 지금 배율이 CSS 변수 --festival-map-scale 로 들어 있어, 핀처럼 확대돼도
+  // 크기를 지켜야 하는 요소는 그 역수만큼 줄여 그린다.
   children?: ReactNode;
 }
+
+// 레이어에 지금 배율을 넘기는 CSS 변수 이름. MapPin 이 읽는다.
+export const MAP_SCALE_VARIABLE = "--festival-map-scale";
 
 const MAP_CENTER: MapRatioPoint = { xRatio: 0.5, yRatio: 0.5 };
 
@@ -67,12 +82,14 @@ export const FestivalMap = ({
   maxScale = 8,
   initialCenter = MAP_CENTER,
   focus = null,
+  resetTo = null,
   className = "",
   controlsClassName = "",
   children,
 }: FestivalMapProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const transformRef = useRef<ReactZoomPanPinchContentRef>(null);
+  const layerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
 
@@ -86,6 +103,11 @@ export const FestivalMap = ({
         { width: sourceWidth, height: sourceHeight },
       ),
     [containerWidth, containerHeight, sourceWidth, sourceHeight],
+  );
+
+  const effectiveMinScale = Math.max(
+    minScale,
+    getFillScale({ width: containerWidth, height: containerHeight }, contentSize),
   );
 
   useEffect(() => {
@@ -112,18 +134,17 @@ export const FestivalMap = ({
       if (contentSize.width <= 0) return;
 
       const container: MapSize = { width: containerWidth, height: containerHeight };
-      const target = clampScale(scale, minScale, maxScale);
+      const target = clampScale(scale, effectiveMinScale, maxScale);
       const { x, y } = getFocusPosition(container, contentSize, point, target);
       void transformRef.current?.setTransform(x, y, target, animationMs, "easeOut");
     },
-    [containerWidth, containerHeight, contentSize, maxScale, minScale],
+    [containerWidth, containerHeight, contentSize, effectiveMinScale, maxScale],
   );
 
-  const resetView = useCallback(
-    (animationMs: number) =>
-      moveTo({ xRatio: centerX, yRatio: centerY }, initialScale, animationMs),
-    [centerX, centerY, initialScale, moveTo],
-  );
+  const resetView = (animationMs: number) =>
+    resetTo
+      ? moveTo(resetTo, resetTo.scale ?? initialScale, animationMs)
+      : moveTo({ xRatio: centerX, yRatio: centerY }, initialScale, animationMs);
 
   // 아래 두 효과는 moveTo를 의존성에 두지 않는다. 컨테이너 크기는 레이아웃이
   // 자리를 잡으며 소수점 단위로 흔들리는데, 그때마다 화면을 다시 잡으면
@@ -182,10 +203,12 @@ export const FestivalMap = ({
         doubleClick={{ disabled: true }}
         initialScale={initialScale}
         maxScale={maxScale}
-        minScale={minScale}
+        minScale={effectiveMinScale}
         onTransform={(_, state) => {
           viewRef.current = state;
           scaleRef.current = state.scale;
+          // 매 프레임 불리므로 리렌더 없이 변수만 바꾼다.
+          layerRef.current?.style.setProperty(MAP_SCALE_VARIABLE, String(state.scale));
         }}
         ref={transformRef}
       >
@@ -197,13 +220,23 @@ export const FestivalMap = ({
           }}
           wrapperStyle={{ width: "100%", height: "100%" }}
         >
-          <img
-            alt={source.alt}
-            className="pointer-events-none size-full select-none"
-            draggable={false}
-            src={source.src}
-          />
-          {children && <div className="absolute inset-0">{children}</div>}
+          {source.src && (
+            <img
+              alt={source.alt}
+              className="pointer-events-none size-full select-none"
+              draggable={false}
+              src={source.src}
+            />
+          )}
+          {children && (
+            <div
+              className="absolute inset-0"
+              ref={layerRef}
+              style={{ [MAP_SCALE_VARIABLE]: initialScale } as CSSProperties}
+            >
+              {children}
+            </div>
+          )}
         </TransformComponent>
       </TransformWrapper>
 

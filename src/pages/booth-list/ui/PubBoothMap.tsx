@@ -1,58 +1,43 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { Booth } from "@/entities/booth";
-import { FestivalMap, type FestivalMapFocus, type MapRatioPoint } from "@/shared/ui";
+import { type ExperienceZone, useZones } from "@/entities/zone";
+import {
+  buildCampusPlaces,
+  CampusMap,
+  type CampusMapBox,
+  type CampusMapView,
+  type CampusPlace,
+  getPlaceFocusWidth,
+} from "@/widgets/campus-map";
 
-import campusMap from "../festival-visuals/campus-map.svg";
 import {
   getPubAreaCenter,
   getPubsCenter,
   pubMapAreaOptions,
   type PubMapArea,
 } from "../model/pubMap";
-import { PubBoothLayer } from "./PubBoothLayer";
 
-// 배치도를 주막이 있는 구역만 남기고 잘라 둔 범위 (전체 배치도 976×1128 좌표 기준).
-// 잘린 그림 밖으로는 끌 수 없어 별도 경계 계산 없이도 지도가 엉뚱한 곳으로 가지 않는다.
-//
-// ⚠️ 범위를 바꿀 때는 width:height 를 반드시 지도 박스와 같은 361:448 로 맞춘다.
-//    height = width * 448 / 361 (폭 185 이면 높이 229.584).
-//    비율이 어긋나면 최소 배율에서 지도가 박스를 다 못 채워 빈 띠가 생긴다.
-//
-// ⚠️ 바꾸면 같은 값을 아래 두 곳에 함께 반영한다.
-//    ① 배경·주막 SVG 2장의 viewBox (festival-visuals/campus-map.svg, pub-booths-active.svg)
-//    ② `model/pubShapes.ts` 의 clipPath (잘린 그림 기준 비율이다)
-const CROP = { x: 607.4, y: 581.5, width: 185, height: 229.584 } as const;
-const FULL_MAP = { width: 976, height: 1128 } as const;
+const PUB_MAP_BOX: CampusMapBox = { width: 361, height: 448 };
 
-const MAP_SOURCE = {
-  src: campusMap,
-  width: CROP.width,
-  height: CROP.height,
-  alt: "주막 위치가 표시된 캠퍼스 배치도",
+// 처음 화면과 구역 버튼을 눌렀을 때 박스 폭에 들어오는 배치도 폭 (배치도 px).
+// 구역마다 퍼진 정도가 달라 값이 다르다. 학생주차장은 네 줄이 비스듬히 늘어서 있고,
+// 복지관은 두 줄로 짧게 모여 있다. 세 값 모두 그 구역의 주막이 지도 박스 안에
+// 다 들어오는 선에서 잡았다. "전체" 는 주막 22개가 다 들어오는 처음 화면이다.
+const AREA_WIDTH: Record<PubMapArea, number> = {
+  all: 185,
+  PARKING: 123.33,
+  WELFARE_CENTER: 97.37,
 };
+// 주막이 아닌 장소를 눌렀을 때. 메인 지도와 같은 거리다.
+const SELECTED_WIDTH = 75.84;
+// 가장 당겼을 때.
+const CLOSEST_WIDTH = 46.25;
+// 지명 뱃지가 [사라지는 폭, 다 보이는 폭]. 주막 지도는 처음 화면(185)부터 지명을
+// 보여 주고, 거기서 한 번만 줄여도(185 → 296) 숨긴다.
+const LABEL_WIDTHS = [240, 190] as const;
 
-// 배율 1은 잘라낸 배치도가 지도 박스에 전부 들어오는 상태다.
-// 주막 22개가 그 안에 다 들어오므로 처음 화면이 곧 전체 보기다.
-const INITIAL_SCALE = 1;
-// 잘라낸 구역 전체가 보이는 상태.
-const MIN_SCALE = 1;
-const MAX_SCALE = 4;
-
-// API 좌표는 캠퍼스 배치도 전체 기준이라 잘라낸 그림 기준으로 옮긴다.
-const toCropRatio = ({ xRatio, yRatio }: MapRatioPoint): MapRatioPoint => ({
-  xRatio: (xRatio * FULL_MAP.width - CROP.x) / CROP.width,
-  yRatio: (yRatio * FULL_MAP.height - CROP.y) / CROP.height,
-});
-
-// 구역 버튼을 눌렀을 때의 배율. 구역마다 퍼진 정도가 달라 값이 다르다.
-// 학생주차장은 네 줄이 비스듬히 늘어서 있고, 복지관은 두 줄로 짧게 모여 있다.
-// 세 값 모두 그 구역의 주막이 지도 박스 안에 다 들어오는 선에서 잡았다.
-const AREA_SCALE: Record<PubMapArea, number> = {
-  all: INITIAL_SCALE,
-  PARKING: 1.5,
-  WELFARE_CENTER: 1.9,
-};
+const NO_ZONES: ExperienceZone[] = [];
 
 interface PubBoothMapProps {
   booths: readonly Booth[];
@@ -67,8 +52,10 @@ interface PubBoothMapProps {
   onSelectBooth: (boothCode: string) => void;
 }
 
-// 주막 지도. 배경 배치도 위에 주막 레이어를 겹쳐 그리고, 구역 버튼을 누르면
-// 배치도를 갈아끼우는 대신 같은 배치도의 그 구역으로 확대·이동한다 (PUB-1 §배치도 좌표 기준).
+// 주막 지도. 캠퍼스 전체 배치도 위에서 주막만 필터와 선택에 따라 색을 켜고 끄고,
+// 체험존·기획 부스·랜드마크 같은 다른 장소는 늘 켜 둔다. 한 주막을 골라 나머지가
+// 회색이 되어도 필터를 통과한 주막은 눌러서 바꿔 고를 수 있다. 구역 버튼을 누르면
+// 같은 배치도의 그 구역으로 확대·이동한다 (PUB-1 §배치도 좌표 기준).
 export const PubBoothMap = ({
   booths,
   highlightedCodes,
@@ -77,15 +64,37 @@ export const PubBoothMap = ({
   selectableCodes,
   selectedArea,
 }: PubBoothMapProps) => {
-  // 처음 화면은 initialCenter 가 잡으므로, 버튼을 누른 뒤에만 지도를 옮긴다.
-  const [focus, setFocus] = useState<FestivalMapFocus | null>(null);
+  // 처음 화면은 initialView 가 잡으므로, 버튼이나 장소를 누른 뒤에만 지도를 옮긴다.
+  const [focus, setFocus] = useState<CampusMapView | null>(null);
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
+  // 체험존은 이 화면에서 지도에만 쓰여, 못 받으면 그 장소만 빠지고 목록은 그대로다.
+  const { data: zones = NO_ZONES } = useZones();
+  const places = useMemo(() => buildCampusPlaces(booths, zones), [booths, zones]);
+
+  const getAreaView = (area: PubMapArea): CampusMapView => ({
+    ...getPubAreaCenter(booths, area),
+    width: AREA_WIDTH[area],
+  });
 
   const selectArea = (area: PubMapArea) => {
     onSelectArea(area);
-    setFocus({
-      ...toCropRatio(getPubAreaCenter(booths, area)),
-      scale: AREA_SCALE[area],
-    });
+    setSelectedPlaceId(null);
+    setFocus(getAreaView(area));
+  };
+
+  const selectPlace = (place: CampusPlace | null) => {
+    // 주막은 목록과 지도에 그 주막만 남기고 필터 칩에 이름을 띄우므로, 지도에는
+    // 핀을 따로 띄우지 않고 보던 자리도 그대로 둔다.
+    if (place?.group === "pub") {
+      setSelectedPlaceId(null);
+      onSelectBooth(place.boothCode);
+      return;
+    }
+
+    setSelectedPlaceId(place?.id ?? null);
+    if (!place) return;
+
+    setFocus({ ...place.point, width: getPlaceFocusWidth(place, SELECTED_WIDTH) });
   };
 
   return (
@@ -114,28 +123,31 @@ export const PubBoothMap = ({
         ))}
       </div>
 
-      <div className="relative aspect-[361/448] w-full">
-        {/* 흐름에서 빼야 지도 내용이 바깥 박스의 비율(361:448)을 밀어내지 않는다. */}
-        <div className="absolute inset-0">
-          <FestivalMap
-            className="size-full rounded-3xl bg-[#1c1c1c]"
-            controlsClassName="right-[5px] bottom-[7px] gap-3"
-            focus={focus}
-            initialCenter={toCropRatio(getPubsCenter(booths))}
-            initialScale={INITIAL_SCALE}
-            maxScale={MAX_SCALE}
-            minScale={MIN_SCALE}
-            source={MAP_SOURCE}
-          >
-            <PubBoothLayer
-              booths={booths}
-              highlightedCodes={highlightedCodes}
-              onSelect={onSelectBooth}
-              selectableCodes={selectableCodes}
-            />
-          </FestivalMap>
-        </div>
-      </div>
+      <CampusMap
+        box={PUB_MAP_BOX}
+        className="rounded-3xl bg-[#1c1c1c]"
+        closestWidth={CLOSEST_WIDTH}
+        controlsClassName="right-[5px] bottom-[7px] gap-3"
+        focus={focus}
+        getActionLabel={(place) =>
+          place.group === "pub"
+            ? `${place.label} 주막만 보기`
+            : `${place.label} 위치 보기`
+        }
+        initialView={{ ...getPubsCenter(booths), width: AREA_WIDTH.all }}
+        labelWidths={LABEL_WIDTHS}
+        isLit={(place) =>
+          place.group === "pub" ? highlightedCodes.has(place.boothCode) : true
+        }
+        keepDimmedPubNumbers
+        isSelectable={(place) =>
+          place.group === "pub" ? selectableCodes.has(place.boothCode) : true
+        }
+        onSelect={selectPlace}
+        places={places}
+        resetTo={getAreaView(selectedArea)}
+        selectedId={selectedPlaceId}
+      />
     </section>
   );
 };

@@ -1,34 +1,56 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-import { MapZoomControls } from "@/shared/ui";
+import { type Booth, useBooths } from "@/entities/booth";
+import { type ExperienceZone, useZones } from "@/entities/zone";
+import {
+  buildCampusPlaces,
+  CampusMap,
+  type CampusMapView,
+  type CampusPlace,
+  getPlaceFocusWidth,
+} from "@/widgets/campus-map";
 
-import mapAll from "../festival-visuals/map-all.png";
-import mapEvent from "../festival-visuals/map-event.png";
-import mapPub from "../festival-visuals/map-pub.png";
+import {
+  CLOSEST_WIDTH,
+  getFilterView,
+  isGroupLit,
+  MAIN_MAP_BOX,
+  mapFilterOptions,
+  type MapFilter,
+  SELECTED_WIDTH,
+} from "../model/mainMap";
 
-type MapFilter = "all" | "pub" | "event";
+// 응답 전에도 배치도와 고정 장소는 그려야 하므로 빈 목록으로 시작한다.
+// 렌더마다 새 배열을 만들면 장소 목록을 매번 다시 계산하므로 하나를 같이 쓴다.
+const NO_BOOTHS: Booth[] = [];
+const NO_ZONES: ExperienceZone[] = [];
 
-// 실제 지도와 마커 연동 전까지 쓰는 Figma 정적 이미지 (25:939 / 25:1245 / 25:1513).
-const mapFilters: { id: MapFilter; label: string; image: string; alt: string }[] = [
-  {
-    id: "all",
-    label: "전체",
-    image: mapAll,
-    alt: "주막과 이벤트 부스가 모두 표시된 축제 지도",
-  },
-  { id: "pub", label: "주막", image: mapPub, alt: "주막 위치가 표시된 축제 지도" },
-  {
-    id: "event",
-    label: "이벤트 부스",
-    image: mapEvent,
-    alt: "이벤트 부스 위치가 표시된 축제 지도",
-  },
-];
-
+// 축제 전체 지도. 필터를 고르면 그 묶음에 색이 들어오며 해당 구역으로 조금 당기고,
+// 장소를 누르면 그 자리로 확대해 이름표(핀)를 띄운다 (Figma 56:3406).
+// 목록을 못 받아도 지도는 그대로 두고, 그 장소들만 누를 수 없게 된다.
 export const FestivalMapSection = () => {
   const [selectedFilter, setSelectedFilter] = useState<MapFilter>("all");
-  const selectedMap =
-    mapFilters.find(({ id }) => id === selectedFilter) ?? mapFilters[0];
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
+  // 처음 화면은 initialView 가 잡으므로, 필터나 장소를 고른 뒤에만 지도를 옮긴다.
+  const [focus, setFocus] = useState<CampusMapView | null>(null);
+
+  const { data: booths = NO_BOOTHS } = useBooths();
+  const { data: zones = NO_ZONES } = useZones();
+  const places = useMemo(() => buildCampusPlaces(booths, zones), [booths, zones]);
+
+  const selectFilter = (filter: MapFilter) => {
+    setSelectedFilter(filter);
+    setSelectedPlaceId(null);
+    setFocus(getFilterView(filter));
+  };
+
+  const selectPlace = (place: CampusPlace | null) => {
+    setSelectedPlaceId(place?.id ?? null);
+    // 빈 곳을 눌러 핀만 닫을 때는 보던 자리를 그대로 둔다.
+    if (place) {
+      setFocus({ ...place.point, width: getPlaceFocusWidth(place, SELECTED_WIDTH) });
+    }
+  };
 
   return (
     <div className="flex w-full flex-col gap-3">
@@ -37,7 +59,7 @@ export const FestivalMapSection = () => {
         className="festival-glass flex w-full gap-3 rounded-full p-2 backdrop-blur-[2px]"
         role="group"
       >
-        {mapFilters.map(({ id, label }) => {
+        {mapFilterOptions.map(({ id, label }) => {
           const isSelected = id === selectedFilter;
 
           return (
@@ -49,7 +71,7 @@ export const FestivalMapSection = () => {
                   : "text-[#a2a2a2]"
               }`}
               key={id}
-              onClick={() => setSelectedFilter(id)}
+              onClick={() => selectFilter(id)}
               type="button"
             >
               {label}
@@ -58,14 +80,20 @@ export const FestivalMapSection = () => {
         })}
       </div>
 
-      <div className="relative aspect-[361/540] w-full overflow-hidden rounded-3xl border border-[#767676] bg-[#1c1c1c]">
-        <img
-          alt={selectedMap.alt}
-          className="size-full object-cover"
-          src={selectedMap.image}
-        />
-        <MapZoomControls className="absolute right-2 bottom-[11px] gap-3" />
-      </div>
+      <CampusMap
+        bordered
+        box={MAIN_MAP_BOX}
+        className="rounded-3xl bg-[#1c1c1c]"
+        closestWidth={CLOSEST_WIDTH}
+        controlsClassName="right-[9px] bottom-3 gap-3"
+        focus={focus}
+        initialView={getFilterView("all")}
+        isLit={(place) => isGroupLit(place.group, selectedFilter)}
+        onSelect={selectPlace}
+        places={places}
+        resetTo={getFilterView(selectedFilter)}
+        selectedId={selectedPlaceId}
+      />
     </div>
   );
 };

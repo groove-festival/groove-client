@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 
 import { type ApiEnvelope, httpClient, requestData } from "@/shared/api";
 
-import type { ExperienceZone } from "../model/zones";
-import { eventQueryKeys } from "./queryKeys";
+import type { ExperienceZone } from "../model/zone";
+import { zoneQueryKeys } from "./queryKeys";
 
 interface ZoneListResponse {
   totalCount: number;
@@ -21,7 +21,7 @@ export async function getZones(): Promise<ExperienceZone[]> {
 
 export function useZones() {
   return useQuery({
-    queryKey: eventQueryKeys.zones(),
+    queryKey: zoneQueryKeys.list(),
     queryFn: getZones,
   });
 }
