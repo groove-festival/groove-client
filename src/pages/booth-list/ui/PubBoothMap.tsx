@@ -56,12 +56,14 @@ const AREA_SCALE: Record<PubMapArea, number> = {
 
 interface PubBoothMapProps {
   booths: readonly Booth[];
-  // 지금 색을 남길 주막들. 구역·단대 필터를 모두 거친 결과가 그대로 들어온다.
+  // 지금 색을 남길 주막들. 단일 주막을 고르면 그 한 곳만 들어온다.
   highlightedCodes: ReadonlySet<string>;
+  // 회색이어도 새로 선택할 수 있는 주막들. 현재 구역·단대 필터 결과다.
+  selectableCodes: ReadonlySet<string>;
   // 구역은 목록도 함께 거르므로 고른 값을 쓰는 쪽이 들고 있는다.
   selectedArea: PubMapArea;
   onSelectArea: (area: PubMapArea) => void;
-  // 색이 들어온 주막을 눌렀을 때. 목록의 그 카드로 데려간다.
+  // 색이 들어온 주막을 눌렀을 때. 목록과 지도에 그 주막만 남긴다.
   onSelectBooth: (boothCode: string) => void;
 }
 
@@ -72,6 +74,7 @@ export const PubBoothMap = ({
   highlightedCodes,
   onSelectArea,
   onSelectBooth,
+  selectableCodes,
   selectedArea,
 }: PubBoothMapProps) => {
   // 처음 화면은 initialCenter 가 잡으므로, 버튼을 누른 뒤에만 지도를 옮긴다.
@@ -128,6 +131,7 @@ export const PubBoothMap = ({
               booths={booths}
               highlightedCodes={highlightedCodes}
               onSelect={onSelectBooth}
+              selectableCodes={selectableCodes}
             />
           </FestivalMap>
         </div>

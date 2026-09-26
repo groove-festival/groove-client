@@ -190,25 +190,72 @@ describe("BoothListPage", () => {
     expect(boothShape("nursing")).toHaveStyle("opacity: 0");
   });
 
-  it("takes the picked booth card into view and rings it", async () => {
-    const scrollIntoView = vi.fn();
-    Element.prototype.scrollIntoView = scrollIntoView;
-
+  it("filters the list to the picked booth and restores the base filters", async () => {
     renderPage();
 
     fireEvent.click(await screen.findByRole("button", { name: "확인했습니다" }));
-    fireEvent.click(boothShape("nursing"));
+    fireEvent.click(screen.getByRole("button", { name: "지도에서 학생주차장 보기" }));
+    expect(screen.getAllByTestId("booth-card")).toHaveLength(2);
 
-    expect(scrollIntoView).toHaveBeenCalledWith({
-      behavior: expect.any(String),
-      block: "center",
-    });
-    expect(screen.getByText("나이팅게일").closest("a")).toHaveClass("border-[#cfff04]");
-    // 고른 주막만 표시할 뿐, 나머지 주막 불은 그대로 둔다.
+    fireEvent.click(
+      screen.getByRole("button", { name: "일렉트로닉 나이트 주막만 보기" }),
+    );
+
+    expect(screen.getAllByTestId("booth-card")).toHaveLength(1);
+    expect(screen.getByRole("link", { name: /일렉트로닉 나이트/ })).toHaveClass(
+      "border-[#cfff04]",
+    );
     expect(boothShape("elec-eh")).toHaveStyle("opacity: 1");
+    expect(boothShape("elec-b-design")).toHaveStyle("opacity: 0");
+    expect(boothShape("elec-b-design")).toBeEnabled();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "전자공학부B • 디자인학과 주막만 보기",
+      }),
+    );
+
+    expect(screen.getAllByTestId("booth-card")).toHaveLength(1);
+    expect(screen.getByRole("link", { name: /전자공학부B • 디자인학과/ })).toHaveClass(
+      "border-[#cfff04]",
+    );
+    expect(
+      screen.getByRole("button", {
+        name: "전자공학부B • 디자인학과 주막 필터 해제",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen
+        .getByRole("button", {
+          name: "전자공학부B • 디자인학과 주막 필터 해제",
+        })
+        .closest("div"),
+    ).toHaveClass("animate-booth-filter-chip-in");
+    expect(
+      screen.getByRole("link", { name: /전자공학부B • 디자인학과/ }).closest("li"),
+    ).toHaveClass("animate-booth-filter-result-in");
+    expect(boothShape("elec-eh")).toHaveStyle("opacity: 0");
+    expect(boothShape("elec-eh")).toBeEnabled();
+    expect(boothShape("elec-b-design")).toHaveStyle("opacity: 1");
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "전자공학부B • 디자인학과 주막 필터 해제",
+      }),
+    );
+
+    // 주막 한 곳 선택만 풀리고, 학생주차장 구역 조건은 그대로 남는다.
+    expect(screen.getAllByTestId("booth-card")).toHaveLength(2);
+    expect(screen.getByRole("link", { name: /일렉트로닉 나이트/ })).toHaveClass(
+      "border-[#fcfcfc]",
+    );
+    expect(boothShape("elec-b-design")).toHaveStyle("opacity: 1");
+    expect(
+      screen.getByRole("button", { name: "지도에서 학생주차장 보기" }),
+    ).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("only lets a lit booth be picked, and drops the pick when a filter changes", async () => {
+  it("only lets a booth in the base filters be picked and drops the pick when they change", async () => {
     renderPage();
 
     fireEvent.click(await screen.findByRole("button", { name: "확인했습니다" }));
@@ -218,11 +265,19 @@ describe("BoothListPage", () => {
     expect(boothShape("nursing")).toBeDisabled();
 
     fireEvent.click(boothShape("elec-eh"));
-    expect(screen.getByText("일렉트로닉 나이트").closest("a")).toHaveClass(
+    expect(screen.getAllByTestId("booth-card")).toHaveLength(1);
+    expect(
+      screen.getByRole("button", { name: "일렉트로닉 나이트 주막 필터 해제" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /일렉트로닉 나이트/ })).toHaveClass(
       "border-[#cfff04]",
     );
 
     fireEvent.click(screen.getByRole("button", { name: "지도에서 전체 보기" }));
+    expect(screen.getAllByTestId("booth-card")).toHaveLength(3);
+    expect(
+      screen.queryByRole("button", { name: "일렉트로닉 나이트 주막 필터 해제" }),
+    ).not.toBeInTheDocument();
     const card = screen.getByText("일렉트로닉 나이트").closest("a");
     expect(card).toHaveClass("border-[#fcfcfc]");
     expect(card).not.toHaveClass("border-[#cfff04]");
