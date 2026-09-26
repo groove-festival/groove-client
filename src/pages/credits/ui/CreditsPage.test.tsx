@@ -44,4 +44,16 @@ describe("CreditsPage", () => {
       expect(node.closest("a")).toBeNull();
     });
   });
+
+  it("serves density-specific thumbnails for the supplied profile photos", () => {
+    renderCredits();
+
+    ["김지훈", "김지안", "전병진", "한나영", "윤지민"].forEach((name) => {
+      screen.getAllByText(name).forEach((node) => {
+        const profileImage = node.closest("article")?.querySelector("img");
+
+        expect(profileImage?.getAttribute("srcset")).toMatch(/1x.+2x.+3x/);
+      });
+    });
+  });
 });
