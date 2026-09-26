@@ -111,17 +111,25 @@ describe("HomePage", () => {
     ).toEqual(["축제 전체 지도", "바로가기", "타임테이블"]);
   });
 
-  it("lights the booth groups that belong to the selected filter", () => {
+  it("lights the booth groups that belong to the selected filter", async () => {
     renderPage();
 
-    const opacity = (testId: string) => screen.getByTestId(testId).style.opacity;
+    // 켜진 도형은 회색 덮개를 걷어 색 레이어가 보인다.
+    const isLit = (id: string) =>
+      screen.getByTestId(`campus-map-cover-${id}`).style.opacity === "0";
+    const stageOpacity = () =>
+      screen.getByTestId("campus-map-color-stage").style.opacity;
+
+    await placeButton("간호학과 주막");
     expect(mapFilters().getByRole("button", { name: "전체" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
-    expect(opacity("main-map-pubs")).toBe("1");
-    expect(opacity("main-map-zones")).toBe("1");
-    expect(opacity("main-map-stage")).toBe("1");
+    expect(isLit("pub:nursing")).toBe(true);
+    expect(isLit("zone:RECOVER")).toBe(true);
+    expect(stageOpacity()).toBe("1");
+    // 목록에 없는 주막은 디자인에 그려져 있어도 꺼 둔다.
+    expect(isLit("pub:cse")).toBe(false);
 
     fireEvent.click(mapFilters().getByRole("button", { name: "주막" }));
     expect(mapFilters().getByRole("button", { name: "주막" })).toHaveAttribute(
@@ -132,14 +140,18 @@ describe("HomePage", () => {
       "aria-pressed",
       "false",
     );
-    expect(opacity("main-map-pubs")).toBe("1");
-    expect(opacity("main-map-zones")).toBe("0");
-    expect(opacity("main-map-stage")).toBe("0");
+    expect(isLit("pub:nursing")).toBe(true);
+    expect(isLit("zone:RECOVER")).toBe(false);
+    // 가요제 무대는 필터와 상관없이 늘 켜져 있다.
+    expect(stageOpacity()).toBe("1");
 
     fireEvent.click(mapFilters().getByRole("button", { name: "이벤트 부스" }));
-    expect(opacity("main-map-pubs")).toBe("0");
-    expect(opacity("main-map-zones")).toBe("1");
-    expect(opacity("main-map-stage")).toBe("0");
+    expect(isLit("pub:nursing")).toBe(false);
+    expect(isLit("zone:RECOVER")).toBe(true);
+    expect(stageOpacity()).toBe("1");
+    // 랜드마크는 필터와 상관없이 늘 켜져 있고, 누르지 않아도 이름표가 떠 있다.
+    expect(screen.getByTestId("campus-map-color-it1").style.opacity).toBe("1");
+    expect(screen.getByText("IT1호관")).toBeInTheDocument();
   });
 
   it("pins the tapped place with its API name and closes it on an empty tap", async () => {
@@ -154,7 +166,7 @@ describe("HomePage", () => {
     expect(screen.queryByText("간호학과 주막")).not.toBeInTheDocument();
     expect(screen.getByText("RECOVER ZONE")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByTestId("main-map-background"));
+    fireEvent.click(screen.getByTestId("campus-map-background"));
     expect(screen.queryByText("RECOVER ZONE")).not.toBeInTheDocument();
     // 디자인 도형이 없는 주막은 지도에서 누를 수 없다.
     expect(
@@ -173,13 +185,12 @@ describe("HomePage", () => {
     expect(
       screen.queryByRole("button", { name: "간호학과 주막 위치 보기" }),
     ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "가요제 무대 위치 보기" }),
-    ).not.toBeInTheDocument();
+    expect(await placeButton("가요제 무대")).toBeInTheDocument();
     expect(await placeButton("RECOVER ZONE")).toBeInTheDocument();
     // 청록 부스는 필터와 상관없이 늘 켜져 있어 누를 수 있다.
     expect(await placeButton("GROOVE RIVALS")).toBeInTheDocument();
     expect(await placeButton("일청담 본부")).toBeInTheDocument();
+    expect(await placeButton("IT5호관(융복합관)")).toBeInTheDocument();
 
     fireEvent.click(mapFilters().getByRole("button", { name: "주막" }));
     expect(await placeButton("간호학과 주막")).toBeInTheDocument();

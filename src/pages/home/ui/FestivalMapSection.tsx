@@ -2,29 +2,23 @@ import { useMemo, useState } from "react";
 
 import { type Booth, useBooths } from "@/entities/booth";
 import { type ExperienceZone, useZones } from "@/entities/zone";
-import { FestivalMap, type FestivalMapFocus } from "@/shared/ui";
-
-import mapBase from "../festival-visuals/main-map-base.svg";
 import {
-  buildMainMapPlaces,
+  buildCampusPlaces,
+  CampusMap,
+  type CampusMapView,
+  type CampusPlace,
+  getPlaceFocusWidth,
+} from "@/widgets/campus-map";
+
+import {
+  CLOSEST_WIDTH,
   getFilterView,
-  MAIN_MAP_CROP,
+  isGroupLit,
+  MAIN_MAP_BOX,
   mapFilterOptions,
   type MapFilter,
-  MAX_SCALE,
-  MIN_SCALE,
-  SELECTED_SCALE,
+  SELECTED_WIDTH,
 } from "../model/mainMap";
-import { MainMapLayer } from "./MainMapLayer";
-
-const MAP_SOURCE = {
-  src: mapBase,
-  width: MAIN_MAP_CROP.width,
-  height: MAIN_MAP_CROP.height,
-  alt: "축제 부스 위치가 표시된 캠퍼스 배치도",
-};
-
-const INITIAL_VIEW = getFilterView("all");
 
 // 응답 전에도 배치도와 고정 장소는 그려야 하므로 빈 목록으로 시작한다.
 // 렌더마다 새 배열을 만들면 장소 목록을 매번 다시 계산하므로 하나를 같이 쓴다.
@@ -37,12 +31,12 @@ const NO_ZONES: ExperienceZone[] = [];
 export const FestivalMapSection = () => {
   const [selectedFilter, setSelectedFilter] = useState<MapFilter>("all");
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
-  // 처음 화면은 initialCenter 가 잡으므로, 필터나 장소를 고른 뒤에만 지도를 옮긴다.
-  const [focus, setFocus] = useState<FestivalMapFocus | null>(null);
+  // 처음 화면은 initialView 가 잡으므로, 필터나 장소를 고른 뒤에만 지도를 옮긴다.
+  const [focus, setFocus] = useState<CampusMapView | null>(null);
 
   const { data: booths = NO_BOOTHS } = useBooths();
   const { data: zones = NO_ZONES } = useZones();
-  const places = useMemo(() => buildMainMapPlaces(booths, zones), [booths, zones]);
+  const places = useMemo(() => buildCampusPlaces(booths, zones), [booths, zones]);
 
   const selectFilter = (filter: MapFilter) => {
     setSelectedFilter(filter);
@@ -50,11 +44,12 @@ export const FestivalMapSection = () => {
     setFocus(getFilterView(filter));
   };
 
-  const selectPlace = (placeId: string | null) => {
-    setSelectedPlaceId(placeId);
+  const selectPlace = (place: CampusPlace | null) => {
+    setSelectedPlaceId(place?.id ?? null);
     // 빈 곳을 눌러 핀만 닫을 때는 보던 자리를 그대로 둔다.
-    const place = places.find(({ id }) => id === placeId);
-    if (place) setFocus({ ...place.point, scale: SELECTED_SCALE });
+    if (place) {
+      setFocus({ ...place.point, width: getPlaceFocusWidth(place, SELECTED_WIDTH) });
+    }
   };
 
   return (
@@ -85,32 +80,20 @@ export const FestivalMapSection = () => {
         })}
       </div>
 
-      <div className="relative aspect-[361/540] w-full">
-        {/* 흐름에서 빼야 지도 내용이 바깥 박스의 비율(361:540)을 밀어내지 않는다. */}
-        <div className="absolute inset-0">
-          <FestivalMap
-            className="size-full rounded-3xl bg-[#1c1c1c]"
-            controlsClassName="right-[9px] bottom-3 gap-3"
-            focus={focus}
-            initialCenter={INITIAL_VIEW}
-            initialScale={INITIAL_VIEW.scale}
-            maxScale={MAX_SCALE}
-            minScale={MIN_SCALE}
-            resetTo={getFilterView(selectedFilter)}
-            source={MAP_SOURCE}
-          >
-            <MainMapLayer
-              filter={selectedFilter}
-              onSelect={selectPlace}
-              places={places}
-              selectedId={selectedPlaceId}
-            />
-          </FestivalMap>
-        </div>
-
-        {/* Figma에서 테두리는 지도 위에 그려진다. */}
-        <div className="pointer-events-none absolute inset-0 rounded-3xl border border-[#767676]" />
-      </div>
+      <CampusMap
+        bordered
+        box={MAIN_MAP_BOX}
+        className="rounded-3xl bg-[#1c1c1c]"
+        closestWidth={CLOSEST_WIDTH}
+        controlsClassName="right-[9px] bottom-3 gap-3"
+        focus={focus}
+        initialView={getFilterView("all")}
+        isLit={(place) => isGroupLit(place.group, selectedFilter)}
+        onSelect={selectPlace}
+        places={places}
+        resetTo={getFilterView(selectedFilter)}
+        selectedId={selectedPlaceId}
+      />
     </div>
   );
 };
