@@ -1,6 +1,7 @@
+import { RotateCcw } from "lucide-react";
+
 import zoomIn from "../festival-visuals/zoom-in.svg";
 import zoomOut from "../festival-visuals/zoom-out.svg";
-import zoomReset from "../festival-visuals/zoom-reset.svg";
 
 interface MapZoomControlsProps {
   // 위치와 버튼 간격은 지도마다 달라 호출하는 쪽에서 지정한다.
@@ -34,8 +35,8 @@ export const MapZoomControls = ({
       onClick: onZoomOut,
     },
     {
-      label: "지도 원래 크기로 보기",
-      icon: zoomReset,
+      label: "지도 초기화",
+      icon: null,
       onClick: onReset,
     },
   ];
@@ -50,7 +51,15 @@ export const MapZoomControls = ({
           onClick={onClick}
           type="button"
         >
-          <img alt="" className={buttonSizeClass} src={icon} />
+          {icon ? (
+            <img alt="" className={buttonSizeClass} src={icon} />
+          ) : (
+            <RotateCcw
+              aria-hidden="true"
+              className="mx-auto size-[21px] rotate-90 text-[#cfcfcf]"
+              strokeWidth={2.25}
+            />
+          )}
         </button>
       ))}
     </div>

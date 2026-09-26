@@ -360,8 +360,6 @@ describe("EventPage", () => {
 
     expect(screen.getByRole("button", { name: "지도 확대" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "지도 축소" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "지도 원래 크기로 보기" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "지도 초기화" })).toBeInTheDocument();
   });
 });
