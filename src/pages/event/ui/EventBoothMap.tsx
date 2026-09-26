@@ -1,57 +1,40 @@
-import { FestivalMap } from "@/shared/ui";
+import { useMemo, useState } from "react";
 
-import mapBase from "../festival-visuals/map-base.svg";
+import { type Booth, useBooths } from "@/entities/booth";
 import {
+  buildCampusPlaces,
+  CampusMap,
+  type CampusMapBox,
+  type CampusPlace,
+  getPlaceFocusWidth,
+  zonePlaceId,
+} from "@/widgets/campus-map";
+
+import {
+  type ExperienceZone,
   getZoneFocus,
   getZonesCenter,
-  type ExperienceZone,
+  isPlacedZone,
   type ZoneType,
 } from "../model/zones";
-import { ZoneBoothLayer } from "./ZoneBoothLayer";
 
-// 배율 1은 잘라낸 배치도가 지도 박스에 전부 들어오는 상태다.
-// 처음 배율은 이전 정적 지도의 프레이밍을 실측해 맞췄다.
-const INITIAL_SCALE = 1.794;
-// 잘라낸 구역 전체가 보이는 상태.
-const MIN_SCALE = 1;
-const MAX_SCALE = 5.52;
+const EVENT_MAP_BOX: CampusMapBox = { width: 361, height: 320 };
+
+// 박스 폭에 들어오는 배치도 폭 (배치도 px). 처음 화면은 이전 정적 지도의
+// 프레이밍(76.92)보다 조금 넓게 잡아 주변 길과 건물이 더 보이게 했다.
+const INITIAL_WIDTH = 95;
 // 선택한 부스를 키우면서 이웃 부스는 화면에 남긴다. 5개가 좁게 몰려 있어
-// 이보다 더 당기면 위치 감각을 잃는다.
-const SELECTED_SCALE = 2.484;
+// 이보다 더 당기면 위치 감각을 잃는다. 체험존이 아닌 장소도 같은 거리로 본다.
+const SELECTED_WIDTH = 55.56;
+// 가장 당겼을 때.
+const CLOSEST_WIDTH = 25;
 // 처음 화면에서 부스 묶음을 정중앙보다 아래에 둔다. 위쪽 도로와 광장이 보여야
-// 부스가 캠퍼스 어디쯤인지 읽히기 때문이다. 보는 자리를 이만큼 위로 올리면
-// 지도가 그만큼 내려온다. 잘린 높이에 대한 비율이라 CROP.height 를 바꾸면
-// 화면상 같은 위치를 유지하도록 이 값도 함께 조정한다 (내림폭 ÷ CROP.height).
-const INITIAL_CENTER_LIFT = 0.0659;
+// 부스가 캠퍼스 어디쯤인지 읽히기 때문이다. 보는 자리를 배치도에서 위로 올리면
+// 지도가 그만큼 내려온다. 화면에서 같은 자리에 오도록 처음 폭에 비례해 올린다
+// (폭 76.92 일 때 8.06px, 배치도 높이 1128 에 대한 비율).
+const INITIAL_CENTER_LIFT = (8.06 * INITIAL_WIDTH) / 76.92 / 1128;
 
-// 배치도를 부스 구역만 남기고 잘라 둔 범위 (전체 배치도 976×1128 좌표 기준).
-// 잘린 그림 밖으로는 끌 수 없어 별도 경계 계산 없이도 지도가 엉뚱한 곳으로 가지 않는다.
-//
-// ⚠️ 범위를 바꿀 때는 width:height 를 반드시 지도 박스와 같은 361:320 으로 맞춘다.
-//    height = width * 320 / 361 (폭 138 이면 높이 122.327).
-//    비율이 어긋나면 최소 배율에서 지도가 박스를 다 못 채워 위아래나 좌우에
-//    빈 띠가 생긴다.
-//
-// ⚠️ 바꾸면 같은 값을 아래 세 곳에 함께 반영한다.
-//    ① 배경·부스 SVG 6장의 viewBox (festival-visuals/map-base.svg, booth-*.svg)
-//    ② ZoneBoothLayer 의 MAP_VIEW_BOX (누르는 자리를 도형에 맞추기 위해)
-//    ③ INITIAL_CENTER_LIFT (잘린 높이가 바뀌면 같은 화면 위치를 유지하도록 보정)
-// 최소 상태 시안(Figma 51:2692)에서 클리핑 박스와 지도 노드 위치를 재어 옮긴 값이다.
-const CROP = { x: 527.2, y: 592.6, width: 138, height: 122.327 } as const;
-const FULL_MAP = { width: 976, height: 1128 } as const;
-
-const MAP_SOURCE = {
-  src: mapBase,
-  width: CROP.width,
-  height: CROP.height,
-  alt: "체험존 부스가 표시된 배치도",
-};
-
-// API 좌표는 캠퍼스 배치도 전체 기준이라 잘라낸 그림 기준으로 옮긴다.
-const toCropRatio = ({ xRatio, yRatio }: { xRatio: number; yRatio: number }) => ({
-  xRatio: (xRatio * FULL_MAP.width - CROP.x) / CROP.width,
-  yRatio: (yRatio * FULL_MAP.height - CROP.y) / CROP.height,
-});
+const NO_BOOTHS: Booth[] = [];
 
 interface EventBoothMapProps {
   zones: readonly ExperienceZone[];
@@ -59,44 +42,70 @@ interface EventBoothMapProps {
   onSelect: (zone: ZoneType | null) => void;
 }
 
-// 이벤트 부스 지도. 배경 배치도 위에 부스 레이어를 겹쳐 그리고, 부스나 카드를
-// 고르면 그 자리로 확대·이동한다. 레이어는 지도와 함께 움직인다.
+// 이벤트 부스 지도. 캠퍼스 전체 배치도 위에서 체험존만 선택에 따라 색을 켜고 끄고,
+// 주막·기획 부스·랜드마크 같은 다른 장소는 늘 켜 둔다. 부스나 카드를 고르면 그
+// 자리로 확대·이동하고 이름표를 띄운다. 체험존이 아닌 장소를 누르면 체험존 선택은
+// 풀고 그 장소에 이름표만 띄운다.
 export const EventBoothMap = ({
   zones,
   selectedZone,
   onSelect,
 }: EventBoothMapProps) => {
-  const focus = getZoneFocus(zones, selectedZone);
-  const zonesCenter = toCropRatio(getZonesCenter(zones));
-  const initialCenter = {
-    xRatio: zonesCenter.xRatio,
-    yRatio: zonesCenter.yRatio - INITIAL_CENTER_LIFT,
+  // 체험존이 아닌 장소. 체험존 선택은 카드와 함께 쓰므로 쓰는 쪽이 들고 있는다.
+  const [otherPlace, setOtherPlace] = useState<CampusPlace | null>(null);
+  // 주막은 이 화면에서 지도에만 쓰여, 못 받으면 그 장소만 빠지고 체험존은 그대로다.
+  const { data: booths = NO_BOOTHS } = useBooths();
+  // 좌표를 아직 넣지 않은 존은 지도에 그리지 않는다 (API 명세 PLAN-1).
+  const places = useMemo(
+    () => buildCampusPlaces(booths, zones.filter(isPlacedZone)),
+    [booths, zones],
+  );
+
+  // 카드에서 체험존을 고르면 다른 장소의 이름표는 닫는다. 나중에 선택을 풀어도
+  // 예전 이름표가 되살아나지 않도록 값 자체를 비운다.
+  if (selectedZone !== null && otherPlace !== null) setOtherPlace(null);
+
+  const zonesCenter = getZonesCenter(zones);
+  const zoneFocus = getZoneFocus(zones, selectedZone);
+  const focus =
+    (zoneFocus && { ...zoneFocus, width: SELECTED_WIDTH }) ??
+    (otherPlace && {
+      ...otherPlace.point,
+      width: getPlaceFocusWidth(otherPlace, SELECTED_WIDTH),
+    });
+
+  const selectPlace = (place: CampusPlace | null) => {
+    if (place?.group === "zone") {
+      setOtherPlace(null);
+      onSelect(place.zoneType);
+      return;
+    }
+
+    setOtherPlace(place);
+    onSelect(null);
   };
 
   return (
-    <div className="relative aspect-[361/320] w-full">
-      {/* 흐름에서 빼야 지도 내용이 바깥 박스의 비율(361:320)을 밀어내지 않는다. */}
-      <div className="absolute inset-0">
-        <FestivalMap
-          className="size-full rounded-3xl bg-[#1c1c1c]"
-          controlsClassName="right-[5px] bottom-[7px] gap-3"
-          focus={focus && { ...toCropRatio(focus), scale: SELECTED_SCALE }}
-          initialCenter={initialCenter}
-          initialScale={INITIAL_SCALE}
-          maxScale={MAX_SCALE}
-          minScale={MIN_SCALE}
-          source={MAP_SOURCE}
-        >
-          <ZoneBoothLayer
-            onSelect={onSelect}
-            selectedZone={selectedZone}
-            zones={zones}
-          />
-        </FestivalMap>
-      </div>
-
-      {/* Figma에서 테두리는 지도 위에 그려진다. */}
-      <div className="pointer-events-none absolute inset-0 rounded-3xl border border-[#767676]" />
-    </div>
+    <CampusMap
+      bordered
+      box={EVENT_MAP_BOX}
+      className="rounded-3xl bg-[#1c1c1c]"
+      closestWidth={CLOSEST_WIDTH}
+      controlsClassName="right-[5px] bottom-[7px] gap-3"
+      focus={focus}
+      initialView={{
+        xRatio: zonesCenter.xRatio,
+        yRatio: zonesCenter.yRatio - INITIAL_CENTER_LIFT,
+        width: INITIAL_WIDTH,
+      }}
+      isLit={(place) =>
+        place.group === "zone"
+          ? selectedZone === null || place.zoneType === selectedZone
+          : true
+      }
+      onSelect={selectPlace}
+      places={places}
+      selectedId={selectedZone ? zonePlaceId(selectedZone) : (otherPlace?.id ?? null)}
+    />
   );
 };
