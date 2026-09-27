@@ -17,5 +17,7 @@ export {
 export { DotSpinner, InteractionLoadingOverlay } from "./Spinner";
 export { default as cardChevronIcon } from "./festival-visuals/card-chevron.svg";
 export { AgreementCheckbox } from "./AgreementCheckbox";
+export { default as hourglassIllustration } from "./festival-visuals/hourglass.png";
+export { default as letterIllustration } from "./festival-visuals/letter.png";
 export { default as lockIllustration } from "./festival-visuals/lock.png";
 export { default as warningIcon } from "./festival-visuals/warning.svg";
