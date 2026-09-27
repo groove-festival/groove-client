@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { mockSubmissionFestivalStatus } from "./mockFestivalStatus";
 
-test("keeps the policy footer below a failed contest submission", async ({ page }) => {
+test("keeps the policy footer below a failed story submission", async ({ page }) => {
   await mockSubmissionFestivalStatus(page);
   await page.route("**/auth/me", (route) =>
     route.fulfill({
@@ -37,7 +37,7 @@ test("keeps the policy footer below a failed contest submission", async ({ page 
     }),
   );
 
-  await page.goto("./contest?phase=open");
+  await page.goto("./story?phase=open");
   await page.getByRole("button", { name: "신청하기" }).click();
   await page.getByRole("button", { name: "사연 작성하기" }).click();
   await page.getByRole("button", { name: "IT" }).click();
@@ -53,20 +53,31 @@ test("keeps the policy footer below a failed contest submission", async ({ page 
 
   const submitButton = page.getByRole("button", { name: "사연 접수하기" });
   const footer = page.getByRole("contentinfo");
+  const footerCopy = page.getByText(
+    "자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요.",
+  );
+  const policyLinks = page.getByRole("navigation", { name: "정책 링크" });
   await expect(footer).toHaveCount(1);
-  await expect(
-    page.getByText("자세한 소식과 문의는 GROOVE 축제 공식 SNS에서 확인해 주세요."),
-  ).toHaveCount(1);
+  await expect(footerCopy).toHaveCount(1);
 
-  for (const width of [320, 390]) {
+  for (const width of [320, 390, 600, 900]) {
     await page.setViewportSize({ width, height: 844 });
     const buttonBounds = await submitButton.boundingBox();
     const footerBounds = await footer.boundingBox();
+    const footerCopyBounds = await footerCopy.boundingBox();
+    const policyLinksBounds = await policyLinks.boundingBox();
+    const expectedFrameWidth = Math.min(width, 600);
+    const expectedContentWidth = expectedFrameWidth - 32;
 
     expect(buttonBounds).not.toBeNull();
     expect(footerBounds).not.toBeNull();
+    expect(footerBounds?.width).toBeCloseTo(expectedFrameWidth, 0);
+    expect(footerCopyBounds?.width).toBeCloseTo(expectedContentWidth, 0);
+    expect(policyLinksBounds?.width).toBeCloseTo(expectedContentWidth, 0);
     expect(footerBounds!.y).toBeGreaterThanOrEqual(
       buttonBounds!.y + buttonBounds!.height,
     );
+    await expect(footerCopy).toHaveCSS("font-size", width >= 480 ? "12px" : "10px");
+    await expect(policyLinks).toHaveCSS("font-size", width >= 480 ? "14px" : "11px");
   }
 });

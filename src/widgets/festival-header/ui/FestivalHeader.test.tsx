@@ -141,6 +141,10 @@ describe("FestivalHeader", () => {
       "/credits",
     );
     expect(screen.getByRole("link", { name: "BOOTH" })).toHaveAttribute("href", "/pub");
+    expect(screen.getByRole("link", { name: "STORY" })).toHaveAttribute(
+      "href",
+      "/story",
+    );
     expect(screen.getByRole("link", { name: "SONG CONTEST" })).toHaveAttribute(
       "href",
       "/contest",
@@ -159,7 +163,7 @@ describe("FestivalHeader", () => {
       isPending: false,
       refetch: vi.fn(),
     } as unknown as ReturnType<typeof useFestivalStatus>);
-    const open = renderHeader("/contest");
+    const open = renderHeader("/story");
     fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
     expect(screen.getByText("사연 모집중")).toBeInTheDocument();
     open.unmount();
@@ -170,12 +174,12 @@ describe("FestivalHeader", () => {
       isPending: false,
       refetch: vi.fn(),
     } as unknown as ReturnType<typeof useFestivalStatus>);
-    const closed = renderHeader("/contest");
+    const closed = renderHeader("/story");
     fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
     expect(screen.queryByText("사연 모집중")).not.toBeInTheDocument();
     closed.unmount();
 
-    renderHeader("/contest?phase=open");
+    renderHeader("/story?phase=open");
     fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
     expect(screen.getByText("사연 모집중")).toBeInTheDocument();
   });

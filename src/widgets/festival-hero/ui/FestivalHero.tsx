@@ -9,11 +9,16 @@ import sparkle from "../festival-visuals/sparkle.svg";
 // Figma 555:2362 / 555:2292 / 555:2445에서 이 영역의 좌표는 동일하다.
 
 interface FestivalHeroProps {
+  bottomArrowText?: string;
   id?: string;
   onBottomArrowClick: () => void;
 }
 
-export const FestivalHero = ({ id, onBottomArrowClick }: FestivalHeroProps) => {
+export const FestivalHero = ({
+  bottomArrowText,
+  id,
+  onBottomArrowClick,
+}: FestivalHeroProps) => {
   return (
     <section
       aria-label="GROOVE 축제 소개"
@@ -118,16 +123,33 @@ export const FestivalHero = ({ id, onBottomArrowClick }: FestivalHeroProps) => {
 
       <div className="pointer-events-none absolute top-0 left-0 z-50 aspect-[393/850] w-full">
         <button
-          aria-label="아래로 이동"
-          className="pointer-events-auto absolute top-[95.41%] left-1/2 block size-[clamp(28px,8.14vw,40px)] -translate-x-1/2 border-0 bg-transparent p-0"
+          aria-label={bottomArrowText ?? "아래로 이동"}
+          className={`pointer-events-auto absolute left-1/2 -translate-x-1/2 border-0 bg-transparent p-0 ${
+            bottomArrowText
+              ? "top-[95.5%] text-[#fcfcfc]"
+              : "top-[95.41%] block size-[clamp(28px,8.14vw,40px)]"
+          }`}
           onClick={onBottomArrowClick}
           type="button"
         >
-          <img
-            alt=""
-            className="animate-float size-full motion-reduce:animate-none"
-            src={chevronDown}
-          />
+          {bottomArrowText ? (
+            <span className="animate-float flex flex-col items-center gap-0.5 motion-reduce:animate-none">
+              <span className="font-slow-gothic text-[clamp(16px,4.3vw,20px)] leading-[normal] font-normal whitespace-nowrap subpixel-antialiased [text-shadow:0_1px_6px_rgba(28,28,28,0.8)]">
+                {bottomArrowText}
+              </span>
+              <img
+                alt=""
+                className="-mt-2 size-[clamp(28px,8.14vw,40px)]"
+                src={chevronDown}
+              />
+            </span>
+          ) : (
+            <img
+              alt=""
+              className="animate-float size-full motion-reduce:animate-none"
+              src={chevronDown}
+            />
+          )}
         </button>
       </div>
 
