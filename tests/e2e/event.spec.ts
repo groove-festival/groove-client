@@ -1,8 +1,11 @@
 import { expect, type Page, test } from "@playwright/test";
 
 const zoneList = (page: Page) => page.getByRole("list", { name: "체험존 목록" });
-const boothShapes = (page: Page) => page.getByTestId(/^zone-booth-[A-Z]+$/);
-const boothShape = (page: Page, type: string) => page.getByTestId(`zone-booth-${type}`);
+const boothShapes = (page: Page) => page.getByTestId(/^campus-map-place-zone:[A-Z]+$/);
+const boothShape = (page: Page, type: string) =>
+  page.getByTestId(`campus-map-place-zone:${type}`);
+const boothCover = (page: Page, type: string) =>
+  page.getByTestId(`campus-map-cover-zone:${type}`);
 
 const zones = ["MOVE", "LOVE", "PROVE", "RECOVER", "GROOVE"].map((type, index) => ({
   type,
@@ -54,11 +57,11 @@ test("starts with no selected zone", async ({ page }) => {
 });
 
 test("selects the tapped booth and slides its card into view", async ({ page }) => {
-  await page.getByRole("button", { name: "GROOVE ZONE 위치 선택" }).tap();
+  await page.getByRole("button", { name: "GROOVE ZONE 위치 보기" }).tap();
 
   await expect(boothShape(page, "GROOVE")).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByTestId("zone-booth-color-GROOVE")).toHaveCSS("opacity", "1");
-  await expect(page.getByTestId("zone-booth-color-LOVE")).toHaveCSS("opacity", "0");
+  await expect(boothCover(page, "GROOVE")).toHaveCSS("opacity", "0");
+  await expect(boothCover(page, "LOVE")).toHaveCSS("opacity", "1");
   await expect(
     zoneList(page).getByRole("button", { name: /GROOVE ZONE/ }),
   ).toHaveAttribute("aria-pressed", "true");
@@ -73,13 +76,20 @@ test("selects the tapped booth and slides its card into view", async ({ page }) 
 });
 
 test("keeps a single selection when another booth is tapped", async ({ page }) => {
-  await page.getByRole("button", { name: "LOVE ZONE 위치 선택" }).tap();
+  await page.getByRole("button", { name: "LOVE ZONE 위치 보기" }).tap();
   await expect(boothShape(page, "LOVE")).toHaveAttribute("aria-pressed", "true");
 
-  await page.getByRole("button", { name: "PROVE ZONE 위치 선택" }).tap();
+  await zoneList(page)
+    .getByRole("button", { name: /PROVE ZONE/ })
+    .tap();
 
-  await expect(boothShape(page, "LOVE")).toHaveAttribute("aria-pressed", "false");
   await expect(boothShape(page, "PROVE")).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    zoneList(page).getByRole("button", { name: /LOVE ZONE/ }),
+  ).toHaveAttribute("aria-pressed", "false");
+  await expect(
+    zoneList(page).getByRole("button", { name: /PROVE ZONE/ }),
+  ).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("button", { pressed: true })).toHaveCount(2);
 });
 

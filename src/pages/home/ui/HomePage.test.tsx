@@ -263,13 +263,20 @@ describe("HomePage", () => {
     renderPage();
 
     const shortcuts = within(screen.getByRole("region", { name: "축제 바로가기" }));
+    expect(
+      shortcuts.getAllByRole("link").map((link) => link.getAttribute("href")),
+    ).toEqual(["/pub", "/story", "/contest", "/event", "/playlist"]);
     expect(shortcuts.getByRole("link", { name: /^주막/ })).toHaveAttribute(
       "href",
       "/pub",
     );
+    expect(shortcuts.getByRole("link", { name: /^사연 모집/ })).toHaveAttribute(
+      "href",
+      "/story",
+    );
     expect(shortcuts.getByRole("link", { name: /^가요제/ })).toHaveAttribute(
       "href",
-      "/coming-soon",
+      "/contest",
     );
     expect(shortcuts.getByRole("link", { name: /^이벤트/ })).toHaveAttribute(
       "href",
@@ -282,20 +289,35 @@ describe("HomePage", () => {
   });
 
   it.each([
-    ["BEFORE", "BEFORE", "사연 모집예정"],
-    ["OPEN", "BEFORE", "사연 모집중"],
-    ["CLOSED", "OPEN", "투표진행중"],
-    ["OPEN", "OPEN", "투표진행중"],
+    ["BEFORE", "CLOSED", "사연 모집", "사연 모집예정"],
+    ["OPEN", "CLOSED", "사연 모집", "사연 모집중"],
+    ["CLOSED", "BEFORE", "가요제", "투표예정"],
+    ["CLOSED", "OPEN", "가요제", "투표진행중"],
+    ["CLOSED", "CLOSED", "가요제", "투표종료"],
   ] as const)(
-    "shows the contest badge for story phase %s and contest phase %s",
-    async (storyPhase, contestPhase, label) => {
+    "shows the stage badge for story phase %s and contest phase %s",
+    async (storyPhase, contestPhase, cardName, label) => {
       currentFestivalStatus = statusBody(storyPhase, contestPhase);
       renderPage();
 
-      const contestCard = screen.getByRole("link", { name: /^가요제/ });
-      expect(await within(contestCard).findByText(label)).toBeInTheDocument();
+      const card = screen.getByRole("link", { name: new RegExp(`^${cardName}`) });
+      expect(await within(card).findByText(label)).toBeInTheDocument();
     },
   );
+
+  it("shows story and contest badges on their own cards when the phases overlap", async () => {
+    currentFestivalStatus = statusBody("OPEN", "OPEN");
+    renderPage();
+
+    expect(
+      await within(screen.getByRole("link", { name: /^사연 모집/ })).findByText(
+        "사연 모집중",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("link", { name: /^가요제/ })).getByText("투표진행중"),
+    ).toBeInTheDocument();
+  });
 
   it("shows only today's timetable and highlights the current item", () => {
     renderPage();
@@ -377,11 +399,26 @@ describe("HomePage timetable by clock", () => {
   });
 });
 
-describe("ShortcutSection contest badge", () => {
+describe("ShortcutSection stage badges", () => {
   it.each([
     ["story-upcoming", "사연 모집예정"],
-    ["story", "사연 모집중"],
-    ["vote", "투표진행중"],
+    ["story-open", "사연 모집중"],
+  ] as const)("shows the %s badge on the story card", (status, label) => {
+    render(
+      <MemoryRouter>
+        <ShortcutSection storyBadgeStatus={status} />
+      </MemoryRouter>,
+    );
+
+    const storyCard = screen.getByRole("link", { name: /^사연 모집/ });
+    expect(within(storyCard).getByText(label)).toBeInTheDocument();
+    expect(screen.getAllByText(label)).toHaveLength(1);
+  });
+
+  it.each([
+    ["contest-upcoming", "투표예정"],
+    ["contest-open", "투표진행중"],
+    ["contest-closed", "투표종료"],
   ] as const)("shows the %s badge on the contest card", (status, label) => {
     render(
       <MemoryRouter>
@@ -391,10 +428,9 @@ describe("ShortcutSection contest badge", () => {
 
     const contestCard = screen.getByRole("link", { name: /^가요제/ });
     expect(within(contestCard).getByText(label)).toBeInTheDocument();
-    expect(screen.getAllByText(label)).toHaveLength(1);
   });
 
-  it("hides the badge when neither contest phase is open", () => {
+  it("hides stage badges when no phase is available", () => {
     render(
       <MemoryRouter>
         <ShortcutSection />
@@ -402,8 +438,12 @@ describe("ShortcutSection contest badge", () => {
     );
 
     const contestCard = screen.getByRole("link", { name: /^가요제/ });
+    const storyCard = screen.getByRole("link", { name: /^사연 모집/ });
     expect(
-      within(contestCard).queryByText(/사연 모집예정|사연 모집중|투표진행중/),
+      within(storyCard).queryByText(/사연 모집예정|사연 모집중/),
+    ).not.toBeInTheDocument();
+    expect(
+      within(contestCard).queryByText(/투표예정|투표진행중|투표종료/),
     ).not.toBeInTheDocument();
   });
 });

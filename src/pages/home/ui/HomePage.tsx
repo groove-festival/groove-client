@@ -1,7 +1,7 @@
 import { useFestivalStatus } from "@/entities/festival";
 import { FestivalHero } from "@/widgets/festival-hero";
 
-import { getContestBadgeStatus } from "../model/contestBadge";
+import { getStageShortcutBadges } from "../model/stageBadges";
 import { FestivalMapSection } from "./FestivalMapSection";
 import { RevealSection } from "./RevealSection";
 import { ShortcutSection } from "./ShortcutSection";
@@ -24,7 +24,7 @@ const scrollToFestivalShortcuts = () => {
 // 그 아래 바로가기·지도·타임테이블 섹션이 스크롤에 따라 차례로 올라온다.
 export default function HomePage() {
   const { data: festivalStatus } = useFestivalStatus();
-  const contestBadgeStatus = getContestBadgeStatus(festivalStatus?.stage);
+  const shortcutBadges = getStageShortcutBadges(festivalStatus?.stage);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#1c1c1c] pb-40 text-[#fcfcfc]">
@@ -36,7 +36,10 @@ export default function HomePage() {
 
       <div className="relative z-10 flex flex-col gap-20 px-4">
         <RevealSection id={FESTIVAL_SHORTCUTS_SECTION_ID} label="축제 바로가기">
-          <ShortcutSection contestBadgeStatus={contestBadgeStatus} />
+          <ShortcutSection
+            contestBadgeStatus={shortcutBadges.contest}
+            storyBadgeStatus={shortcutBadges.story}
+          />
         </RevealSection>
         <RevealSection delayMs={120} label="축제 전체 지도">
           <FestivalMapSection />

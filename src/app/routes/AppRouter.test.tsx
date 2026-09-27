@@ -47,6 +47,33 @@ const orderTableEnvelope = {
   status: 200,
 };
 
+const festivalStatusEnvelope = {
+  data: {
+    success: true,
+    error: null,
+    data: {
+      phase: "BEFORE",
+      festivalStartAt: "2026-10-01T00:00:00+09:00",
+      festivalEndAt: "2026-10-03T00:00:00+09:00",
+      stage: {
+        storyPhase: "BEFORE",
+        storyCollectionStartAt: "2026-09-20T00:00:00+09:00",
+        storyCollectionEndAt: "2026-09-30T00:00:00+09:00",
+        contestPhase: "BEFORE",
+        contestStartAt: "2026-10-01T18:00:00+09:00",
+        contestEndAt: "2026-10-01T21:00:00+09:00",
+      },
+      playlist: {
+        phase: "SUBMISSION",
+        submissionStartAt: "2026-09-12T00:00:00+09:00",
+        submissionEndAt: "2026-09-17T00:00:00+09:00",
+        publishAt: "2026-10-01T00:00:00+09:00",
+      },
+    },
+  },
+  status: 200,
+};
+
 // 데이터를 부르는 화면이 섞여 있어 라우팅만 보는 이 검사에도 쿼리 클라이언트가 필요하다.
 const renderRoute = (path: string) => {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
@@ -54,7 +81,7 @@ const renderRoute = (path: string) => {
     defaultOptions: { queries: { retry: false } },
   });
 
-  render(
+  return render(
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
     </QueryClientProvider>,
@@ -157,5 +184,40 @@ describe("AppRouter", () => {
 
     expect(screen.getByRole("heading", { name: "GRO-OVE ZONE" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "메뉴 열기" })).toBeInTheDocument();
+  });
+
+  it("renders story collection and song contest at separate routes", async () => {
+    const get = vi.spyOn(httpClient, "get").mockImplementation((url: string) => {
+      if (url === "/festival/status") {
+        return Promise.resolve(festivalStatusEnvelope);
+      }
+      if (url === "/contest/votes") {
+        return Promise.resolve({
+          data: { success: true, error: null, data: [] },
+          status: 200,
+        });
+      }
+      return Promise.resolve({
+        data: {
+          success: true,
+          error: null,
+          data: { loggedIn: false, role: null, displayName: null, pubId: null },
+        },
+        status: 200,
+      });
+    });
+
+    const story = renderRoute("/story");
+    expect(
+      await screen.findByRole("heading", { name: "사연 모집을 준비하고 있어요" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "타임테이블" })).not.toBeInTheDocument();
+    story.unmount();
+
+    renderRoute("/contest");
+    expect(await screen.findByRole("tab", { name: "타임테이블" })).toBeInTheDocument();
+    expect(screen.queryByText("사연 모집을 준비하고 있어요")).not.toBeInTheDocument();
+
+    get.mockRestore();
   });
 });

@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { type ApiEnvelope, httpClient, requestData } from "@/shared/api";
 
-import { songContestQueryKeys } from "./queryKeys";
+import { contestStoryQueryKeys } from "./queryKeys";
 
 export type ContestStoryCollege =
   "IT" | "NURSING" | "ART" | "SOCIAL" | "EDU" | "NATURE";
@@ -25,7 +25,7 @@ export async function getPublicContestStories(): Promise<PublicContestStory[]> {
 export function usePublicContestStories(enabled = true) {
   return useQuery({
     enabled,
-    queryKey: songContestQueryKeys.stories(),
+    queryKey: contestStoryQueryKeys.list(),
     queryFn: getPublicContestStories,
   });
 }

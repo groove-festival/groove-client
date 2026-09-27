@@ -13,7 +13,7 @@ export const FestivalMenu = ({ isOpen, onClose }: FestivalMenuProps) => {
   const location = useLocation();
   const { data: festivalStatus } = useFestivalStatus();
   const previewBadge =
-    location.pathname === "/contest" &&
+    location.pathname === "/story" &&
     new URLSearchParams(location.search).get("phase") === "open";
   const storyBadge = previewBadge || festivalStatus?.stage?.storyPhase === "OPEN";
   const contestBadge = festivalStatus?.stage?.contestPhase === "OPEN";
@@ -70,7 +70,7 @@ export const FestivalMenu = ({ isOpen, onClose }: FestivalMenuProps) => {
                   to={item.to}
                 >
                   {item.label}
-                  {item.to === "/contest" && storyBadge && (
+                  {item.to === "/story" && storyBadge && (
                     <span className="rounded-full bg-[#ff0080] px-3 py-1 text-xs font-semibold whitespace-nowrap">
                       사연 모집중
                     </span>
