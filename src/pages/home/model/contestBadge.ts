@@ -1,9 +1,27 @@
-export type ContestBadgeStatus = "story" | "vote";
+import type { StageStatus } from "@/entities/festival";
+
+export type ContestBadgeStatus = "story-upcoming" | "story" | "vote";
 
 export const contestBadgeLabels: Record<ContestBadgeStatus, string> = {
+  "story-upcoming": "사연 모집예정",
   story: "사연 모집중",
-  vote: "투표 진행중",
+  vote: "투표진행중",
 };
 
-// 배지 상태 API(FR-0.4) 연동 전까지 쓰는 임시 상수. 단계가 바뀌면 이 값을 바꾼다.
-export const CONTEST_BADGE_STATUS: ContestBadgeStatus = "story";
+export function getContestBadgeStatus(
+  stage: Pick<StageStatus, "storyPhase" | "contestPhase"> | undefined,
+): ContestBadgeStatus | undefined {
+  if (stage?.contestPhase === "OPEN") {
+    return "vote";
+  }
+
+  if (stage?.storyPhase === "OPEN") {
+    return "story";
+  }
+
+  if (stage?.storyPhase === "BEFORE") {
+    return "story-upcoming";
+  }
+
+  return undefined;
+}

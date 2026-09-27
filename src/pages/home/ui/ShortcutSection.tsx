@@ -6,11 +6,7 @@ import shortcutContest from "../festival-visuals/shortcut-contest.png";
 import shortcutEvent from "../festival-visuals/shortcut-event.png";
 import shortcutPlaylist from "../festival-visuals/shortcut-playlist.png";
 import shortcutPub from "../festival-visuals/shortcut-pub.png";
-import {
-  CONTEST_BADGE_STATUS,
-  contestBadgeLabels,
-  type ContestBadgeStatus,
-} from "../model/contestBadge";
+import { contestBadgeLabels, type ContestBadgeStatus } from "../model/contestBadge";
 
 interface Shortcut {
   id: "pub" | "contest" | "event" | "playlist";
@@ -24,21 +20,21 @@ interface Shortcut {
 const shortcuts: Shortcut[] = [
   {
     id: "pub",
-    title: "주막 바로가기",
+    title: "주막",
     description: "단과대학 선택 후 QR로 셀프 주문",
     to: "/pub",
     icon: shortcutPub,
   },
   {
     id: "contest",
-    title: "가요제 바로가기",
+    title: "가요제",
     description: "타임테이블, 투표 확인, 예선 투표 및 사연 신청",
     to: "/coming-soon",
     icon: shortcutContest,
   },
   {
     id: "event",
-    title: "이벤트 바로가기",
+    title: "이벤트",
     description: "체험존 안내 & 단대 순위(라이벌스)",
     to: "/event",
     icon: shortcutEvent,
@@ -96,9 +92,7 @@ interface ShortcutSectionProps {
   contestBadgeStatus?: ContestBadgeStatus;
 }
 
-export const ShortcutSection = ({
-  contestBadgeStatus = CONTEST_BADGE_STATUS,
-}: ShortcutSectionProps) => (
+export const ShortcutSection = ({ contestBadgeStatus }: ShortcutSectionProps) => (
   <ul className="flex w-full flex-col gap-4">
     {shortcuts.map((shortcut) => (
       <li key={shortcut.id}>
