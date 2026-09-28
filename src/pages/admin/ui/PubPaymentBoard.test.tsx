@@ -91,6 +91,9 @@ describe("PubPaymentBoard", () => {
     renderBoard();
 
     expect(await screen.findByRole("button", { name: "결제완료" })).toBeInTheDocument();
+    // 되돌릴 수 없는 취소는 행을 펼쳐야 보인다 — 결제완료 옆에서 잘못 누르지 않게.
+    expect(screen.queryByRole("button", { name: "주문취소" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
     expect(screen.getByRole("button", { name: "주문취소" })).toBeInTheDocument();
     // 입금확인중에서 곧바로 서빙완료로 보내지 않는다.
     expect(screen.queryByRole("button", { name: "서빙완료" })).not.toBeInTheDocument();
@@ -147,7 +150,8 @@ describe("PubPaymentBoard", () => {
     ]);
     renderBoard();
 
-    fireEvent.click(await screen.findByRole("button", { name: "주문취소" }));
+    fireEvent.click(await screen.findByRole("button", { expanded: false }));
+    fireEvent.click(screen.getByRole("button", { name: "주문취소" }));
 
     const dialog = await screen.findByRole("dialog", {
       name: "이 주문을 취소할까요?",
@@ -180,5 +184,35 @@ describe("PubPaymentBoard", () => {
     fireEvent.click(toggle);
 
     expect(screen.getByText("1번 테이블")).toBeInTheDocument();
+  });
+
+  it("numbers orders by arrival and shows how long each has waited, oldest first", async () => {
+    const minutesAgo = (minutes: number) =>
+      new Date(Date.now() - minutes * 60_000).toISOString();
+    respondWith([
+      orderBody({
+        orderId: 30,
+        status: "DEPOSIT_CLAIMED",
+        depositorName: "늦은손님",
+        orderedAt: minutesAgo(2),
+        tableNumber: 5,
+      }),
+      orderBody({
+        orderId: 10,
+        status: "DEPOSIT_CLAIMED",
+        depositorName: "먼저손님",
+        orderedAt: minutesAgo(12),
+        tableNumber: 3,
+      }),
+    ]);
+    renderBoard();
+
+    await screen.findByText("먼저손님");
+    const rows = within(await groupSection("입금확인중")).getAllByRole("article");
+    expect(rows[0]).toHaveAccessibleName("주문 1번 · 3번 테이블");
+    expect(rows[0]).toHaveTextContent("#1");
+    expect(rows[0]).toHaveTextContent("12분 전");
+    expect(rows[1]).toHaveTextContent("#2");
+    expect(rows[1]).toHaveTextContent("2분 전");
   });
 });

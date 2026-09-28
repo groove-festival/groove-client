@@ -15,10 +15,11 @@ import {
   isRevenueOrder,
   orderWorkbookFileName,
 } from "../model/orderWorkbook";
+import { numberOrdersByArrival } from "../model/orderTiming";
 import { useOrderStatusChange } from "../model/useOrderStatusChange";
 import { OrderCancelDialog } from "./OrderCancelDialog";
 import { OrderStatusError } from "./OrderStatusError";
-import { PubOrderCard } from "./PubOrderCard";
+import { PubOrderRow } from "./PubOrderRow";
 
 type HistoryFilter = "ALL" | AdminOrderStatus;
 
@@ -57,6 +58,7 @@ export const PubOrderHistory = ({ pubName }: PubOrderHistoryProps) => {
     (order) => order.status === "PENDING_DEPOSIT" || order.status === "DEPOSIT_CLAIMED",
   );
   const canceledCount = allOrders.filter((order) => order.status === "CANCELED").length;
+  const orderNumbers = numberOrdersByArrival(allOrders);
 
   // 최신 주문이 위로 온다. 방금 처리한 주문을 찾는 용도가 가장 많다.
   const visibleOrders = allOrders
@@ -81,13 +83,12 @@ export const PubOrderHistory = ({ pubName }: PubOrderHistoryProps) => {
     }
   };
 
+  const summaryItemClass = "flex flex-col gap-0.5 rounded-xl bg-[#262626] px-3 py-2.5";
+
   return (
-    <section className="flex flex-col gap-4 rounded-2xl bg-[#262626] p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-sm font-bold text-[#fcfcfc]">주문 내역 · 정산</h2>
-          <p className="text-xs text-[#a2a2a2]">매출은 결제완료·완료 주문만 합쳐요.</p>
-        </div>
+    <section aria-label="주문 내역" className="flex flex-col gap-4">
+      <div className="flex items-center justify-between gap-3 px-1">
+        <p className="text-xs text-[#a2a2a2]">매출은 결제완료·완료 주문만 합쳐요.</p>
         <button
           className="h-10 shrink-0 rounded-xl bg-[#00b37e] px-3 text-xs font-bold text-[#0b0b0b] disabled:opacity-60"
           disabled={!orders.isSuccess || exportState === "working"}
@@ -105,35 +106,35 @@ export const PubOrderHistory = ({ pubName }: PubOrderHistoryProps) => {
       )}
 
       {orders.isPending && (
-        <p className="text-xs text-[#a2a2a2]">주문을 불러오는 중…</p>
+        <p className="px-1 text-xs text-[#a2a2a2]">주문을 불러오는 중…</p>
       )}
       {orders.isError && (
-        <p className="text-xs text-[#a2a2a2]">
+        <p className="px-1 text-xs text-[#a2a2a2]">
           주문을 불러오지 못했어요. 5초 뒤 다시 시도해요.
         </p>
       )}
 
       {orders.isSuccess && (
-        <dl className="grid grid-cols-2 gap-2 text-xs">
-          <div className="flex flex-col gap-1 rounded-xl bg-[#323232] p-3">
+        <dl className="grid grid-cols-2 gap-1.5 text-xs">
+          <div className={summaryItemClass}>
             <dt className="text-[#a2a2a2]">매출</dt>
-            <dd className="text-base font-bold text-[#fcfcfc]">
+            <dd className="text-base font-bold text-[#fcfcfc] tabular-nums">
               {formatWon(sumAmount(revenueOrders))}
             </dd>
             <dd className="text-[#7a7a7a]">{revenueOrders.length}건</dd>
           </div>
-          <div className="flex flex-col gap-1 rounded-xl bg-[#323232] p-3">
+          <div className={summaryItemClass}>
             <dt className="text-[#a2a2a2]">결제 확인 전</dt>
-            <dd className="text-base font-bold text-[#fcfcfc]">
+            <dd className="text-base font-bold text-[#fcfcfc] tabular-nums">
               {formatWon(sumAmount(unpaidOrders))}
             </dd>
             <dd className="text-[#7a7a7a]">{unpaidOrders.length}건</dd>
           </div>
-          <div className="flex flex-col gap-1 rounded-xl bg-[#323232] p-3">
+          <div className={summaryItemClass}>
             <dt className="text-[#a2a2a2]">전체 주문</dt>
             <dd className="text-base font-bold text-[#fcfcfc]">{allOrders.length}건</dd>
           </div>
-          <div className="flex flex-col gap-1 rounded-xl bg-[#323232] p-3">
+          <div className={summaryItemClass}>
             <dt className="text-[#a2a2a2]">취소</dt>
             <dd className="text-base font-bold text-[#fcfcfc]">{canceledCount}건</dd>
           </div>
@@ -142,40 +143,51 @@ export const PubOrderHistory = ({ pubName }: PubOrderHistoryProps) => {
 
       <OrderStatusError statusChange={statusChange} />
 
-      <div aria-label="주문 상태 필터" className="flex flex-wrap gap-1.5" role="group">
-        {filters.map((option) => (
-          <button
-            aria-pressed={filter === option}
-            className={`h-8 rounded-lg px-3 text-xs font-semibold ${
-              filter === option
-                ? "bg-[#5d00ff] text-[#fcfcfc]"
-                : "bg-[#323232] text-[#a2a2a2]"
-            }`}
-            key={option}
-            onClick={() => setFilter(option)}
-            type="button"
-          >
-            {filterLabel(option)}
-          </button>
-        ))}
-      </div>
-
-      {orders.isSuccess && visibleOrders.length === 0 ? (
-        <p className="rounded-xl bg-[#2c2c2c] p-3 text-xs text-[#7a7a7a]">
-          해당하는 주문이 없어요.
-        </p>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {visibleOrders.map((order) => (
-            <PubOrderCard
-              isPending={statusChange.changeStatus.isPending}
-              key={order.id}
-              onChangeStatus={statusChange.requestStatusChange}
-              order={order}
-            />
+      <section aria-label="주문 목록" className="flex flex-col gap-1.5">
+        {/* 필터는 한 줄로 두고 넘치면 옆으로 민다. 줄바꿈되면 목록이 그만큼 밀려난다. */}
+        <div
+          aria-label="주문 상태 필터"
+          className="-mx-4 flex [scrollbar-width:none] gap-1.5 overflow-x-auto px-4 pb-1"
+          role="group"
+        >
+          {filters.map((option) => (
+            <button
+              aria-pressed={filter === option}
+              className={`h-8 shrink-0 rounded-full px-3 text-xs font-semibold ${
+                filter === option
+                  ? "bg-[#5d00ff] text-[#fcfcfc]"
+                  : "bg-[#262626] text-[#a2a2a2]"
+              }`}
+              key={option}
+              onClick={() => setFilter(option)}
+              type="button"
+            >
+              {filterLabel(option)}
+            </button>
           ))}
         </div>
-      )}
+        <p className="px-1 text-right text-[11px] text-[#7a7a7a]">최근 주문 순 ↓</p>
+
+        {orders.isSuccess && visibleOrders.length === 0 ? (
+          <p className="rounded-xl bg-[#262626] px-3 py-2.5 text-xs text-[#7a7a7a]">
+            해당하는 주문이 없어요.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-1.5">
+            {visibleOrders.map((order) => (
+              <PubOrderRow
+                isPending={statusChange.changeStatus.isPending}
+                key={order.id}
+                now={orders.dataUpdatedAt}
+                onChangeStatus={statusChange.requestStatusChange}
+                order={order}
+                orderNumber={orderNumbers.get(order.id)}
+                showStatus
+              />
+            ))}
+          </div>
+        )}
+      </section>
 
       <OrderCancelDialog statusChange={statusChange} />
 

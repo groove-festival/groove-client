@@ -35,23 +35,3 @@ export const summarizeKitchenMenus = (orders: AdminOrder[]): KitchenMenuTotal[] 
       right.quantity - left.quantity || left.name.localeCompare(right.name, "ko"),
   );
 };
-
-// 이 시간을 넘겨 기다린 조리 주문은 눈에 띄게 한다.
-export const LATE_KITCHEN_ORDER_MS = 20 * 60 * 1000;
-
-// 주문 뒤 몇 분이 지났는지. 시각을 못 읽거나 아직 기준 시각이 없으면 null.
-export const minutesSinceOrdered = (order: AdminOrder, now: number): number | null => {
-  const orderedAt = Date.parse(order.orderedAt);
-
-  if (Number.isNaN(orderedAt) || now === 0) {
-    return null;
-  }
-
-  return Math.max(0, Math.floor((now - orderedAt) / 60_000));
-};
-
-export const isLateKitchenOrder = (order: AdminOrder, now: number): boolean => {
-  const minutes = minutesSinceOrdered(order, now);
-
-  return minutes !== null && minutes * 60_000 >= LATE_KITCHEN_ORDER_MS;
-};

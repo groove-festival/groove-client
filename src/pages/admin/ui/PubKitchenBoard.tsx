@@ -1,64 +1,79 @@
 import { useAdminOrders } from "../api/getAdminOrders";
 import { formatOrderTime } from "../lib/formatOrderText";
 import { type AdminOrder, partitionAdminOrders } from "../model/adminOrder";
+import { summarizeKitchenMenus } from "../model/kitchenQueue";
 import {
-  isLateKitchenOrder,
-  minutesSinceOrdered,
-  summarizeKitchenMenus,
-} from "../model/kitchenQueue";
+  KITCHEN_WAIT,
+  minutesSince,
+  numberOrdersByArrival,
+  type WaitTone,
+  waitToneOf,
+} from "../model/orderTiming";
 import { useOrderStatusChange } from "../model/useOrderStatusChange";
 import { OrderStatusError } from "./OrderStatusError";
+import { WaitChip } from "./WaitChip";
 
-interface KitchenOrderCardProps {
+// 테이블 번호 칸의 색이 곧 대기 시간이다. 주방에서 멀리서도 빨간 칸부터 집는다.
+const tableBlockClasses: Record<WaitTone, string> = {
+  fresh: "bg-[#3a3a3a] text-[#fcfcfc]",
+  waiting: "bg-[#ffb020] text-[#0b0b0b]",
+  late: "bg-[#ff5c5c] text-[#0b0b0b]",
+};
+
+interface KitchenTicketProps {
   isPending: boolean;
   now: number;
   onServe: (order: AdminOrder) => void;
   order: AdminOrder;
+  orderNumber: number | undefined;
 }
 
-// 조리하는 사람이 멀리서도 읽을 수 있게 테이블 번호와 메뉴를 크게 쓴다. 금액·
-// 입금자명은 주방에 필요 없고 개인정보라 싣지 않는다. 취소는 주방에서 누를
-// 일이 아니어서 서빙완료 하나만 둔다 — 취소는 주문 내역 화면에서 한다.
-const KitchenOrderCard = ({
+// 조리 주문 한 건을 한 줄짜리 티켓으로. 왼쪽 테이블 번호, 가운데 만들 메뉴,
+// 오른쪽 서빙완료. 금액·입금자명은 주방에 필요 없고 개인정보라 싣지 않는다.
+// 취소는 주방에서 누를 일이 아니라 주문 내역 화면에만 둔다.
+const KitchenTicket = ({
   isPending,
   now,
   onServe,
   order,
-}: KitchenOrderCardProps) => {
-  const minutes = minutesSinceOrdered(order, now);
-  const isLate = isLateKitchenOrder(order, now);
+  orderNumber,
+}: KitchenTicketProps) => {
+  const minutes = minutesSince(order.orderedAt, now);
+  const tone = waitToneOf(minutes, KITCHEN_WAIT);
 
   return (
     <article
       aria-label={`${order.tableNumber}번 테이블 조리 주문`}
-      className={`flex flex-col gap-3 rounded-xl p-4 ${
-        isLate ? "bg-[#3a2a12] ring-1 ring-[#ffb020]" : "bg-[#323232]"
-      }`}
+      className="flex items-stretch gap-2.5 rounded-xl bg-[#2c2c2c] p-2"
     >
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="text-2xl font-bold text-[#fcfcfc]">{order.tableNumber}번</span>
-        <span
-          className={`text-sm font-semibold ${isLate ? "text-[#ffb020]" : "text-[#a2a2a2]"}`}
-        >
-          {formatOrderTime(order.orderedAt)}
-          {minutes !== null && ` · ${minutes}분 전`}
+      <div
+        className={`flex w-14 shrink-0 flex-col items-center justify-center rounded-lg ${tableBlockClasses[tone]}`}
+      >
+        <span className="text-2xl leading-none font-bold tabular-nums">
+          {order.tableNumber}
         </span>
+        <span className="mt-0.5 text-[10px] font-semibold">번 테이블</span>
       </div>
 
-      <ul className="flex flex-col gap-1 border-t border-[#4a4a4a] pt-3">
-        {order.lines.map((line) => (
-          <li
-            className="flex justify-between gap-3 text-lg font-semibold text-[#fcfcfc]"
-            key={line.menuId}
-          >
-            <span className="break-keep">{line.name}</span>
-            <span className="shrink-0 text-[#00ffff]">× {line.quantity}</span>
-          </li>
-        ))}
-      </ul>
+      <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 py-0.5">
+        <div className="flex items-center gap-1.5 text-[11px] text-[#7a7a7a] tabular-nums">
+          {orderNumber !== undefined && (
+            <span className="font-semibold">#{orderNumber}</span>
+          )}
+          <span>{formatOrderTime(order.orderedAt)}</span>
+          <WaitChip minutes={minutes} tone={tone} />
+        </div>
+        <ul className="flex flex-wrap gap-x-3 gap-y-0.5 text-[15px] leading-snug font-semibold text-[#fcfcfc]">
+          {order.lines.map((line) => (
+            <li className="break-keep" key={line.menuId}>
+              {line.name} <span className="text-[#00ffff]">×{line.quantity}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
 
       <button
-        className="h-12 rounded-lg bg-[#5d00ff] text-base font-bold text-[#fcfcfc] disabled:opacity-60"
+        className="w-[72px] shrink-0 rounded-lg bg-[#5d00ff] text-sm font-bold text-[#fcfcfc] disabled:opacity-60"
         disabled={isPending}
         onClick={() => onServe(order)}
         type="button"
@@ -76,33 +91,29 @@ export const PubKitchenBoard = () => {
   const statusChange = useOrderStatusChange();
 
   const now = orders.dataUpdatedAt;
-  const { paid } = partitionAdminOrders(orders.data ?? [], now);
+  const allOrders = orders.data ?? [];
+  const { paid } = partitionAdminOrders(allOrders, now);
+  const orderNumbers = numberOrdersByArrival(allOrders);
   const menuTotals = summarizeKitchenMenus(paid);
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl bg-[#262626] p-4">
-      <div className="flex flex-col gap-1">
-        <div className="flex items-baseline gap-2">
-          <h2 className="text-sm font-bold text-[#fcfcfc]">주방 · 조리 대기</h2>
-          <span className="text-xs text-[#a2a2a2]">{paid.length}건</span>
-        </div>
-        <p className="text-xs text-[#a2a2a2]">
-          {orders.isPending && "주문을 불러오는 중…"}
-          {orders.isError && "주문을 불러오지 못했어요. 5초 뒤 다시 시도해요."}
-          {orders.isSuccess &&
-            "결제가 확인된 주문만 보여요. 5초마다 자동으로 갱신돼요. 음식이 나가면 서빙완료를 눌러 주세요."}
-        </p>
-      </div>
+    <section aria-label="주방" className="flex flex-col gap-4">
+      <p className="px-1 text-xs leading-relaxed text-[#a2a2a2]">
+        {orders.isPending && "주문을 불러오는 중…"}
+        {orders.isError && "주문을 불러오지 못했어요. 5초 뒤 다시 시도해요."}
+        {orders.isSuccess &&
+          "결제가 확인된 주문만 보여요. 테이블 칸이 노랑(10분)·빨강(20분)이면 오래 기다린 주문이에요."}
+      </p>
 
       <OrderStatusError statusChange={statusChange} />
 
       {menuTotals.length > 0 && (
-        <section aria-label="만들 메뉴 합계" className="flex flex-col gap-2">
-          <h3 className="text-xs font-bold text-[#fcfcfc]">만들 메뉴 합계</h3>
-          <ul className="flex flex-wrap gap-2">
+        <section aria-label="만들 메뉴 합계" className="flex flex-col gap-1.5">
+          <h3 className="px-1 text-sm font-bold text-[#fcfcfc]">만들 메뉴 합계</h3>
+          <ul className="flex flex-wrap gap-1.5">
             {menuTotals.map((menu) => (
               <li
-                className="rounded-lg bg-[#1c1c1c] px-3 py-2 text-sm font-semibold text-[#fcfcfc]"
+                className="rounded-lg bg-[#262626] px-2.5 py-1.5 text-sm font-semibold text-[#fcfcfc]"
                 key={menu.menuId}
               >
                 {menu.name} <span className="text-[#00ffff]">{menu.quantity}</span>
@@ -112,25 +123,33 @@ export const PubKitchenBoard = () => {
         </section>
       )}
 
-      {orders.isSuccess && paid.length === 0 ? (
-        <p className="rounded-xl bg-[#2c2c2c] p-4 text-sm text-[#7a7a7a]">
-          조리할 주문이 없어요.
-        </p>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {paid.map((order) => (
-            <KitchenOrderCard
-              isPending={statusChange.changeStatus.isPending}
-              key={order.id}
-              now={now}
-              onServe={(target) =>
-                statusChange.requestStatusChange(target, "COMPLETED")
-              }
-              order={order}
-            />
-          ))}
+      <section aria-label="조리 대기" className="flex flex-col gap-1.5">
+        <div className="flex items-baseline gap-2 px-1">
+          <h3 className="text-sm font-bold text-[#fcfcfc]">조리 대기</h3>
+          <span className="text-xs font-semibold text-[#00ffff]">{paid.length}건</span>
+          <span className="ml-auto text-[11px] text-[#7a7a7a]">먼저 들어온 순 ↓</span>
         </div>
-      )}
+        {orders.isSuccess && paid.length === 0 ? (
+          <p className="rounded-xl bg-[#262626] px-3 py-4 text-sm text-[#7a7a7a]">
+            조리할 주문이 없어요.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-1.5">
+            {paid.map((order) => (
+              <KitchenTicket
+                isPending={statusChange.changeStatus.isPending}
+                key={order.id}
+                now={now}
+                onServe={(target) =>
+                  statusChange.requestStatusChange(target, "COMPLETED")
+                }
+                order={order}
+                orderNumber={orderNumbers.get(order.id)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
     </section>
   );
 };

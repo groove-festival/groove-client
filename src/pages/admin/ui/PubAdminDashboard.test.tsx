@@ -76,6 +76,11 @@ const renderDashboard = (initialEntry = "/admin") => {
   );
 };
 
+beforeEach(() => {
+  // jsdom은 스크롤을 구현하지 않는다. 탭을 바꾸면 맨 위로 올리는지만 본다.
+  window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
+});
+
 afterEach(() => {
   vi.clearAllMocks();
 });
@@ -104,13 +109,16 @@ describe("PubAdminDashboard", () => {
     fireEvent.click(await screen.findByRole("tab", { name: /주막 설정/ }));
 
     expect(screen.getByText("status-toggle")).toBeInTheDocument();
+    expect(window.scrollTo).toHaveBeenCalledWith({ top: 0 });
     expect(screen.getByText("?view=settings")).toBeInTheDocument();
   });
 
   it("shows how many orders wait on each working view", async () => {
     renderDashboard();
 
-    expect(await screen.findByRole("tab", { name: /주방\s*2건/ })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: /입금 확인\s*1건/ })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("tab", { name: /2\s*건\s*주방/ }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /1\s*건\s*입금 확인/ })).toBeInTheDocument();
   });
 });

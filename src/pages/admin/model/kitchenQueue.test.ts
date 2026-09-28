@@ -1,9 +1,5 @@
 import { type AdminOrder } from "./adminOrder";
-import {
-  isLateKitchenOrder,
-  minutesSinceOrdered,
-  summarizeKitchenMenus,
-} from "./kitchenQueue";
+import { summarizeKitchenMenus } from "./kitchenQueue";
 
 const order = (over: Partial<AdminOrder>): AdminOrder => ({
   depositorName: null,
@@ -42,23 +38,5 @@ describe("summarizeKitchenMenus", () => {
 
   it("returns nothing when there is nothing to cook", () => {
     expect(summarizeKitchenMenus([])).toEqual([]);
-  });
-});
-
-describe("minutesSinceOrdered", () => {
-  const orderedAt = Date.parse("2026-10-01T18:00:00+09:00");
-
-  it("counts whole minutes since the order", () => {
-    expect(minutesSinceOrdered(order({}), orderedAt + 12.5 * 60_000)).toBe(12);
-  });
-
-  it("does not guess before the first poll or for unreadable times", () => {
-    expect(minutesSinceOrdered(order({}), 0)).toBeNull();
-    expect(minutesSinceOrdered(order({ orderedAt: "bad" }), orderedAt)).toBeNull();
-  });
-
-  it("flags orders waiting 20 minutes or more", () => {
-    expect(isLateKitchenOrder(order({}), orderedAt + 19 * 60_000)).toBe(false);
-    expect(isLateKitchenOrder(order({}), orderedAt + 20 * 60_000)).toBe(true);
   });
 });

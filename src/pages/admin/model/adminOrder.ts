@@ -65,9 +65,6 @@ export const adminOrderTransitionLabels: Record<AdminOrderStatus, string> = {
   CANCELED: "주문취소",
 };
 
-// 입금자명을 낸 지 오래됐는데 아직 대사하지 않은 건은 눈에 띄어야 한다.
-export const STALE_DEPOSIT_CLAIM_MS = 10 * 60 * 1000;
-
 // 이 시간을 넘긴 입금대기 건은 접는다. 자동 취소는 하지 않는다 — 이미 이체한
 // 손님의 주문을 서버가 취소하면 환불 분쟁이 된다 (PRD §11-17).
 export const STALE_PENDING_DEPOSIT_MS = 30 * 60 * 1000;
@@ -80,17 +77,6 @@ const elapsedMs = (isoTime: string | null, now: number): number | null => {
   const parsed = Date.parse(isoTime);
 
   return Number.isNaN(parsed) ? null : now - parsed;
-};
-
-// 대사를 오래 기다린 입금확인중 건인지. 시각을 못 읽으면 강조하지 않는다.
-export const isStaleDepositClaim = (order: AdminOrder, now: number): boolean => {
-  if (order.status !== "DEPOSIT_CLAIMED") {
-    return false;
-  }
-
-  const elapsed = elapsedMs(order.depositorSubmittedAt ?? order.orderedAt, now);
-
-  return elapsed !== null && elapsed >= STALE_DEPOSIT_CLAIM_MS;
 };
 
 // 접어둘 장기 미입금 건인지.

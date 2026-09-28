@@ -103,7 +103,8 @@ describe("PubOrderHistory", () => {
     });
     renderHistory();
 
-    fireEvent.click(await screen.findByRole("button", { name: "주문취소" }));
+    fireEvent.click(await screen.findByRole("button", { expanded: false }));
+    fireEvent.click(screen.getByRole("button", { name: "주문취소" }));
     const dialog = await screen.findByRole("dialog", { name: "이 주문을 취소할까요?" });
     expect(httpPatch).not.toHaveBeenCalled();
 

@@ -2,7 +2,6 @@ import {
   type AdminOrder,
   type AdminOrderStatus,
   getAllowedAdminOrderTransitions,
-  isStaleDepositClaim,
   isStalePendingDeposit,
   partitionAdminOrders,
   STALE_PENDING_DEPOSIT_MS,
@@ -139,21 +138,6 @@ describe("partitionAdminOrders", () => {
 });
 
 describe("stale markers", () => {
-  it("highlights a deposit claim that has waited too long", () => {
-    expect(
-      isStaleDepositClaim(
-        order({ status: "DEPOSIT_CLAIMED", depositorSubmittedAt: minutesAgo(11) }),
-        NOW,
-      ),
-    ).toBe(true);
-    expect(
-      isStaleDepositClaim(
-        order({ status: "DEPOSIT_CLAIMED", depositorSubmittedAt: minutesAgo(2) }),
-        NOW,
-      ),
-    ).toBe(false);
-  });
-
   it("ignores unreadable timestamps instead of hiding the order", () => {
     expect(isStalePendingDeposit(order({ orderedAt: "not-a-date" }), NOW)).toBe(false);
   });
@@ -163,12 +147,6 @@ describe("stale markers", () => {
 
     expect(
       isStalePendingDeposit(order({ status: "PAID", orderedAt: longAgo }), NOW),
-    ).toBe(false);
-    expect(
-      isStaleDepositClaim(
-        order({ status: "PENDING_DEPOSIT", orderedAt: longAgo }),
-        NOW,
-      ),
     ).toBe(false);
   });
 });
