@@ -257,15 +257,18 @@ function StoryLoginPanel({
 }) {
   return (
     <section className="mx-auto mt-20 flex w-full flex-col gap-6">
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-bold">Google 로그인</h1>
         <p className="text-sm leading-6 text-[#a2a2a2]">
           <span className="block">사연은 Google 계정당 하나만 접수할 수 있어요.</span>
-          <span className="block">다시 제출하면 기존 사연이 새 내용으로 바뀝니다.</span>
+          <span className="block">
+            다시 제출하면 기존 사연이 새 내용으로 덮어쓰기돼요.
+          </span>
         </p>
         <p className="text-sm leading-6 text-[#a2a2a2]">
-          학교 계정이 아니어도 참여할 수 있어요. 1인 1회 참여 원칙을 위해 Google
-          로그인과 학번 입력을 부탁드려요.
+          <span className="block">학교 계정이 아니어도 참여할 수 있어요.</span>
+          <span className="block">1인 1회 참여 원칙을 위해</span>
+          <span className="block">Google 로그인과 학번 입력을 부탁드려요.</span>
         </p>
       </div>
 
@@ -296,7 +299,7 @@ function StoryLoginPanel({
       <p className="text-xs leading-5 text-[#a2a2a2]">
         <span className="block">Google 비밀번호는 GROOVE에 전달되지 않아요.</span>
         <span className="block">
-          Google에서 발급한 인증 정보로 로그인 상태를 확인합니다.
+          Google에서 발급한 인증 정보로 로그인 상태만 확인해요.
         </span>
       </p>
 
