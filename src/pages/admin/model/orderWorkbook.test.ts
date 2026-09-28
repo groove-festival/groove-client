@@ -16,6 +16,7 @@ const order = (over: Partial<AdminOrder>): AdminOrder => ({
       itemId: 1005,
       menuId: 1,
       name: "닭발",
+      options: [],
       price: 15_000,
       quantity: 1,
       servedAt: null,
@@ -57,6 +58,7 @@ const orders: AdminOrder[] = [
         itemId: 1006,
         menuId: 1,
         name: "닭발",
+        options: [],
         price: 15_000,
         quantity: 2,
         servedAt: null,
@@ -65,6 +67,7 @@ const orders: AdminOrder[] = [
         itemId: 1007,
         menuId: 2,
         name: "콜라",
+        options: [],
         price: 2_000,
         quantity: 1,
         servedAt: null,
@@ -157,6 +160,39 @@ describe("buildOrderWorkbook", () => {
       2_000,
       "O",
     ]);
+  });
+
+  it("writes the ticked options next to the menu name", () => {
+    const optionOrder = order({
+      id: 9,
+      lines: [
+        {
+          itemId: 1009,
+          menuId: 30,
+          name: "짜파게티",
+          options: [
+            { label: "불파게티로 변경", priceDelta: 1_000 },
+            { label: "메인 메뉴와 함께 주문했어요", priceDelta: -1_000 },
+          ],
+          price: 5_000,
+          quantity: 2,
+          servedAt: null,
+        },
+      ],
+      totalPrice: 10_000,
+    });
+    const sheets = buildOrderWorkbook([optionOrder], context);
+    const rowsOf = (name: string) =>
+      values(sheets.find((item) => item.name === name)?.data ?? []);
+
+    expect(rowsOf("주문 내역")[1][7]).toBe(
+      "짜파게티 (불파게티로 변경, 메인 메뉴와 함께 주문했어요) × 2",
+    );
+    expect(rowsOf("주문 품목")[1][4]).toBe(
+      "짜파게티 (불파게티로 변경, 메인 메뉴와 함께 주문했어요)",
+    );
+    // 메뉴별 판매는 옵션과 상관없이 메뉴 단위로 모은다.
+    expect(rowsOf("메뉴별 판매")[1]).toEqual(["짜파게티", 2, 10_000, 1]);
   });
 
   it("aggregates sales by menu, table and hour from revenue orders", () => {

@@ -1,4 +1,4 @@
-import { type BoothMenuItem } from "@/entities/booth";
+import { type BoothMenuItem, formatMenuOptionPriceDelta } from "@/entities/booth";
 
 const priceFormatter = new Intl.NumberFormat("ko-KR");
 
@@ -11,6 +11,18 @@ export const BoothMenuItemRow = ({ item }: { item: BoothMenuItem }) => {
         <p className="text-xl leading-6 font-semibold">{item.name}</p>
         {item.description && (
           <p className="text-base leading-[19px]">{item.description}</p>
+        )}
+        {item.options.length > 0 && (
+          <ul aria-label={`${item.name} 옵션`} className="flex flex-col gap-1">
+            {item.options.map((option) => (
+              <li className="text-sm leading-[17px] text-[#cfcfcf]" key={option.id}>
+                <span className="tabular-nums">
+                  {formatMenuOptionPriceDelta(option.priceDelta)}
+                </span>{" "}
+                {option.label}
+              </li>
+            ))}
+          </ul>
         )}
       </div>
       <p className="shrink-0 text-right text-base leading-[19px] font-semibold">

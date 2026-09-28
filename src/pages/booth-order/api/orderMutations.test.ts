@@ -63,14 +63,45 @@ describe("toPlacedOrder mapping", () => {
       bank: "국민",
       holder: "홍길동",
     });
+    // 옵션을 모르는 서버는 options를 보내지 않는다. 없으면 빈 목록으로 읽는다.
     expect(order.lines).toEqual([
-      { menuId: 4, name: "닭발", price: 15_000, quantity: 2 },
+      { menuId: 4, name: "닭발", options: [], price: 15_000, quantity: 2 },
     ]);
     expect(order).toMatchObject({
       id: 7,
       pubName: "일렉트로닉 나이트",
       totalPrice: 30_000,
     });
+  });
+
+  it("keeps the chosen options with a unit price that already includes them", async () => {
+    httpGet.mockResolvedValueOnce(
+      envelope({
+        ...orderBody,
+        items: [
+          {
+            lineAmount: 12_000,
+            menuId: 9,
+            menuName: "짜파게티",
+            options: [{ label: "불파게티로 변경", priceDelta: 1_000 }],
+            quantity: 2,
+            unitPrice: 6_000,
+          },
+        ],
+      }),
+    );
+
+    const order = await getOrder(target);
+
+    expect(order.lines).toEqual([
+      {
+        menuId: 9,
+        name: "짜파게티",
+        options: [{ label: "불파게티로 변경", priceDelta: 1_000 }],
+        price: 6_000,
+        quantity: 2,
+      },
+    ]);
   });
 
   it("treats a missing depositor name as not submitted", async () => {

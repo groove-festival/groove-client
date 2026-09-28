@@ -17,6 +17,8 @@ export interface CreateMenuRequestBody {
   category: MenuCategory;
   description: string | null;
   name: string;
+  // 옵션은 최대 10개, 이름은 50자까지. 비우거나 빼면 옵션 없는 메뉴가 된다.
+  options?: { label: string; priceDelta: number }[];
   price: number;
   separateCharge: boolean;
 }

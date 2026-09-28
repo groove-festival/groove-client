@@ -10,9 +10,17 @@ export interface OrderAccount {
   holder: string;
 }
 
+// 주문 줄에 적용된 옵션. 주문 응답은 옵션 id 없이 당시 이름·가격 차이만 준다.
+export interface OrderLineOption {
+  label: string;
+  priceDelta: number;
+}
+
 export interface OrderLine {
   menuId: number;
   name: string;
+  options: OrderLineOption[];
+  // 옵션 가격 차이까지 더한 한 개 값.
   price: number;
   quantity: number;
 }

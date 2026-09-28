@@ -61,11 +61,11 @@ const createMenus = () => {
   ];
 };
 
-const tableResponse = (orderable = true) => ({
+const tableResponse = (orderable = true, menus: unknown[] = createMenus()) => ({
   orderable,
   pub: {
     menuBoardImageUrl: null,
-    menus: createMenus(),
+    menus,
     pub: {
       area: "PARKING",
       boothCode: BOOTH_ID,
@@ -88,8 +88,15 @@ const account = {
   bankName: "국민",
 };
 
+interface OrderLineOption {
+  label: string;
+  priceDelta: number;
+}
+
 interface OrderOverrides {
   depositorName?: string | null;
+  // 두 번째 줄(메뉴)에 붙은 옵션.
+  menuOptions?: OrderLineOption[];
   paymentMethod?: PaymentMethod;
   status?: OrderStatus;
 }
@@ -99,6 +106,7 @@ let currentOrder: ReturnType<typeof createOrderBody> | null = null;
 
 function createOrderBody({
   depositorName = null,
+  menuOptions = [],
   paymentMethod = "TRANSFER",
   status = "PENDING_DEPOSIT",
 }: OrderOverrides = {}) {
@@ -117,6 +125,7 @@ function createOrderBody({
         lineAmount: 25_000,
         menuId: 1,
         menuName: "메뉴명",
+        options: menuOptions,
         quantity: 1,
         unitPrice: 25_000,
       },
@@ -186,6 +195,74 @@ const placeOrder = async () => {
   fireEvent.click(screen.getByRole("button", { name: "27,000원 주문하기" }));
   await screen.findByRole("dialog", { name: "계좌이체 안내" });
 };
+
+const useTableMenus = (menus: unknown[]) => {
+  httpGet.mockImplementation((url: string) =>
+    url.includes("/orders/")
+      ? Promise.reject(apiError("PUB005", 404))
+      : Promise.resolve(envelope(tableResponse(true, menus))),
+  );
+};
+
+const optionMenus = () => [
+  {
+    category: "SIDE",
+    description: null,
+    imageUrl: null,
+    menuId: 14,
+    name: "상차림비",
+    price: 2_000,
+    separateCharge: true,
+    soldOut: false,
+  },
+  {
+    category: "MAIN",
+    description: null,
+    imageUrl: null,
+    menuId: 30,
+    name: "짜파게티",
+    options: [
+      { optionId: 31, label: "불파게티로 변경", priceDelta: 1_000 },
+      { optionId: 32, label: "메인 메뉴와 함께 주문했어요", priceDelta: -1_000 },
+    ],
+    price: 5_000,
+    separateCharge: false,
+    soldOut: false,
+  },
+];
+
+const jointSeparateChargeMenus = () => [
+  {
+    category: "SIDE",
+    description: "1인당 받아요",
+    imageUrl: null,
+    menuId: 20,
+    name: "상차림비 (1인)",
+    price: 2_000,
+    separateCharge: true,
+    soldOut: false,
+  },
+  {
+    category: "SIDE",
+    description: "3인 이상은 테이블당 받아요",
+    imageUrl: null,
+    menuId: 21,
+    name: "상차림비 (테이블)",
+    price: 5_000,
+    separateCharge: true,
+    soldOut: false,
+  },
+  {
+    category: "MAIN",
+    description: null,
+    imageUrl: null,
+    menuId: 4,
+    name: "닭발",
+    price: 15_000,
+    separateCharge: false,
+    soldOut: false,
+  },
+];
 
 const getTransferDialog = () => screen.getByRole("dialog", { name: "계좌이체 안내" });
 
@@ -265,6 +342,117 @@ describe("BoothOrderPage", () => {
     // 상차림비가 섹션에도 남으면 수량과 합계가 두 번 잡힌다.
     expect(screen.getAllByRole("list", { name: "상차림비" })).toHaveLength(1);
     expect(screen.queryByRole("heading", { name: "상차림비" })).not.toBeInTheDocument();
+  });
+
+  it("lets the customer tick menu options once the menu is in the cart", async () => {
+    useTableMenus(optionMenus());
+    await showMenuScreen();
+
+    // 담기 전에는 옵션을 펼치지 않는다.
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "짜파게티 수량 늘리기" }));
+    const options = screen.getByRole("group", { name: "짜파게티 옵션" });
+    expect(within(options).getByText("해당되면 체크해 주세요")).toBeInTheDocument();
+    expect(
+      within(options).getByRole("checkbox", { name: /메인 메뉴와 함께 주문했어요/ }),
+    ).toHaveAccessibleName("메인 메뉴와 함께 주문했어요 −1,000원");
+
+    fireEvent.click(within(options).getByRole("checkbox", { name: /불파게티로 변경/ }));
+    expect(
+      screen.getByRole("button", { name: "8,000원 주문하기" }),
+    ).toBeInTheDocument();
+
+    // 체크한 옵션은 담은 수량 전체에 붙는다.
+    fireEvent.click(screen.getByRole("button", { name: "짜파게티 수량 늘리기" }));
+    fireEvent.click(screen.getByRole("button", { name: "14,000원 주문하기" }));
+
+    await waitFor(() =>
+      expect(httpPost).toHaveBeenCalledWith(
+        `/pubs/${BOOTH_ID}/tables/${TABLE_CODE}/orders`,
+        {
+          items: [
+            { menuId: 14, quantity: 1 },
+            { menuId: 30, optionIds: [31], quantity: 2 },
+          ],
+        },
+        { headers: { "Idempotency-Key": expect.any(String) } },
+      ),
+    );
+  });
+
+  it("drops the ticked options when the menu goes back to zero", async () => {
+    useTableMenus(optionMenus());
+    await showMenuScreen();
+
+    fireEvent.click(screen.getByRole("button", { name: "짜파게티 수량 늘리기" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /불파게티로 변경/ }));
+    fireEvent.click(screen.getByRole("button", { name: "짜파게티 수량 줄이기" }));
+
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "짜파게티 수량 늘리기" }));
+    expect(screen.getByRole("checkbox", { name: /불파게티로 변경/ })).not.toBeChecked();
+    expect(
+      screen.getByRole("button", { name: "7,000원 주문하기" }),
+    ).toBeInTheDocument();
+  });
+
+  it("lets the customer pick among several separate charges", async () => {
+    useTableMenus(jointSeparateChargeMenus());
+    await showMenuScreen();
+
+    const separateCharges = screen.getByRole("list", { name: "상차림비" });
+    expect(within(separateCharges).getByText("1인당 받아요")).toBeInTheDocument();
+    expect(
+      within(separateCharges).getByText("3인 이상은 테이블당 받아요"),
+    ).toBeInTheDocument();
+    expect(
+      within(separateCharges).getByLabelText("상차림비 (1인) 수량"),
+    ).toHaveTextContent("0");
+    expect(
+      within(separateCharges).getByRole("button", {
+        name: "상차림비 (1인) 수량 줄이기",
+      }),
+    ).toBeDisabled();
+    expect(screen.getByText("해당하는 상차림비를 선택해 주세요")).toBeInTheDocument();
+
+    // 메뉴만 담으면 주문 대신 상차림비를 고르라고 안내한다.
+    fireEvent.click(screen.getByRole("button", { name: "닭발 수량 늘리기" }));
+    fireEvent.click(screen.getByRole("button", { name: "상차림비를 선택해 주세요" }));
+    expect(httpPost).not.toHaveBeenCalled();
+
+    fireEvent.click(
+      within(separateCharges).getByRole("button", {
+        name: "상차림비 (테이블) 수량 늘리기",
+      }),
+    );
+    expect(
+      screen.queryByText("해당하는 상차림비를 선택해 주세요"),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "20,000원 주문하기" }));
+
+    await waitFor(() =>
+      expect(httpPost).toHaveBeenCalledWith(
+        `/pubs/${BOOTH_ID}/tables/${TABLE_CODE}/orders`,
+        {
+          items: [
+            { menuId: 21, quantity: 1 },
+            { menuId: 4, quantity: 1 },
+          ],
+        },
+        { headers: { "Idempotency-Key": expect.any(String) } },
+      ),
+    );
+  });
+
+  it("does not open the order button for separate charges alone", async () => {
+    useTableMenus(jointSeparateChargeMenus());
+    await showMenuScreen();
+
+    fireEvent.click(screen.getByRole("button", { name: "상차림비 (1인) 수량 늘리기" }));
+
+    expect(getBottomBar()).toHaveAttribute("inert");
   });
 
   it("slides the order button in only while a menu is selected", async () => {
@@ -468,6 +656,24 @@ describe("BoothOrderPage", () => {
     expect(
       window.localStorage.getItem(getOrderStorageKey(BOOTH_ID, TABLE_CODE)),
     ).toBeNull();
+  });
+
+  it("lists the chosen options under the menu on the receipt", async () => {
+    seedOrder({
+      depositorName: "김입금",
+      menuOptions: [
+        { label: "불파게티로 변경", priceDelta: 1_000 },
+        { label: "메인 메뉴와 함께 주문했어요", priceDelta: -1_000 },
+      ],
+      status: "PAID",
+    });
+    renderOrderPage();
+
+    await screen.findByRole("heading", { name: "주문이 완료되었어요!" });
+    expect(screen.getByText("불파게티로 변경 (+1,000원)")).toBeInTheDocument();
+    expect(
+      screen.getByText("메인 메뉴와 함께 주문했어요 (−1,000원)"),
+    ).toBeInTheDocument();
   });
 
   it("shows a served cash order with the cash receipt rows", async () => {

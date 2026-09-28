@@ -1,11 +1,18 @@
 import { type BoothMenuItem, type MenuCategory } from "@/entities/booth";
 
+// 메뉴 옵션 한 줄의 입력값. 가격 차이는 "-"만 친 상태도 있어 문자열로 둔다.
+export interface MenuOptionDraft {
+  label: string;
+  priceDelta: string;
+}
+
 // 메뉴 등록·수정 폼의 입력값. 가격은 입력 중 빈 문자열일 수 있어 문자열로
 // 들고 있다가 제출 시점에 숫자로 바꾼다.
 export interface MenuDraft {
   category: MenuCategory;
   description: string;
   name: string;
+  options: MenuOptionDraft[];
   price: string;
   separateCharge: boolean;
 }
@@ -14,14 +21,25 @@ export const emptyMenuDraft: MenuDraft = {
   category: "MAIN",
   description: "",
   name: "",
+  options: [],
   price: "",
   separateCharge: false,
 };
+
+export const emptyMenuOptionDraft: MenuOptionDraft = { label: "", priceDelta: "" };
+
+// 서버가 받는 옵션 한도 (PUB-A5·A6).
+export const MAX_MENU_OPTIONS = 10;
+export const MAX_MENU_OPTION_LABEL_LENGTH = 50;
 
 export const toMenuDraft = (menu: BoothMenuItem): MenuDraft => ({
   category: menu.category,
   description: menu.description ?? "",
   name: menu.name,
+  options: menu.options.map((option) => ({
+    label: option.label,
+    priceDelta: String(option.priceDelta),
+  })),
   price: String(menu.price),
   separateCharge: menu.separateCharge,
 });
@@ -50,6 +68,32 @@ const parsePrice = (price: string): number | null => {
   return parsed < MIN_MENU_PRICE ? null : parsed;
 };
 
+// 할인 옵션("메인 메뉴와 함께 주문 시 −1,000원")이 있어 음수를 받는다. 휴대폰
+// 자판이 마이너스 기호(−)를 넣는 경우도 하이픈과 같게 읽는다.
+const parsePriceDelta = (priceDelta: string): number | null => {
+  const trimmed = priceDelta.trim().replace(/^−/, "-");
+
+  return /^-?\d+$/.test(trimmed) ? Number(trimmed) : null;
+};
+
+const getMenuOptionError = (option: MenuOptionDraft): string | null => {
+  const label = option.label.trim();
+
+  if (!label) {
+    return "옵션 이름을 입력해 주세요.";
+  }
+
+  if (label.length > MAX_MENU_OPTION_LABEL_LENGTH) {
+    return `옵션 이름은 ${MAX_MENU_OPTION_LABEL_LENGTH}자 이내로 입력해 주세요.`;
+  }
+
+  if (parsePriceDelta(option.priceDelta) === null) {
+    return "옵션 가격은 숫자로 입력해 주세요. 할인이면 앞에 -를 붙여요.";
+  }
+
+  return null;
+};
+
 // 서버에 보내기 전에 막을 입력이면 문구를, 괜찮으면 null을 준다. 분류는
 // select로만 고르므로 여기서 검사하지 않는다.
 export const getMenuDraftError = (draft: MenuDraft): string | null => {
@@ -57,17 +101,48 @@ export const getMenuDraftError = (draft: MenuDraft): string | null => {
     return "메뉴 이름을 입력해 주세요.";
   }
 
-  if (parsePrice(draft.price) === null) {
+  const price = parsePrice(draft.price);
+
+  if (price === null) {
     return "가격은 1원 이상의 숫자로 입력해 주세요.";
+  }
+
+  if (draft.options.length > MAX_MENU_OPTIONS) {
+    return `옵션은 ${MAX_MENU_OPTIONS}개까지 추가할 수 있어요.`;
+  }
+
+  for (const option of draft.options) {
+    const optionError = getMenuOptionError(option);
+
+    if (optionError) {
+      return optionError;
+    }
+  }
+
+  // 할인 옵션을 모두 체크해도 한 개 값이 0원 아래로 내려가면 안 된다.
+  const totalDiscount = draft.options.reduce(
+    (sum, option) => sum + Math.min(0, parsePriceDelta(option.priceDelta) ?? 0),
+    0,
+  );
+
+  if (price + totalDiscount < 0) {
+    return "할인 옵션을 모두 골라도 가격이 0원 아래로 내려가지 않게 해 주세요.";
   }
 
   return null;
 };
 
+export interface MenuOptionPayload {
+  label: string;
+  priceDelta: number;
+}
+
 export interface MenuDraftPayload {
   category: MenuCategory;
   description: string | null;
   name: string;
+  // 수정(PUB-A6)에서 보내면 기존 옵션 목록을 통째로 바꾼다. 빈 배열은 모두 지운다.
+  options: MenuOptionPayload[];
   price: number;
   separateCharge: boolean;
 }
@@ -85,6 +160,10 @@ export const toMenuDraftPayload = (draft: MenuDraft): MenuDraftPayload | null =>
     category: draft.category,
     description: draft.description.trim() || null,
     name: draft.name.trim(),
+    options: draft.options.map((option) => ({
+      label: option.label.trim(),
+      priceDelta: parsePriceDelta(option.priceDelta) ?? 0,
+    })),
     price,
     separateCharge: draft.separateCharge,
   };

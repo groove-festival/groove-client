@@ -21,6 +21,7 @@ const order = (over: Partial<AdminOrder>): AdminOrder => ({
       itemId: 1001,
       menuId: 4,
       name: "닭발",
+      options: [],
       price: 15_000,
       quantity: 1,
       servedAt: null,

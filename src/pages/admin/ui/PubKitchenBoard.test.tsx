@@ -119,6 +119,38 @@ describe("PubKitchenBoard", () => {
     expect(items[1]).toHaveTextContent("콜라 1");
   });
 
+  it("shows the ticked options so the kitchen cooks the right thing", async () => {
+    respondWith([
+      orderBody({
+        orderId: 1,
+        items: [
+          {
+            lineAmount: 12_000,
+            menuId: 30,
+            options: [{ label: "불파게티로 변경", priceDelta: 1_000 }],
+            orderItemId: 300,
+            menuName: "짜파게티",
+            quantity: 2,
+            unitPrice: 6_000,
+          },
+        ],
+      }),
+    ]);
+    renderBoard();
+
+    const totals = await screen.findByRole("region", { name: "만들 메뉴 합계" });
+    expect(within(totals).getByRole("listitem")).toHaveTextContent(
+      "짜파게티 (불파게티로 변경) 2",
+    );
+    const ticket = screen.getByRole("article", { name: "1번 테이블 조리 주문" });
+    expect(ticket).toHaveTextContent("짜파게티 (불파게티로 변경) ×2");
+
+    fireEvent.click(within(ticket).getByRole("button", { expanded: false }));
+    expect(
+      screen.getByRole("button", { name: "짜파게티 (불파게티로 변경) 서빙 체크" }),
+    ).toBeInTheDocument();
+  });
+
   it("keeps depositor names and amounts off the kitchen screen", async () => {
     respondWith([orderBody({ orderId: 1 })]);
     renderBoard();

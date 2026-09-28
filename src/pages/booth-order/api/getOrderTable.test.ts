@@ -90,11 +90,59 @@ describe("getOrderTable", () => {
 
     const { booth } = await getOrderTable("elec-eh", "table-a");
 
-    expect(booth.separateChargeItem?.name).toBe("상차림비");
+    expect(booth.separateChargeItems.map((item) => item.name)).toEqual(["상차림비"]);
     expect(booth.menuSections.map((section) => section.id)).toEqual(["set", "drink"]);
     expect(booth.menuSections.flatMap((section) => section.items)).not.toContainEqual(
       expect.objectContaining({ separateCharge: true }),
     );
+  });
+
+  it("keeps every separate charge, not just the first", async () => {
+    // 1인·테이블당 상차림비를 나누거나 연합 주막이 학과별로 받는 경우가 있다.
+    httpGet.mockResolvedValueOnce(
+      envelope({
+        ...tableBody,
+        pub: {
+          ...tableBody.pub,
+          menus: [
+            ...tableBody.pub.menus,
+            menu(4, { name: "상차림비 (테이블)", price: 5_000, separateCharge: true }),
+          ],
+        },
+      }),
+    );
+
+    const { booth } = await getOrderTable("elec-eh", "table-a");
+
+    expect(booth.separateChargeItems.map((item) => item.name)).toEqual([
+      "상차림비",
+      "상차림비 (테이블)",
+    ]);
+  });
+
+  it("maps menu options and treats a server without options as none", async () => {
+    httpGet.mockResolvedValueOnce(
+      envelope({
+        ...tableBody,
+        pub: {
+          ...tableBody.pub,
+          menus: [
+            menu(5, {
+              options: [{ optionId: 51, label: "불파게티로 변경", priceDelta: 1_000 }],
+            }),
+            menu(6),
+          ],
+        },
+      }),
+    );
+
+    const { booth } = await getOrderTable("elec-eh", "table-a");
+    const [withOptions, withoutOptions] = booth.menuSections[0].items;
+
+    expect(withOptions.options).toEqual([
+      { id: 51, label: "불파게티로 변경", priceDelta: 1_000 },
+    ]);
+    expect(withoutOptions.options).toEqual([]);
   });
 
   it("maps the menu response fields onto the booth menu shape", async () => {

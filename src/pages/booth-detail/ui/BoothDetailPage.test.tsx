@@ -163,6 +163,7 @@ describe("BoothMenuItemRow", () => {
       imageUrl: null,
       isSoldOut: false,
       name: "김치전",
+      options: [],
       price: 15_000,
       separateCharge: false,
     };
@@ -182,5 +183,32 @@ describe("BoothMenuItemRow", () => {
 
     expect(screen.getByText("품절")).toBeInTheDocument();
     expect(screen.queryByText("15,000원")).not.toBeInTheDocument();
+  });
+
+  it("lists menu options compactly with a signed price", () => {
+    render(
+      <ul>
+        <BoothMenuItemRow
+          item={{
+            category: "MAIN",
+            description: null,
+            id: 2,
+            imageUrl: null,
+            isSoldOut: false,
+            name: "짜파게티",
+            options: [
+              { id: 1, label: "불파게티로 변경", priceDelta: 1_000 },
+              { id: 2, label: "메인 메뉴와 함께 주문 시", priceDelta: -1_000 },
+            ],
+            price: 5_000,
+            separateCharge: false,
+          }}
+        />
+      </ul>,
+    );
+
+    const options = screen.getByRole("list", { name: "짜파게티 옵션" });
+    expect(options).toHaveTextContent("+1,000원 불파게티로 변경");
+    expect(options).toHaveTextContent("−1,000원 메인 메뉴와 함께 주문 시");
   });
 });
