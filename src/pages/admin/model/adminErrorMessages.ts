@@ -104,6 +104,16 @@ export function pubAccountErrorMessage(error: unknown): string {
   );
 }
 
+export function pubProfileErrorMessage(error: unknown): string {
+  if (error instanceof ApiError && error.code === "C001") {
+    return "주막 이름은 1~40자, 소개는 200자까지 적을 수 있어요.";
+  }
+  return (
+    adminAccessErrorMessage(error) ??
+    "주막 정보 저장에 실패했어요. 잠시 후 다시 시도해 주세요."
+  );
+}
+
 export function orderStatusErrorMessage(error: unknown): string {
   if (error instanceof ApiError && error.code === "PUB001") {
     return "지금 상태에서는 바꿀 수 없는 주문이에요. 목록을 새로고침해 주세요.";

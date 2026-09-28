@@ -10,6 +10,7 @@ export type {
   BoothMenuResponseBody,
 } from "./api/getBoothDetail";
 export { getBooths, useBooths } from "./api/getBooths";
+export { boothQueryKeys } from "./api/queryKeys";
 export {
   createBoothMenuSections,
   createBoothOrderMenus,
@@ -27,9 +28,14 @@ export type {
 export {
   boothFilterOptions,
   collegeCodes,
+  compareByOperatingDay,
   formatBoothDepartments,
+  formatOperatingDate,
+  getBoothDepartmentParts,
   getBoothDisplayName,
+  getBoothSpotCode,
   getBoothsByFilter,
+  isDayShiftBooth,
 } from "./model/booths";
 export type {
   Booth,
@@ -37,6 +43,9 @@ export type {
   BoothFilter,
   BoothStatus,
   College,
+  FestivalDay,
 } from "./model/booths";
 export { BoothCard } from "./ui/BoothCard";
+export { BoothDepartments } from "./ui/BoothDepartments";
 export { BoothDetailHeader } from "./ui/BoothDetailHeader";
+export { OperatingDateBadge } from "./ui/OperatingDateBadge";

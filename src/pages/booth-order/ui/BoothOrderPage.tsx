@@ -307,7 +307,18 @@ export default function BoothOrderPage() {
     return <NetworkErrorFallback onReload={() => void tableQuery.refetch()} />;
   }
 
-  const { booth, isOrderable } = tableQuery.data;
+  const { booth, isOrderable, tableCode: resolvedTableCode } = tableQuery.data;
+
+  // 한 자리를 날짜별로 나눠 쓰는 주막은 QR 스티커 한 장을 이틀 내내 쓴다. 서버가 오늘
+  // 여는 학과의 테이블로 옮겨 답하면 주소를 그쪽으로 바꿔, 주문·장바구니가 그 주막에 붙게 한다.
+  if (booth.boothCode !== boothId || resolvedTableCode !== tableCode) {
+    return (
+      <Navigate
+        replace
+        to={`/pub/${encodeURIComponent(booth.boothCode)}/${encodeURIComponent(resolvedTableCode)}`}
+      />
+    );
+  }
 
   // 준비중이면 주문 UI 대신 같은 내용을 읽기 전용으로 보여주는 주막 정보
   // 페이지로 보낸다 (PUB-3 orderable=false).

@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { Navigate, useParams } from "react-router";
 
-import { BoothDetailHeader, isBoothNotFound, useBoothDetail } from "@/entities/booth";
+import {
+  BoothDetailHeader,
+  compareByOperatingDay,
+  getBoothSpotCode,
+  isBoothNotFound,
+  useBoothDetail,
+  useBooths,
+} from "@/entities/booth";
 import { LoadingFallback, NetworkErrorFallback } from "@/shared/ui";
 
 import { BoothMenuSection } from "./BoothMenuSection";
@@ -17,13 +24,39 @@ const hasDismissedQrNotice = () => {
   }
 };
 
+// 주막 코드가 아니라 자리 코드로 들어온 주소(예: 사범대 학과를 날짜별로 나누기 전의
+// /pub/edu-kor-home)는 그 자리에서 오늘 여는 주막으로 보낸다. 목록(PUB-1)이 이미
+// 오늘 쉬는 학과를 빼 주므로 남은 것 중 먼저 여는 쪽이다. 없는 자리면 목록으로 간다.
+const SpotRedirect = ({ spotCode }: { spotCode: string }) => {
+  const boothsQuery = useBooths();
+
+  if (boothsQuery.isPending) {
+    return <LoadingFallback />;
+  }
+
+  const target = (boothsQuery.data ?? [])
+    .filter((booth) => getBoothSpotCode(booth) === spotCode)
+    .sort(compareByOperatingDay)[0];
+
+  return (
+    <Navigate
+      replace
+      to={target ? `/pub/${encodeURIComponent(target.boothCode)}` : "/pub"}
+    />
+  );
+};
+
 export default function BoothDetailPage() {
   const { boothId } = useParams<{ boothId: string }>();
   const boothQuery = useBoothDetail(boothId);
   const [isQrNoticeOpen, setIsQrNoticeOpen] = useState(() => !hasDismissedQrNotice());
 
-  if (!boothId || (boothQuery.isError && isBoothNotFound(boothQuery.error))) {
+  if (!boothId) {
     return <Navigate replace to="/pub" />;
+  }
+
+  if (boothQuery.isError && isBoothNotFound(boothQuery.error)) {
+    return <SpotRedirect key={boothId} spotCode={boothId} />;
   }
 
   if (boothQuery.isPending) {

@@ -41,16 +41,17 @@ const NO_ZONES: ExperienceZone[] = [];
 
 interface PubBoothMapProps {
   booths: readonly Booth[];
-  // 지금 색을 남길 주막들. 단일 주막을 고르면 그 한 곳만 들어온다.
+  // 지금 색을 남길 자리(spotCode)들. 한 자리를 고르면 그 한 곳만 들어온다.
   highlightedCodes: ReadonlySet<string>;
-  // 회색이어도 새로 선택할 수 있는 주막들. 현재 구역·단대 필터 결과다.
+  // 회색이어도 새로 선택할 수 있는 자리들. 현재 구역·단대 필터 결과다.
   selectableCodes: ReadonlySet<string>;
   // 구역은 목록도 함께 거르므로 고른 값을 쓰는 쪽이 들고 있는다.
   selectedArea: PubMapArea;
-  selectedBoothCode: string | null;
+  selectedSpotCode: string | null;
   onSelectArea: (area: PubMapArea) => void;
-  // 색이 들어온 주막을 눌렀을 때. 목록과 지도에 그 주막만 남긴다.
-  onSelectBooth: (boothCode: string) => void;
+  // 색이 들어온 자리를 눌렀을 때. 목록과 지도에 그 자리 주막만 남긴다. 축제 전의
+  // 사범대 자리는 날짜별 두 학과가 함께 남는다.
+  onSelectSpot: (spotCode: string) => void;
 }
 
 // 주막 지도. 캠퍼스 전체 배치도 위에서 주막만 필터와 선택에 따라 색을 켜고 끄고,
@@ -61,10 +62,10 @@ export const PubBoothMap = ({
   booths,
   highlightedCodes,
   onSelectArea,
-  onSelectBooth,
+  onSelectSpot,
   selectableCodes,
   selectedArea,
-  selectedBoothCode,
+  selectedSpotCode,
 }: PubBoothMapProps) => {
   // 처음 화면은 initialView 가 잡으므로, 버튼이나 장소를 누른 뒤에만 지도를 옮긴다.
   const [focus, setFocus] = useState<CampusMapView | null>(null);
@@ -80,10 +81,10 @@ export const PubBoothMap = ({
 
   // 목록에서 주막 선택이 풀리면 지도의 주막 핀 선택도 푼다. Effect로 하면 한
   // 번 그린 뒤 다시 그리므로, 선택이 바뀐 렌더에서 바로 맞춘다.
-  const [prevSelectedBoothCode, setPrevSelectedBoothCode] = useState(selectedBoothCode);
-  if (prevSelectedBoothCode !== selectedBoothCode) {
-    setPrevSelectedBoothCode(selectedBoothCode);
-    if (selectedBoothCode === null && selectedPlaceId?.startsWith("pub:")) {
+  const [prevSelectedSpotCode, setPrevSelectedSpotCode] = useState(selectedSpotCode);
+  if (prevSelectedSpotCode !== selectedSpotCode) {
+    setPrevSelectedSpotCode(selectedSpotCode);
+    if (selectedSpotCode === null && selectedPlaceId?.startsWith("pub:")) {
       setSelectedPlaceId(null);
     }
   }
@@ -98,7 +99,7 @@ export const PubBoothMap = ({
     if (place?.group === "pub") {
       setSelectedPlaceId(place.id);
       setFocus({ ...place.point, width: getPlaceFocusWidth(place, SELECTED_WIDTH) });
-      onSelectBooth(place.boothCode);
+      onSelectSpot(place.spotCode);
       return;
     }
 
@@ -148,11 +149,11 @@ export const PubBoothMap = ({
         initialView={{ ...getPubsCenter(booths), width: AREA_WIDTH.all }}
         labelWidths={LABEL_WIDTHS}
         isLit={(place) =>
-          place.group === "pub" ? highlightedCodes.has(place.boothCode) : true
+          place.group === "pub" ? highlightedCodes.has(place.spotCode) : true
         }
         keepDimmedPubNumbers
         isSelectable={(place) =>
-          place.group === "pub" ? selectableCodes.has(place.boothCode) : true
+          place.group === "pub" ? selectableCodes.has(place.spotCode) : true
         }
         onSelect={selectPlace}
         places={places}
