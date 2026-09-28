@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 
 import { httpClient } from "@/shared/api";
 
-import { PubOrderBoard } from "./PubOrderBoard";
+import { PubPaymentBoard } from "./PubPaymentBoard";
 
 vi.mock("@/shared/api", async () => {
   const actual = await vi.importActual<Record<string, unknown>>("@/shared/api");
@@ -44,7 +44,7 @@ const renderBoard = () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  return render(<PubOrderBoard />, { wrapper });
+  return render(<PubPaymentBoard />, { wrapper });
 };
 
 const groupSection = (title: string) => screen.findByRole("region", { name: title });
@@ -53,8 +53,8 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe("PubOrderBoard", () => {
-  it("separates orders awaiting payment confirmation from confirmed ones", async () => {
+describe("PubPaymentBoard", () => {
+  it("keeps only orders awaiting payment confirmation, split by depositor submission", async () => {
     respondWith([
       orderBody({ orderId: 1, status: "PENDING_DEPOSIT", tableNumber: 1 }),
       orderBody({
@@ -80,8 +80,8 @@ describe("PubOrderBoard", () => {
     expect(within(pending).getByText("1번 테이블")).toBeInTheDocument();
     expect(within(pending).getByText("미제출")).toBeInTheDocument();
 
-    const paid = await groupSection("결제완료 · 조리 중");
-    expect(within(paid).getByText("3번 테이블")).toBeInTheDocument();
+    // 결제완료된 주문은 주방 화면으로 넘어간다.
+    expect(screen.queryByText("3번 테이블")).not.toBeInTheDocument();
   });
 
   it("offers only the transitions PUB-A9 accepts for each status", async () => {
@@ -142,7 +142,9 @@ describe("PubOrderBoard", () => {
   });
 
   it("asks before canceling, since cancellation cannot be undone", async () => {
-    respondWith([orderBody({ orderId: 7, status: "PAID" })]);
+    respondWith([
+      orderBody({ orderId: 7, status: "DEPOSIT_CLAIMED", depositorName: "김입금" }),
+    ]);
     renderBoard();
 
     fireEvent.click(await screen.findByRole("button", { name: "주문취소" }));
@@ -161,22 +163,6 @@ describe("PubOrderBoard", () => {
         status: "CANCELED",
       }),
     );
-  });
-
-  it("folds finished orders away so the working queue stays readable", async () => {
-    respondWith([
-      orderBody({ orderId: 8, status: "COMPLETED", tableNumber: 8 }),
-      orderBody({ orderId: 9, status: "CANCELED", tableNumber: 9 }),
-    ]);
-    renderBoard();
-
-    const toggle = await screen.findByRole("button", { name: /완료·취소된 주문 2건/ });
-    expect(screen.queryByText("8번 테이블")).not.toBeInTheDocument();
-
-    fireEvent.click(toggle);
-
-    expect(screen.getByText("8번 테이블")).toBeInTheDocument();
-    expect(screen.getByText("9번 테이블")).toBeInTheDocument();
   });
 
   it("folds long-unpaid orders without canceling them", async () => {
