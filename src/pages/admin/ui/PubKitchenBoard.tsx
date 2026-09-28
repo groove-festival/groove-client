@@ -8,6 +8,7 @@ import { orderItemServedErrorMessage } from "../model/adminErrorMessages";
 import {
   type AdminOrder,
   type AdminOrderLine,
+  formatAdminLineName,
   partitionAdminOrders,
 } from "../model/adminOrder";
 import { summarizeKitchenMenus } from "../model/kitchenQueue";
@@ -29,6 +30,19 @@ const tableBlockClasses: Record<WaitTone, string> = {
   waiting: "bg-[#ffb020] text-[#0b0b0b]",
   late: "bg-[#ff5c5c] text-[#0b0b0b]",
 };
+
+// 옵션은 조리법이 바뀌는 신호다 ("불파게티로 변경"). 메뉴 이름과 색을 달리해
+// 바쁜 주방에서도 놓치지 않게 한다. 이미 나간 줄은 전체를 흐리게 둔다.
+const KitchenLineName = ({ line }: { line: AdminOrderLine }) => (
+  <>
+    {line.name}
+    {line.options.length > 0 && (
+      <span className={line.servedAt ? "" : "text-[#ffd84d]"}>
+        {` (${line.options.map((option) => option.label).join(", ")})`}
+      </span>
+    )}
+  </>
+);
 
 interface KitchenTicketProps {
   isPending: boolean;
@@ -105,9 +119,9 @@ const KitchenTicket = ({
                 className={`break-keep ${
                   line.servedAt ? "text-[#6a6a6a] line-through" : "text-[#fcfcfc]"
                 }`}
-                key={line.menuId}
+                key={line.itemId}
               >
-                {line.name}{" "}
+                <KitchenLineName line={line} />{" "}
                 <span className={line.servedAt ? "" : "text-[#00ffff]"}>
                   ×{line.quantity}
                 </span>
@@ -136,13 +150,13 @@ const KitchenTicket = ({
             const isServed = line.servedAt !== null;
 
             return (
-              <li className="flex items-center gap-2 py-1 pl-1" key={line.menuId}>
+              <li className="flex items-center gap-2 py-1 pl-1" key={line.itemId}>
                 <span
                   className={`min-w-0 flex-1 truncate text-sm font-semibold ${
                     isServed ? "text-[#6a6a6a] line-through" : "text-[#fcfcfc]"
                   }`}
                 >
-                  {line.name} ×{line.quantity}
+                  <KitchenLineName line={line} /> ×{line.quantity}
                 </span>
                 {isServed && line.servedAt && (
                   <span className="shrink-0 text-[11px] text-[#7a7a7a] tabular-nums">
@@ -150,7 +164,7 @@ const KitchenTicket = ({
                   </span>
                 )}
                 <button
-                  aria-label={`${line.name} ${isServed ? "서빙 체크 해제" : "서빙 체크"}`}
+                  aria-label={`${formatAdminLineName(line)} ${isServed ? "서빙 체크 해제" : "서빙 체크"}`}
                   aria-pressed={isServed}
                   className={`flex h-9 w-[72px] shrink-0 items-center justify-center gap-1 rounded-lg text-xs font-bold ${
                     isServed
@@ -225,7 +239,7 @@ export const PubKitchenBoard = ({ visibleTables }: PubKitchenBoardProps) => {
             {menuTotals.map((menu) => (
               <li
                 className="rounded-lg bg-[#262626] px-2.5 py-1.5 text-sm font-semibold text-[#fcfcfc]"
-                key={menu.menuId}
+                key={`${menu.menuId}:${menu.name}`}
               >
                 {menu.name} <span className="text-[#00ffff]">{menu.quantity}</span>
               </li>

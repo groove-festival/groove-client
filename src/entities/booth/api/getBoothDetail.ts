@@ -7,12 +7,20 @@ import { createBoothMenuSections } from "../model/boothDetail";
 import type { Booth } from "../model/booths";
 import { boothQueryKeys } from "./queryKeys";
 
+export interface BoothMenuOptionResponseBody {
+  label: string;
+  optionId: number;
+  priceDelta: number;
+}
+
 export interface BoothMenuResponseBody {
   category: MenuCategory;
   description: string | null;
   imageUrl: string | null;
   menuId: number;
   name: string;
+  // 옵션은 나중에 붙은 필드라 옵션이 없는 서버는 아예 보내지 않는다.
+  options?: BoothMenuOptionResponseBody[] | null;
   price: number;
   separateCharge: boolean;
   soldOut: boolean;
@@ -31,6 +39,11 @@ export const toBoothMenuItem = (menu: BoothMenuResponseBody): BoothMenuItem => (
   imageUrl: menu.imageUrl,
   isSoldOut: menu.soldOut,
   name: menu.name,
+  options: (menu.options ?? []).map((option) => ({
+    id: option.optionId,
+    label: option.label,
+    priceDelta: option.priceDelta,
+  })),
   price: menu.price,
   separateCharge: menu.separateCharge,
 });

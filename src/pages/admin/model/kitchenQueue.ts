@@ -1,9 +1,10 @@
-import { type AdminOrder } from "./adminOrder";
+import { type AdminOrder, formatAdminLineName } from "./adminOrder";
 
 // 주방 화면은 결제완료(PAID) 주문만 본다. 결제완료가 조리 착수 신호이고
 // (FR-1.8), 입금 확인 전 주문을 조리하면 돈을 못 받은 음식이 나간다.
 export interface KitchenMenuTotal {
   menuId: number;
+  // 옵션을 붙인 이름. 같은 메뉴라도 옵션이 다르면 만드는 법이 달라 따로 센다.
   name: string;
   quantity: number;
 }
@@ -12,7 +13,7 @@ export interface KitchenMenuTotal {
 // 몰아 굽는 메뉴가 많아 주문 카드를 하나씩 세는 것보다 이 합계를 먼저 본다.
 // 많이 밀린 메뉴가 위로 온다.
 export const summarizeKitchenMenus = (orders: AdminOrder[]): KitchenMenuTotal[] => {
-  const totals = new Map<number, KitchenMenuTotal>();
+  const totals = new Map<string, KitchenMenuTotal>();
 
   for (const order of orders) {
     for (const line of order.lines) {
@@ -21,16 +22,14 @@ export const summarizeKitchenMenus = (orders: AdminOrder[]): KitchenMenuTotal[] 
         continue;
       }
 
-      const total = totals.get(line.menuId);
+      const name = formatAdminLineName(line);
+      const key = `${line.menuId}:${name}`;
+      const total = totals.get(key);
 
       if (total) {
         total.quantity += line.quantity;
       } else {
-        totals.set(line.menuId, {
-          menuId: line.menuId,
-          name: line.name,
-          quantity: line.quantity,
-        });
+        totals.set(key, { menuId: line.menuId, name, quantity: line.quantity });
       }
     }
   }

@@ -13,11 +13,18 @@ import { getOrderScreen, isAwaitingDepositorName, type PlacedOrder } from "./ord
 import { createToast, type ToastState } from "./toast";
 import {
   buildOrderLines,
+  canPlaceOrder,
   changeQuantity,
+  clearOptions,
   createInitialCart,
   getOrderTotal,
+  getQuantity,
   hasSelectedMenu,
+  hasSelectedSeparateCharge,
   type OrderCart,
+  type OrderOptionSelection,
+  toCreateOrderItems,
+  toggleOption,
 } from "./orderCart";
 import {
   getOrderStorageKey,
@@ -32,6 +39,7 @@ export const useBoothOrder = (booth: BoothOrderDetail, tableCode: string) => {
   const queryClient = useQueryClient();
   const storageKey = getOrderStorageKey(booth.boothCode, tableCode);
   const [cart, setCart] = useState<OrderCart>(() => createInitialCart(booth));
+  const [selectedOptions, setSelectedOptions] = useState<OrderOptionSelection>({});
   const [orderRef, setOrderRef] = useState<StoredOrderRef | null>(() =>
     readStoredOrderRef(storageKey),
   );
@@ -44,7 +52,10 @@ export const useBoothOrder = (booth: BoothOrderDetail, tableCode: string) => {
   const orderQuery = useOrder(target);
   const order = orderQuery.data ?? null;
 
-  const resetCart = () => setCart(createInitialCart(booth));
+  const resetCart = () => {
+    setCart(createInitialCart(booth));
+    setSelectedOptions({});
+  };
 
   const saveOrderRef = (nextOrderRef: StoredOrderRef | null) => {
     writeStoredOrderRef(storageKey, nextOrderRef);
@@ -86,16 +97,13 @@ export const useBoothOrder = (booth: BoothOrderDetail, tableCode: string) => {
     }
   };
 
-  const cartLines = buildOrderLines(booth, cart);
+  const cartLines = buildOrderLines(booth, cart, selectedOptions);
 
   const placeOrderMutation = useMutation({
     mutationFn: () =>
       createOrder({
         boothCode: booth.boothCode,
-        items: cartLines.map((line) => ({
-          menuId: line.menuId,
-          quantity: line.quantity,
-        })),
+        items: toCreateOrderItems(cartLines),
         tableCode,
       }),
     onSuccess: ({ order: createdOrder, orderToken }) => {
@@ -121,9 +129,12 @@ export const useBoothOrder = (booth: BoothOrderDetail, tableCode: string) => {
   });
 
   return {
-    canPlaceOrder: hasSelectedMenu(booth, cart),
+    canPlaceOrder: canPlaceOrder(booth, cart),
     cart,
     cartTotal: getOrderTotal(cartLines),
+    hasSelectedMenu: hasSelectedMenu(booth, cart),
+    hasSelectedSeparateCharge: hasSelectedSeparateCharge(booth, cart),
+    selectedOptions,
     errorToast,
     hasIncompleteOrder: isAwaitingDepositorName(order) && !isTransferDialogOpen,
     isPlacingOrder: placeOrderMutation.isPending,
@@ -131,8 +142,16 @@ export const useBoothOrder = (booth: BoothOrderDetail, tableCode: string) => {
     isTransferDialogOpen,
     order,
     screen: getOrderScreen(order),
-    changeItemQuantity: (item: BoothMenuItem, delta: number) =>
-      setCart((current) => changeQuantity(current, item, delta)),
+    changeItemQuantity: (item: BoothMenuItem, delta: number) => {
+      const nextCart = changeQuantity(booth, cart, item, delta);
+
+      setCart(nextCart);
+      if (getQuantity(nextCart, item) === 0) {
+        setSelectedOptions((current) => clearOptions(current, item));
+      }
+    },
+    toggleItemOption: (item: BoothMenuItem, optionId: number) =>
+      setSelectedOptions((current) => toggleOption(current, item, optionId)),
     dismissErrorToast: () => setErrorToast(null),
     placeOrder: () => {
       setErrorToast(null);

@@ -5,6 +5,7 @@ import {
   type AdminOrderStatus,
   type AdminPaymentMethod,
   adminOrderStatusLabels,
+  formatAdminLineName,
 } from "./adminOrder";
 
 // 주막 정산용 엑셀. 서버 주문 목록(PUB-A8) 한 번으로 만들 수 있어 서버에
@@ -187,7 +188,9 @@ const buildOrdersSheet = (orders: AdminOrder[]): OrderWorkbookSheet => ({
       paymentMethodLabels[order.paymentMethod],
       order.depositorName ?? "",
       toKstDateTimeText(order.depositorSubmittedAt),
-      order.lines.map((line) => `${line.name} × ${line.quantity}`).join(", "),
+      order.lines
+        .map((line) => `${formatAdminLineName(line)} × ${line.quantity}`)
+        .join(", "),
       quantityOf(order),
       won(order.totalPrice),
       isRevenueOrder(order) ? "O" : "",
@@ -217,7 +220,7 @@ const buildLinesSheet = (orders: AdminOrder[]): OrderWorkbookSheet => ({
         toKstDateTimeText(order.orderedAt),
         order.tableNumber,
         adminOrderStatusLabels[order.status],
-        line.name,
+        formatAdminLineName(line),
         won(line.price),
         line.quantity,
         won(line.price * line.quantity),
@@ -239,7 +242,8 @@ interface MenuTally extends Tally {
 
 const buildMenuSheet = (revenueOrders: AdminOrder[]): OrderWorkbookSheet => {
   // 메뉴 이름은 주문 당시 스냅샷이다. 축제 중에 이름을 고쳤어도 같은 메뉴로
-  // 묶이도록 menuId로 모으고, 이름은 가장 최근 주문의 것을 쓴다.
+  // 묶이도록 menuId로 모으고, 이름은 가장 최근 주문의 것을 쓴다. 옵션은 메뉴를
+  // 가르지 않는다 — 매출에는 옵션 가격 차이가 단가에 이미 들어가 있다.
   const menus = new Map<number, MenuTally>();
 
   for (const order of revenueOrders) {

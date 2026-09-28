@@ -106,6 +106,35 @@ describe("PubPaymentBoard", () => {
     expect(screen.queryByRole("button", { name: "서빙완료" })).not.toBeInTheDocument();
   });
 
+  it("lists the ticked options with each line when the row opens", async () => {
+    respondWith([
+      orderBody({
+        orderId: 2,
+        status: "DEPOSIT_CLAIMED",
+        depositorName: "김입금",
+        items: [
+          {
+            lineAmount: 4_000,
+            menuId: 30,
+            options: [{ label: "메인 메뉴와 함께 주문했어요", priceDelta: -1_000 }],
+            orderItemId: 300,
+            menuName: "짜파게티",
+            quantity: 1,
+            unitPrice: 4_000,
+          },
+        ],
+        totalAmount: 4_000,
+      }),
+    ]);
+    renderBoard();
+
+    fireEvent.click(await screen.findByRole("button", { expanded: false }));
+
+    expect(
+      screen.getByText("짜파게티 (메인 메뉴와 함께 주문했어요) × 1"),
+    ).toBeInTheDocument();
+  });
+
   it("never offers to mark a deposit as claimed — only the guest can do that", async () => {
     respondWith([orderBody({ orderId: 1, status: "PENDING_DEPOSIT" })]);
     renderBoard();

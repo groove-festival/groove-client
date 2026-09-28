@@ -7,6 +7,7 @@ import {
   type AdminOrderStatus,
   adminOrderStatusLabels,
   adminOrderTransitionLabels,
+  formatAdminLineName,
   getAllowedAdminOrderTransitions,
 } from "../model/adminOrder";
 import { minutesSince, type WaitThresholds, waitToneOf } from "../model/orderTiming";
@@ -141,9 +142,9 @@ export const PubOrderRow = ({
         >
           <ul className="flex flex-col gap-0.5 text-xs text-[#d4d4d4]">
             {order.lines.map((line) => (
-              <li className="flex justify-between gap-2" key={line.menuId}>
-                <span className="truncate">
-                  {line.name} × {line.quantity}
+              <li className="flex justify-between gap-2" key={line.itemId}>
+                <span className="min-w-0 break-keep">
+                  {formatAdminLineName(line)} × {line.quantity}
                 </span>
                 <span className="shrink-0 text-[#a2a2a2] tabular-nums">
                   {formatWon(line.price * line.quantity)}

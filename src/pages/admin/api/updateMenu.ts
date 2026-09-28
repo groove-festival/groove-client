@@ -16,6 +16,8 @@ export interface UpdateMenuRequestBody {
   category?: MenuCategory;
   description?: string | null;
   name?: string;
+  // 보내면 기존 옵션 목록을 통째로 바꾼다. 빈 배열은 옵션을 모두 지운다.
+  options?: { label: string; priceDelta: number }[];
   price?: number;
   separateCharge?: boolean;
   soldOut?: boolean;

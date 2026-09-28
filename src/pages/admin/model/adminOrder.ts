@@ -7,11 +7,19 @@ export type AdminOrderStatus =
 
 export type AdminPaymentMethod = "TRANSFER" | "CASH";
 
+// 손님이 체크한 메뉴 옵션. 주문 당시의 이름·가격 차이 스냅샷이다.
+export interface AdminOrderLineOption {
+  label: string;
+  priceDelta: number;
+}
+
 export interface AdminOrderLine {
   // PUB-A14로 항목별 서빙을 체크할 때 쓰는 주문 항목 ID.
   itemId: number;
   menuId: number;
   name: string;
+  options: AdminOrderLineOption[];
+  // 옵션 가격 차이까지 더한 한 개 값.
   price: number;
   quantity: number;
   // 직원이 이 항목을 자리에 가져다준 시각. 아직이면 null.
@@ -30,6 +38,14 @@ export interface AdminOrder {
   tableNumber: number;
   totalPrice: number;
 }
+
+// 메뉴 이름 뒤에 옵션을 붙여 적는다 ("짜파게티 (불파게티로 변경)"). 옵션은
+// 손님 자율 체크라 직원이 보고 조리·확인해야 하므로, 주문을 보여주는 모든
+// 화면과 정산 파일이 같은 표기를 쓴다.
+export const formatAdminLineName = (line: Pick<AdminOrderLine, "name" | "options">) =>
+  line.options.length
+    ? `${line.name} (${line.options.map((option) => option.label).join(", ")})`
+    : line.name;
 
 // 관리자용 문구. 손님 화면은 "입금 대기 / 입금 확인 중 …"으로 띄어 쓰지만
 // 관리자 화면은 붙여 쓴다 (FR-1.8-0).

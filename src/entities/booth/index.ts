@@ -6,17 +6,20 @@ export {
 } from "./api/getBoothDetail";
 export type {
   BoothDetailResponseBody,
+  BoothMenuOptionResponseBody,
   BoothMenuResponseBody,
 } from "./api/getBoothDetail";
 export { getBooths, useBooths } from "./api/getBooths";
 export {
   createBoothMenuSections,
   createBoothOrderMenus,
+  formatMenuOptionPriceDelta,
   menuCategories,
 } from "./model/boothDetail";
 export type {
   BoothDetail,
   BoothMenuItem,
+  BoothMenuOption,
   BoothMenuSection,
   BoothOrderDetail,
   MenuCategory,
