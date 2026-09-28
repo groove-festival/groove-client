@@ -51,6 +51,7 @@ jobs:
               --build-arg SENTRY_AUTH_TOKEN=__SENTRY_AUTH_TOKEN__ \
               --build-arg SENTRY_ORG=__SENTRY_ORG__ \
               --build-arg SENTRY_PROJECT=__SENTRY_PROJECT__ \
+              --build-arg VITE_GOOGLE_CLIENT_ID=__VITE_GOOGLE_CLIENT_ID__ \
               -t $REGISTRY/$ORG_LC/$IMAGE_NAME:latest \
               -t $REGISTRY/$ORG_LC/$IMAGE_NAME:$BUILD_DATE \
               .
@@ -64,6 +65,7 @@ jobs:
               --build-arg SENTRY_AUTH_TOKEN=__SENTRY_AUTH_TOKEN__ \
               --build-arg SENTRY_ORG=__SENTRY_ORG__ \
               --build-arg SENTRY_PROJECT=__SENTRY_PROJECT__ \
+              --build-arg VITE_GOOGLE_CLIENT_ID=__VITE_GOOGLE_CLIENT_ID__ \
             -t $REGISTRY/$ORG_LC/$IMAGE_NAME:dev \
             .
           fi
