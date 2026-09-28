@@ -8,10 +8,14 @@ export type AdminOrderStatus =
 export type AdminPaymentMethod = "TRANSFER" | "CASH";
 
 export interface AdminOrderLine {
+  // PUB-A14로 항목별 서빙을 체크할 때 쓰는 주문 항목 ID.
+  itemId: number;
   menuId: number;
   name: string;
   price: number;
   quantity: number;
+  // 직원이 이 항목을 자리에 가져다준 시각. 아직이면 null.
+  servedAt: string | null;
 }
 
 export interface AdminOrder {

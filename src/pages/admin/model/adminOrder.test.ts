@@ -16,7 +16,16 @@ const order = (over: Partial<AdminOrder>): AdminOrder => ({
   depositorName: null,
   depositorSubmittedAt: null,
   id: 1,
-  lines: [{ menuId: 4, name: "닭발", price: 15_000, quantity: 1 }],
+  lines: [
+    {
+      itemId: 1001,
+      menuId: 4,
+      name: "닭발",
+      price: 15_000,
+      quantity: 1,
+      servedAt: null,
+    },
+  ],
   orderedAt: minutesAgo(1),
   paymentMethod: "TRANSFER",
   status: "PENDING_DEPOSIT",

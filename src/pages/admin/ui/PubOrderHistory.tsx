@@ -16,6 +16,7 @@ import {
   orderWorkbookFileName,
 } from "../model/orderWorkbook";
 import { numberOrdersByArrival } from "../model/orderTiming";
+import { filterOrdersByTables } from "../model/tableFilter";
 import { useOrderStatusChange } from "../model/useOrderStatusChange";
 import { OrderCancelDialog } from "./OrderCancelDialog";
 import { OrderStatusError } from "./OrderStatusError";
@@ -39,6 +40,8 @@ type ExportState = "idle" | "working" | "failed";
 
 interface PubOrderHistoryProps {
   pubName: string;
+  // 담당 테이블 필터. 목록에만 적용하고 매출 요약·엑셀은 주막 전체 기준이다.
+  visibleTables: number[];
 }
 
 const sumAmount = (orders: AdminOrder[]): number =>
@@ -46,7 +49,7 @@ const sumAmount = (orders: AdminOrder[]): number =>
 
 // 지난 주문을 상태별로 찾아보고, 정산용 엑셀을 내려받는 화면. 결제완료 뒤의
 // 취소처럼 입금 확인·주방 화면에서 하지 않는 처리도 여기서 한다.
-export const PubOrderHistory = ({ pubName }: PubOrderHistoryProps) => {
+export const PubOrderHistory = ({ pubName, visibleTables }: PubOrderHistoryProps) => {
   const orders = useAdminOrders();
   const statusChange = useOrderStatusChange();
   const [filter, setFilter] = useState<HistoryFilter>("ALL");
@@ -61,7 +64,7 @@ export const PubOrderHistory = ({ pubName }: PubOrderHistoryProps) => {
   const orderNumbers = numberOrdersByArrival(allOrders);
 
   // 최신 주문이 위로 온다. 방금 처리한 주문을 찾는 용도가 가장 많다.
-  const visibleOrders = allOrders
+  const visibleOrders = filterOrdersByTables(allOrders, visibleTables)
     .filter((order) => filter === "ALL" || order.status === filter)
     .sort((left, right) => right.orderedAt.localeCompare(left.orderedAt));
 
@@ -88,7 +91,9 @@ export const PubOrderHistory = ({ pubName }: PubOrderHistoryProps) => {
   return (
     <section aria-label="주문 내역" className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3 px-1">
-        <p className="text-xs text-[#a2a2a2]">매출은 결제완료·완료 주문만 합쳐요.</p>
+        <p className="text-xs text-[#a2a2a2]">
+          주막 전체 기준이에요. 매출은 결제완료·완료 주문만 합쳐요.
+        </p>
         <button
           className="h-10 shrink-0 rounded-xl bg-[#00b37e] px-3 text-xs font-bold text-[#0b0b0b] disabled:opacity-60"
           disabled={!orders.isSuccess || exportState === "working"}

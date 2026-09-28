@@ -18,7 +18,14 @@ const orderBody = (over: Record<string, unknown>) => ({
   depositorName: null,
   depositorSubmittedAt: null,
   items: [
-    { lineAmount: 15_000, menuId: 4, menuName: "닭발", quantity: 1, unitPrice: 15_000 },
+    {
+      lineAmount: 15_000,
+      menuId: 4,
+      orderItemId: 40,
+      menuName: "닭발",
+      quantity: 1,
+      unitPrice: 15_000,
+    },
   ],
   orderId: 1,
   orderedAt: new Date().toISOString(),
@@ -44,7 +51,7 @@ const renderBoard = () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  return render(<PubPaymentBoard />, { wrapper });
+  return render(<PubPaymentBoard visibleTables={[]} />, { wrapper });
 };
 
 const groupSection = (title: string) => screen.findByRole("region", { name: title });
@@ -214,5 +221,38 @@ describe("PubPaymentBoard", () => {
     expect(rows[0]).toHaveTextContent("12분 전");
     expect(rows[1]).toHaveTextContent("#2");
     expect(rows[1]).toHaveTextContent("2분 전");
+  });
+
+  it("uses the pub-wide arrival number even when only some tables are shown", async () => {
+    const minutesAgo = (minutes: number) =>
+      new Date(Date.now() - minutes * 60_000).toISOString();
+    respondWith([
+      orderBody({
+        orderId: 1,
+        status: "DEPOSIT_CLAIMED",
+        depositorName: "일번",
+        orderedAt: minutesAgo(9),
+        tableNumber: 1,
+      }),
+      orderBody({
+        orderId: 2,
+        status: "DEPOSIT_CLAIMED",
+        depositorName: "사번",
+        orderedAt: minutesAgo(3),
+        tableNumber: 4,
+      }),
+    ]);
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PubPaymentBoard visibleTables={[4]} />
+      </QueryClientProvider>,
+    );
+
+    const row = await screen.findByRole("article", { name: "주문 2번 · 4번 테이블" });
+    expect(row).toHaveTextContent("#2");
+    expect(screen.queryByText("일번")).not.toBeInTheDocument();
   });
 });

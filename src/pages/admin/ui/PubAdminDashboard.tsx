@@ -1,9 +1,12 @@
 import { useSearchParams } from "react-router";
 
 import { useAdminOrders } from "../api/getAdminOrders";
-import { useAdminPub } from "../api/getAdminPub";
+import { type AdminPub, useAdminPub } from "../api/getAdminPub";
+import { useAdminTables } from "../api/getAdminTables";
 import { partitionAdminOrders } from "../model/adminOrder";
 import { type PubAdminView, pubAdminViews } from "../model/pubAdminView";
+import { filterOrdersByTables } from "../model/tableFilter";
+import { useTableFilter } from "../model/useTableFilter";
 import { AdminHeader } from "./AdminHeader";
 import { PubAccountForm } from "./PubAccountForm";
 import { PubAdminTabBar } from "./PubAdminTabBar";
@@ -14,29 +17,43 @@ import { PubOrderHistory } from "./PubOrderHistory";
 import { PubPaymentBoard } from "./PubPaymentBoard";
 import { PubStatusToggle } from "./PubStatusToggle";
 import { PubTableManager } from "./PubTableManager";
+import { TableFilterSheet } from "./TableFilterSheet";
 
 const VIEW_PARAM = "view";
 
 const toView = (value: string | null): PubAdminView =>
   pubAdminViews.find((view) => view.id === value)?.id ?? "payment";
 
-// 주막은 입금 확인하는 사람과 조리하는 사람이 다른 기기로 같은 계정을 쓴다.
-// 화면을 탭으로 가르고 주소(?view=kitchen)에 남겨, 주방 기기는 그 주소를 열어
-// 두기만 하면 된다. 메뉴·테이블처럼 축제 전에 한 번 세팅하는 것은 설정 탭으로
-// 뺀다.
-export const PubAdminDashboard = () => {
-  const pub = useAdminPub();
+interface PubAdminWorkspaceProps {
+  pub: AdminPub;
+}
+
+// 주막 정보를 받은 뒤의 화면. 담당 테이블 필터가 주막 코드별로 저장되므로
+// 주막을 안 뒤에야 만든다.
+const PubAdminWorkspace = ({ pub }: PubAdminWorkspaceProps) => {
   const orders = useAdminOrders();
+  const tables = useAdminTables();
+  const tableFilter = useTableFilter(pub.booth.boothCode);
   const [searchParams, setSearchParams] = useSearchParams();
   const activeView = toView(searchParams.get(VIEW_PARAM));
   const activeLabel = pubAdminViews.find((view) => view.id === activeView)?.label;
+  const allOrders = orders.data ?? [];
 
-  // 탭에 처리할 건수를 붙여 다른 탭에 있어도 새 주문이 들어온 것을 안다.
-  const board = partitionAdminOrders(orders.data ?? [], orders.dataUpdatedAt);
+  // 탭 배지도 담당 테이블 기준이다. 남의 테이블 주문으로 배지가 뜨면 알바생이
+  // 자기 일인 줄 알고 들어가 본다.
+  const board = partitionAdminOrders(
+    filterOrdersByTables(allOrders, tableFilter.tables),
+    orders.dataUpdatedAt,
+  );
   const badgeCounts: Partial<Record<PubAdminView, number>> = {
     payment: board.depositClaimed.length + board.pendingDeposit.length,
     kitchen: board.paid.length,
   };
+
+  // 테이블 목록을 못 받았으면 주문에 나온 테이블로라도 고르게 한다.
+  const tableNumbers = tables.data
+    ? tables.data.map((table) => table.tableNumber).sort((a, b) => a - b)
+    : [...new Set(allOrders.map((order) => order.tableNumber))].sort((a, b) => a - b);
 
   const selectView = (view: PubAdminView) => {
     setSearchParams(
@@ -51,6 +68,66 @@ export const PubAdminDashboard = () => {
     // 중간에서 시작해 무엇이 먼저인지 놓친다.
     window.scrollTo({ top: 0 });
   };
+
+  return (
+    <>
+      <section
+        aria-labelledby={`pub-admin-${activeView}-tab`}
+        className="flex flex-col gap-3"
+        id={`pub-admin-${activeView}`}
+        role="tabpanel"
+      >
+        <div className="flex items-center justify-between gap-3 px-1">
+          <h2 className="text-lg font-bold text-[#fcfcfc]">{activeLabel}</h2>
+          {activeView !== "settings" && (
+            <TableFilterSheet
+              onChange={tableFilter.changeTables}
+              tableNumbers={tableNumbers}
+              tables={tableFilter.tables}
+            />
+          )}
+        </div>
+        {activeView === "payment" && (
+          <PubPaymentBoard visibleTables={tableFilter.tables} />
+        )}
+        {activeView === "kitchen" && (
+          <PubKitchenBoard visibleTables={tableFilter.tables} />
+        )}
+        {activeView === "history" && (
+          <PubOrderHistory
+            pubName={pub.booth.name}
+            visibleTables={tableFilter.tables}
+          />
+        )}
+        {activeView === "settings" && (
+          <>
+            <PubStatusToggle
+              hasAccount={pub.account !== null}
+              status={pub.booth.status}
+            />
+            <PubAccountForm account={pub.account} />
+            <PubMenuManager menus={pub.menus} />
+            <PubMenuBoardImageField menuBoardImageUrl={pub.menuBoardImageUrl} />
+            <PubTableManager boothCode={pub.booth.boothCode} pubName={pub.booth.name} />
+          </>
+        )}
+      </section>
+
+      <PubAdminTabBar
+        activeView={activeView}
+        badgeCounts={badgeCounts}
+        onSelect={selectView}
+      />
+    </>
+  );
+};
+
+// 주막은 입금 확인하는 사람과 조리하는 사람이 다른 기기로 같은 계정을 쓴다.
+// 화면을 탭으로 가르고 주소(?view=kitchen)에 남겨, 주방 기기는 그 주소를 열어
+// 두기만 하면 된다. 메뉴·테이블처럼 축제 전에 한 번 세팅하는 것은 설정 탭으로
+// 뺀다.
+export const PubAdminDashboard = () => {
+  const pub = useAdminPub();
 
   return (
     <div className="min-h-dvh">
@@ -74,47 +151,8 @@ export const PubAdminDashboard = () => {
           </div>
         )}
 
-        {pub.data && (
-          <section
-            aria-labelledby={`pub-admin-${activeView}-tab`}
-            className="flex flex-col gap-3"
-            id={`pub-admin-${activeView}`}
-            role="tabpanel"
-          >
-            <h2 className="px-1 text-lg font-bold text-[#fcfcfc]">{activeLabel}</h2>
-            {activeView === "payment" && <PubPaymentBoard />}
-            {activeView === "kitchen" && <PubKitchenBoard />}
-            {activeView === "history" && (
-              <PubOrderHistory pubName={pub.data.booth.name} />
-            )}
-            {activeView === "settings" && (
-              <>
-                <PubStatusToggle
-                  hasAccount={pub.data.account !== null}
-                  status={pub.data.booth.status}
-                />
-                <PubAccountForm account={pub.data.account} />
-                <PubMenuManager menus={pub.data.menus} />
-                <PubMenuBoardImageField
-                  menuBoardImageUrl={pub.data.menuBoardImageUrl}
-                />
-                <PubTableManager
-                  boothCode={pub.data.booth.boothCode}
-                  pubName={pub.data.booth.name}
-                />
-              </>
-            )}
-          </section>
-        )}
+        {pub.data && <PubAdminWorkspace pub={pub.data} />}
       </div>
-
-      {pub.data && (
-        <PubAdminTabBar
-          activeView={activeView}
-          badgeCounts={badgeCounts}
-          onSelect={selectView}
-        />
-      )}
     </div>
   );
 };

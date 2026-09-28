@@ -24,7 +24,14 @@ const orderBody = (over: Record<string, unknown>) => ({
   depositorName: null,
   depositorSubmittedAt: null,
   items: [
-    { lineAmount: 15_000, menuId: 4, menuName: "닭발", quantity: 1, unitPrice: 15_000 },
+    {
+      lineAmount: 15_000,
+      menuId: 4,
+      orderItemId: 40,
+      menuName: "닭발",
+      quantity: 1,
+      unitPrice: 15_000,
+    },
   ],
   orderId: 1,
   orderedAt: "2026-10-01T18:00:00",
@@ -50,7 +57,9 @@ const renderHistory = () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  return render(<PubOrderHistory pubName="컴퓨터학부 주막" />, { wrapper });
+  return render(<PubOrderHistory pubName="컴퓨터학부 주막" visibleTables={[]} />, {
+    wrapper,
+  });
 };
 
 afterEach(() => {

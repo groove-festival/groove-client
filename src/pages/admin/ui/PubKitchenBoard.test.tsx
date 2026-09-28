@@ -18,7 +18,14 @@ const orderBody = (over: Record<string, unknown>) => ({
   depositorName: "김입금",
   depositorSubmittedAt: null,
   items: [
-    { lineAmount: 15_000, menuId: 4, menuName: "닭발", quantity: 1, unitPrice: 15_000 },
+    {
+      lineAmount: 15_000,
+      menuId: 4,
+      orderItemId: 40,
+      menuName: "닭발",
+      quantity: 1,
+      unitPrice: 15_000,
+    },
   ],
   orderId: 1,
   orderedAt: new Date().toISOString(),
@@ -44,7 +51,7 @@ const renderBoard = () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  return render(<PubKitchenBoard />, { wrapper });
+  return render(<PubKitchenBoard visibleTables={[]} />, { wrapper });
 };
 
 afterEach(() => {
@@ -75,6 +82,7 @@ describe("PubKitchenBoard", () => {
           {
             lineAmount: 30_000,
             menuId: 4,
+            orderItemId: 40,
             menuName: "닭발",
             quantity: 2,
             unitPrice: 15_000,
@@ -82,6 +90,7 @@ describe("PubKitchenBoard", () => {
           {
             lineAmount: 2_000,
             menuId: 9,
+            orderItemId: 90,
             menuName: "콜라",
             quantity: 1,
             unitPrice: 2_000,
@@ -94,6 +103,7 @@ describe("PubKitchenBoard", () => {
           {
             lineAmount: 15_000,
             menuId: 4,
+            orderItemId: 40,
             menuName: "닭발",
             quantity: 1,
             unitPrice: 15_000,
@@ -146,5 +156,79 @@ describe("PubKitchenBoard", () => {
     renderBoard();
 
     expect(await screen.findByText("조리할 주문이 없어요.")).toBeInTheDocument();
+  });
+
+  it("checks menus one by one so the next server sees what already went out", async () => {
+    respondWith([
+      orderBody({
+        orderId: 7,
+        items: [
+          {
+            lineAmount: 15_000,
+            menuId: 4,
+            orderItemId: 40,
+            menuName: "닭발",
+            quantity: 1,
+            unitPrice: 15_000,
+          },
+          {
+            lineAmount: 2_000,
+            menuId: 9,
+            orderItemId: 90,
+            menuName: "콜라",
+            quantity: 1,
+            unitPrice: 2_000,
+            servedAt: "2026-10-01T18:05:00",
+          },
+        ],
+      }),
+    ]);
+    // 응답이 늦어도 화면은 누르는 즉시 바뀌어야 한다.
+    httpPatch.mockReturnValue(new Promise(() => {}));
+    renderBoard();
+
+    const ticket = await screen.findByRole("article", { name: "1번 테이블 조리 주문" });
+    expect(ticket).toHaveTextContent("1/2 나감");
+    // 이미 나간 콜라는 만들 메뉴 합계에서 빠진다.
+    const totals = screen.getByRole("region", { name: "만들 메뉴 합계" });
+    expect(totals).toHaveTextContent("닭발 1");
+    expect(totals).not.toHaveTextContent("콜라");
+
+    fireEvent.click(within(ticket).getByRole("button", { expanded: false }));
+    expect(
+      within(ticket).getByRole("button", { name: "콜라 서빙 체크 해제" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(within(ticket).getByRole("button", { name: "닭발 서빙 체크" }));
+
+    await waitFor(() =>
+      expect(httpPatch).toHaveBeenCalledWith("/admin/pub/orders/7/items/40/served", {
+        served: true,
+      }),
+    );
+    expect(
+      await within(ticket).findByRole("button", { name: "닭발 서빙 체크 해제" }),
+    ).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("shows only the tables the server looks after", async () => {
+    respondWith([
+      orderBody({ orderId: 1, tableNumber: 1 }),
+      orderBody({ orderId: 2, tableNumber: 3 }),
+    ]);
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PubKitchenBoard visibleTables={[3]} />
+      </QueryClientProvider>,
+    );
+
+    expect(
+      await screen.findByRole("article", { name: "3번 테이블 조리 주문" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("article", { name: "1번 테이블 조리 주문" }),
+    ).not.toBeInTheDocument();
   });
 });

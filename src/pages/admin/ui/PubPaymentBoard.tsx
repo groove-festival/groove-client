@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useAdminOrders } from "../api/getAdminOrders";
 import { type AdminOrder, partitionAdminOrders } from "../model/adminOrder";
 import { numberOrdersByArrival, PAYMENT_WAIT } from "../model/orderTiming";
+import { filterOrdersByTables } from "../model/tableFilter";
 import { useOrderStatusChange } from "../model/useOrderStatusChange";
 import { OrderCancelDialog } from "./OrderCancelDialog";
 import { OrderStatusError } from "./OrderStatusError";
@@ -43,7 +44,12 @@ const OrderGroup = ({
 
 // 결제 확인 전 주문만 모아 통장과 대조하는 화면이다 (FR-1.8-1, FR-1.8-2).
 // 결제완료로 올린 주문은 주방 화면으로 넘어가고, 끝난 주문은 주문 내역에서 본다.
-export const PubPaymentBoard = () => {
+export interface PubPaymentBoardProps {
+  // 담당 테이블 필터. 비어 있으면 전체.
+  visibleTables: number[];
+}
+
+export const PubPaymentBoard = ({ visibleTables }: PubPaymentBoardProps) => {
   const orders = useAdminOrders();
   const statusChange = useOrderStatusChange();
   const [isStaleOpen, setIsStaleOpen] = useState(false);
@@ -53,8 +59,14 @@ export const PubPaymentBoard = () => {
   // 받아온 적이 없으면 0이라 아무것도 오래된 것으로 치지 않는다.
   const now = orders.dataUpdatedAt;
   const allOrders = orders.data ?? [];
-  const board = partitionAdminOrders(allOrders, now);
+  const board = partitionAdminOrders(
+    filterOrdersByTables(allOrders, visibleTables),
+    now,
+  );
+  // 순번은 필터와 상관없이 주막 전체 기준이다. 필터를 바꿔도 같은 주문은 같은 번호다.
   const orderNumbers = numberOrdersByArrival(allOrders);
+  // 필터가 걸린 채 비어 있으면 주문이 없는 게 아니라 안 보이는 것일 수 있다.
+  const scope = visibleTables.length > 0 ? "담당 테이블에는 " : "";
 
   const renderRow = (order: AdminOrder) => (
     <PubOrderRow
@@ -81,7 +93,7 @@ export const PubPaymentBoard = () => {
 
       <OrderGroup
         description="먼저 들어온 순 ↓"
-        emptyLabel="대조할 주문이 없어요."
+        emptyLabel={`${scope}대조할 주문이 없어요.`}
         orders={board.depositClaimed}
         renderRow={renderRow}
         title="입금확인중"
@@ -89,7 +101,7 @@ export const PubPaymentBoard = () => {
 
       <OrderGroup
         description="입금자명 미제출 · 현금"
-        emptyLabel="입금 대기 중인 주문이 없어요."
+        emptyLabel={`${scope}입금 대기 중인 주문이 없어요.`}
         orders={board.pendingDeposit}
         renderRow={renderRow}
         title="입금대기"

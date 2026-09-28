@@ -20,6 +20,13 @@ const statusToneClasses: Record<AdminOrderStatus, string> = {
   CANCELED: "bg-[#3a3a3a] text-[#a2a2a2]",
 };
 
+// 결제완료(돈 확인)와 서빙완료(음식 전달)는 누르는 사람과 뜻이 달라 색으로
+// 구분한다. 결제완료는 결제완료 배지와 같은 초록, 서빙완료는 보라.
+const primaryButtonClasses: Partial<Record<AdminOrderStatus, string>> = {
+  PAID: "bg-[#00b37e] text-[#0b0b0b]",
+  COMPLETED: "bg-[#5d00ff] text-[#fcfcfc]",
+};
+
 export interface PubOrderRowProps {
   isPending: boolean;
   now: number;
@@ -117,7 +124,7 @@ export const PubOrderRow = ({
 
         {primary && (
           <button
-            className="h-11 shrink-0 rounded-lg bg-[#5d00ff] px-3 text-xs font-bold text-[#fcfcfc] disabled:opacity-60"
+            className={`h-11 shrink-0 rounded-lg px-3 text-xs font-bold disabled:opacity-60 ${primaryButtonClasses[primary]}`}
             disabled={isPending}
             onClick={() => onChangeStatus(order, primary)}
             type="button"

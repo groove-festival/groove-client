@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router";
 
 import { httpClient } from "@/shared/api";
@@ -56,7 +56,13 @@ const renderDashboard = (initialEntry = "/admin") => {
                 orderBody(2, "PAID"),
                 orderBody(3, "PAID"),
               ]
-            : pubBody,
+            : url === "/admin/pub/tables"
+              ? [1, 2, 3].map((n) => ({
+                  orderPath: "",
+                  tableCode: `t${n}`,
+                  tableNumber: n,
+                }))
+              : pubBody,
         error: null,
       },
       status: 200,
@@ -83,6 +89,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.clearAllMocks();
+  window.localStorage.clear();
 });
 
 describe("PubAdminDashboard", () => {
@@ -120,5 +127,21 @@ describe("PubAdminDashboard", () => {
       await screen.findByRole("tab", { name: /2\s*건\s*주방/ }),
     ).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /1\s*건\s*입금 확인/ })).toBeInTheDocument();
+  });
+
+  it("narrows the working views to the tables this device looks after", async () => {
+    renderDashboard();
+
+    fireEvent.click(await screen.findByRole("button", { name: /담당 테이블/ }));
+    const sheet = screen.getByRole("dialog", { name: "담당 테이블" });
+    fireEvent.click(await within(sheet).findByRole("button", { name: "2번 테이블" }));
+    fireEvent.click(within(sheet).getByRole("button", { name: "1개 테이블 적용" }));
+
+    expect(
+      screen.getByRole("button", { name: /담당 테이블:\s*2번/ }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /1\s*건\s*주방/ })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /입금 확인/ })).not.toHaveTextContent(/\d/);
+    expect(window.localStorage.getItem("groove:pub-admin:tables:PUB-A01")).toBe("[2]");
   });
 });

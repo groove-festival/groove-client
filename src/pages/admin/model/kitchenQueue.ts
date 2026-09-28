@@ -8,7 +8,7 @@ export interface KitchenMenuTotal {
   quantity: number;
 }
 
-// 조리 중인 주문 전체에서 메뉴별로 몇 개를 만들어야 하는지 합친다. 한 번에
+// 조리 중인 주문 전체에서 아직 나가지 않은 메뉴가 몇 개인지 합친다. 한 번에
 // 몰아 굽는 메뉴가 많아 주문 카드를 하나씩 세는 것보다 이 합계를 먼저 본다.
 // 많이 밀린 메뉴가 위로 온다.
 export const summarizeKitchenMenus = (orders: AdminOrder[]): KitchenMenuTotal[] => {
@@ -16,6 +16,11 @@ export const summarizeKitchenMenus = (orders: AdminOrder[]): KitchenMenuTotal[] 
 
   for (const order of orders) {
     for (const line of order.lines) {
+      // 이미 나간 항목은 더 만들 필요가 없다.
+      if (line.servedAt) {
+        continue;
+      }
+
       const total = totals.get(line.menuId);
 
       if (total) {
