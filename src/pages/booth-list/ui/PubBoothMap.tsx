@@ -86,6 +86,16 @@ export const PubBoothMap = ({
     if (selectedBoothCode === null && selectedPlaceId?.startsWith("pub:")) {
       setSelectedPlaceId(null);
     }
+    if (selectedBoothCode !== null) {
+      const place = places.find(
+        (candidate) =>
+          candidate.group === "pub" && candidate.boothCode === selectedBoothCode,
+      );
+      if (place) {
+        setSelectedPlaceId(place.id);
+        setFocus({ ...place.point, width: getPlaceFocusWidth(place, SELECTED_WIDTH) });
+      }
+    }
   }
 
   const selectArea = (area: PubMapArea) => {

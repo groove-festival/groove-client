@@ -123,6 +123,7 @@ const BoothListPage = () => {
   // 지도에서 고른 주막. 구역·단대 필터 위에 한 주막만 남기는 추가 필터다.
   const [selectedBoothCode, setSelectedBoothCode] = useState<string | null>(null);
   const [isNoticeOpen, setIsNoticeOpen] = useState(() => !hasDismissedNotice());
+  const pubMapRef = useRef<HTMLDivElement>(null);
   const selectedBoothResultRef = useRef<HTMLLIElement>(null);
   const boothsQuery = useBooths();
   const booths = useMemo(() => boothsQuery.data ?? [], [boothsQuery.data]);
@@ -185,9 +186,29 @@ const BoothListPage = () => {
     });
   };
 
-  const selectBoothFromMap = (boothCode: string) => {
+  const selectBooth = (boothCode: string) => {
     setSelectedBoothCode(boothCode);
+  };
+
+  const selectBoothFromMap = (boothCode: string) => {
+    selectBooth(boothCode);
     window.setTimeout(scrollToSelectedBoothResult, 0);
+  };
+
+  const scrollToPubMap = () => {
+    const prefersReducedMotion = window.matchMedia?.(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    pubMapRef.current?.scrollIntoView({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      block: "start",
+    });
+  };
+
+  const selectBoothFromCard = (boothCode: string) => {
+    selectBooth(boothCode);
+    window.setTimeout(scrollToPubMap, 0);
   };
 
   if (boothsQuery.isPending) {
@@ -218,15 +239,17 @@ const BoothListPage = () => {
 
   return (
     <main className="relative min-h-dvh bg-[#1c1c1c] px-4 pt-[100px] text-[#fcfcfc]">
-      <PubBoothMap
-        booths={booths}
-        highlightedCodes={highlightedCodes}
-        onSelectArea={changeArea}
-        onSelectBooth={selectBoothFromMap}
-        selectableCodes={selectableCodes}
-        selectedArea={selectedArea}
-        selectedBoothCode={selectedBoothCode}
-      />
+      <div ref={pubMapRef}>
+        <PubBoothMap
+          booths={booths}
+          highlightedCodes={highlightedCodes}
+          onSelectArea={changeArea}
+          onSelectBooth={selectBoothFromMap}
+          selectableCodes={selectableCodes}
+          selectedArea={selectedArea}
+          selectedBoothCode={selectedBoothCode}
+        />
+      </div>
 
       <div className="mt-4 flex min-w-0 items-center gap-2">
         <BoothFilterMenu onChange={changeFilter} selectedFilter={selectedFilter} />
@@ -271,7 +294,7 @@ const BoothListPage = () => {
           >
             <BoothCard
               booth={booth}
-              isSelected={booth.boothCode === selectedBoothCode}
+              onSelectLocation={() => selectBoothFromCard(booth.boothCode)}
               to={`/pub/${booth.boothCode}`}
             />
           </li>

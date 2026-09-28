@@ -14,6 +14,7 @@ vi.mock("@/shared/api", async () => {
 
 const httpGet = vi.mocked(httpClient.get);
 let scrollBy: ReturnType<typeof vi.fn>;
+let scrollIntoView: ReturnType<typeof vi.fn>;
 
 const booths = [
   {
@@ -76,7 +77,7 @@ const boothButton = (boothCode: string) =>
 const boothCard = (name: string) =>
   within(screen.getByRole("list", { name: /주막 목록$/ }))
     .getByText(name)
-    .closest("a");
+    .closest("[data-testid='booth-card']");
 
 const createQueryClient = () =>
   new QueryClient({
@@ -97,6 +98,7 @@ const renderPage = () => {
 beforeEach(() => {
   vi.clearAllMocks();
   scrollBy = vi.fn();
+  scrollIntoView = vi.fn();
   Object.defineProperty(window, "innerHeight", {
     configurable: true,
     value: 720,
@@ -104,6 +106,10 @@ beforeEach(() => {
   Object.defineProperty(window, "scrollBy", {
     configurable: true,
     value: scrollBy,
+  });
+  Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+    configurable: true,
+    value: scrollIntoView,
   });
   window.localStorage.clear();
   window.sessionStorage.clear();
@@ -125,10 +131,9 @@ describe("BoothListPage", () => {
     expect(await screen.findAllByTestId("booth-card")).toHaveLength(3);
     expect(screen.getByText("일렉트로닉 나이트")).toBeInTheDocument();
     expect(screen.getByText("전자공학부B • 디자인학과")).toBeInTheDocument();
-    expect(screen.getAllByTestId("booth-card")[0]).toHaveAttribute(
-      "href",
-      "/pub/elec-eh",
-    );
+    expect(
+      screen.getByRole("link", { name: "일렉트로닉 나이트 메뉴 보기" }),
+    ).toHaveAttribute("href", "/pub/elec-eh");
     expect(httpGet).toHaveBeenCalledWith("/pubs");
   });
 
@@ -145,7 +150,9 @@ describe("BoothListPage", () => {
     );
 
     fireEvent.click(await screen.findByRole("button", { name: "확인했습니다" }));
-    fireEvent.click((await screen.findAllByTestId("booth-card"))[0]);
+    fireEvent.click(
+      await screen.findByRole("link", { name: "일렉트로닉 나이트 메뉴 보기" }),
+    );
 
     expect(screen.getByText("주막 상세")).toBeInTheDocument();
   });
@@ -252,9 +259,7 @@ describe("BoothListPage", () => {
     );
 
     expect(screen.getAllByTestId("booth-card")).toHaveLength(1);
-    expect(screen.getByRole("link", { name: /일렉트로닉 나이트/ })).toHaveClass(
-      "border-[#cfff04]",
-    );
+    expect(boothCard("일렉트로닉 나이트")).toHaveClass("border-[#fcfcfc]");
     expect(screen.getAllByText("일렉트로닉 나이트")).toHaveLength(3);
     await waitFor(() =>
       expect(scrollBy).toHaveBeenCalledWith({
@@ -272,15 +277,26 @@ describe("BoothListPage", () => {
     expect(boothButton("elec-b-design")).toBeInTheDocument();
 
     fireEvent.click(
+      screen.getByRole("button", { name: "일렉트로닉 나이트 주막 위치 보기" }),
+    );
+
+    expect(screen.getAllByTestId("booth-card")).toHaveLength(1);
+    await waitFor(() =>
+      expect(scrollIntoView).toHaveBeenCalledWith({
+        behavior: "smooth",
+        block: "start",
+      }),
+    );
+    expect(isBoothLit("elec-eh")).toBe(true);
+
+    fireEvent.click(
       screen.getByRole("button", {
         name: "전자공학부B • 디자인학과 주막만 보기",
       }),
     );
 
     expect(screen.getAllByTestId("booth-card")).toHaveLength(1);
-    expect(screen.getByRole("link", { name: /전자공학부B • 디자인학과/ })).toHaveClass(
-      "border-[#cfff04]",
-    );
+    expect(boothCard("전자공학부B • 디자인학과")).toHaveClass("border-[#fcfcfc]");
     expect(screen.getAllByText("전자공학부B • 디자인학과")).toHaveLength(3);
     expect(
       screen.getByRole("button", {
@@ -295,7 +311,9 @@ describe("BoothListPage", () => {
         .closest("div"),
     ).toHaveClass("animate-booth-filter-chip-in");
     expect(
-      screen.getByRole("link", { name: /전자공학부B • 디자인학과/ }).closest("li"),
+      screen
+        .getByRole("button", { name: "전자공학부B • 디자인학과 주막 위치 보기" })
+        .closest("li"),
     ).toHaveClass("animate-booth-filter-result-in");
     expect(isBoothLit("elec-eh")).toBe(false);
     expect(boothButton("elec-eh")).toBeInTheDocument();
@@ -309,9 +327,7 @@ describe("BoothListPage", () => {
 
     // 주막 한 곳 선택만 풀리고, 학생주차장 구역 조건은 그대로 남는다.
     expect(screen.getAllByTestId("booth-card")).toHaveLength(2);
-    expect(screen.getByRole("link", { name: /일렉트로닉 나이트/ })).toHaveClass(
-      "border-[#fcfcfc]",
-    );
+    expect(boothCard("일렉트로닉 나이트")).toHaveClass("border-[#fcfcfc]");
     expect(isBoothLit("elec-b-design")).toBe(true);
     expect(
       screen.getByRole("button", { name: "지도에서 학생주차장 보기" }),
@@ -333,9 +349,7 @@ describe("BoothListPage", () => {
     expect(
       screen.getByRole("button", { name: "일렉트로닉 나이트 주막 필터 해제" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /일렉트로닉 나이트/ })).toHaveClass(
-      "border-[#cfff04]",
-    );
+    expect(boothCard("일렉트로닉 나이트")).toHaveClass("border-[#fcfcfc]");
 
     fireEvent.click(screen.getByRole("button", { name: "지도에서 전체 보기" }));
     expect(screen.getAllByTestId("booth-card")).toHaveLength(3);
@@ -418,7 +432,9 @@ describe("BoothListPage", () => {
     );
 
     fireEvent.click(await screen.findByRole("button", { name: "확인했습니다" }));
-    fireEvent.click((await screen.findAllByTestId("booth-card"))[0]);
+    fireEvent.click(
+      await screen.findByRole("link", { name: "일렉트로닉 나이트 메뉴 보기" }),
+    );
     fireEvent.click(screen.getByRole("link", { name: "주막 목록으로" }));
 
     expect(await screen.findAllByTestId("booth-card")).toHaveLength(3);
