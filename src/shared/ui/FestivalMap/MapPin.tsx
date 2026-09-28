@@ -4,9 +4,11 @@ import { MAP_SCALE_VARIABLE } from "./FestivalMap";
 import type { MapRatioPoint } from "./mapGeometry";
 
 // 핀과 지명 뱃지가 함께 쓰는 이름표 상자 (Figma 56:3765).
-// 그림자를 filter 로 주면 안쪽 backdrop-blur 가 먹지 않아 상자에만 건다.
+// 시안의 배경 흐림(backdrop-blur)은 넣지 않는다. iOS Safari 는 확대되는 지도 안에
+// backdrop-filter 가 있으면 지도를 확대 전 크기로 그려 늘려서 배치도가 뭉개진다.
+// 배경이 거의 불투명(0.92)이라 흐림이 빠져도 눈에 띄지 않는다.
 export const mapBadgeClassName =
-  "max-w-[240px] rounded-lg border border-[rgba(252,252,252,0.72)] bg-[rgba(28,28,28,0.92)] px-3 py-2 text-center text-sm leading-[1.35] font-semibold whitespace-normal break-keep text-[#fcfcfc] shadow-[0_4px_8px_rgba(0,0,0,0.5)] backdrop-blur-[3px]";
+  "max-w-[240px] rounded-lg border border-[rgba(252,252,252,0.72)] bg-[rgba(28,28,28,0.92)] px-3 py-2 text-center text-sm leading-[1.35] font-semibold whitespace-normal break-keep text-[#fcfcfc] shadow-[0_4px_8px_rgba(0,0,0,0.5)]";
 
 interface MapPinProps {
   // 핀 끝(아래 점)이 닿을 자리. FestivalMap 의 source 크기에 대한 비율이다.
