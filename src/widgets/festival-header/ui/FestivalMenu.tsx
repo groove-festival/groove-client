@@ -29,7 +29,7 @@ export const FestivalMenu = ({ isOpen, onClose }: FestivalMenuProps) => {
       role="dialog"
     >
       <div
-        className={`h-full w-full overflow-y-auto bg-[#1c1c1c] transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none ${
+        className={`h-full w-full [scrollbar-width:none] overflow-y-auto bg-[#1c1c1c] transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none [&::-webkit-scrollbar]:hidden ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
