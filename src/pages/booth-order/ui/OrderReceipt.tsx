@@ -1,5 +1,7 @@
 import { type ReactNode } from "react";
 
+import { formatMenuOptionPriceDelta } from "@/entities/booth";
+
 import { formatWon } from "../lib/formatWon";
 import { type OrderAccount, type PlacedOrder } from "../model/order";
 import { CopyAccountNumberButton } from "./CopyAccountNumberButton";
@@ -69,10 +71,19 @@ export const OrderReceipt = ({
           )}
           <ReceiptRow label="주문 메뉴">
             <ul className="list-disc pl-6">
-              {order.lines.map((line) => (
-                <li key={line.menuId}>
+              {order.lines.map((line, index) => (
+                <li key={`${line.menuId}-${index}`}>
                   {line.name}({formatWon(line.price)})
                   {line.quantity > 1 && ` x ${line.quantity}`}
+                  {line.options.length > 0 && (
+                    <ul className="text-sm leading-5 text-[#767676]">
+                      {line.options.map((option) => (
+                        <li key={option.label}>
+                          {`${option.label} (${formatMenuOptionPriceDelta(option.priceDelta)})`}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               ))}
             </ul>

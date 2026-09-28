@@ -3,8 +3,11 @@ import { type ApiEnvelope, httpClient, requestData } from "@/shared/api";
 import { type PlacedOrder } from "../model/order";
 import { type OrderResponseBody, toPlacedOrder } from "./orderResponse";
 
+// 옵션을 고르지 않은 줄은 optionIds를 아예 빼고 보낸다. 옵션을 모르는 서버에도
+// 그대로 통하는 본문이다.
 export interface CreateOrderItem {
   menuId: number;
+  optionIds?: number[];
   quantity: number;
 }
 

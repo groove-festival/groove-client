@@ -9,7 +9,7 @@ const createOrder = (overrides: Partial<PlacedOrder> = {}): PlacedOrder => ({
   account: { accountNumber: "000000-00-000000", bank: "국민", holder: "홍길동" },
   depositorName: null,
   id: 1,
-  lines: [{ menuId: 4, name: "닭발", price: 15_000, quantity: 1 }],
+  lines: [{ menuId: 4, name: "닭발", options: [], price: 15_000, quantity: 1 }],
   paymentMethod: "TRANSFER",
   pubName: "주막 이름",
   status: "PENDING_DEPOSIT",

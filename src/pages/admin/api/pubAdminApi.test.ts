@@ -102,9 +102,36 @@ describe("getAdminPub", () => {
         imageUrl: null,
         isSoldOut: false,
         name: "닭발",
+        options: [],
         price: 15_000,
         separateCharge: false,
       },
+    ]);
+  });
+
+  it("maps menu options with their signed price deltas", async () => {
+    httpGet.mockResolvedValueOnce(
+      envelope({
+        account: null,
+        menuBoardImageUrl: null,
+        menus: [
+          {
+            ...menuBody,
+            options: [
+              { optionId: 1, label: "불파게티로 변경", priceDelta: 1_000 },
+              { optionId: 2, label: "메인 메뉴와 함께 주문 시", priceDelta: -1_000 },
+            ],
+          },
+        ],
+        pub: { boothCode: "elec-eh", name: "일렉트로닉 나이트", status: "OPEN" },
+      }),
+    );
+
+    const pub = await getAdminPub();
+
+    expect(pub.menus[0].options).toEqual([
+      { id: 1, label: "불파게티로 변경", priceDelta: 1_000 },
+      { id: 2, label: "메인 메뉴와 함께 주문 시", priceDelta: -1_000 },
     ]);
   });
 });
@@ -154,6 +181,7 @@ describe("order endpoints", () => {
           itemId: 40,
           menuId: 4,
           name: "닭발",
+          options: [],
           price: 15_000,
           quantity: 2,
           servedAt: null,
@@ -164,6 +192,30 @@ describe("order endpoints", () => {
       status: "DEPOSIT_CLAIMED",
       tableNumber: 3,
       totalPrice: 30_000,
+    });
+  });
+
+  it("keeps the options the customer ticked on each line", async () => {
+    httpGet.mockResolvedValueOnce(
+      envelope([
+        {
+          ...orderBody,
+          items: [
+            {
+              ...orderBody.items[0],
+              options: [{ label: "불파게티로 변경", priceDelta: 1_000 }],
+              unitPrice: 16_000,
+            },
+          ],
+        },
+      ]),
+    );
+
+    const [order] = await getAdminOrders();
+
+    expect(order.lines[0]).toMatchObject({
+      options: [{ label: "불파게티로 변경", priceDelta: 1_000 }],
+      price: 16_000,
     });
   });
 
@@ -236,6 +288,36 @@ describe("menu endpoints", () => {
       price: 15_000,
       separateCharge: false,
     });
+  });
+
+  it("creates a menu with its options", async () => {
+    httpPost.mockResolvedValueOnce(envelope(menuBody));
+    const options = [
+      { label: "불파게티로 변경", priceDelta: 1_000 },
+      { label: "메인 메뉴와 함께 주문 시", priceDelta: -1_000 },
+    ];
+
+    await createMenu({
+      category: "MAIN",
+      description: null,
+      name: "짜파게티",
+      options,
+      price: 5_000,
+      separateCharge: false,
+    });
+
+    expect(httpPost).toHaveBeenCalledWith(
+      "/admin/pub/menus",
+      expect.objectContaining({ options }),
+    );
+  });
+
+  it("replaces the option list when an edit sends it", async () => {
+    httpPatch.mockResolvedValueOnce(envelope(menuBody));
+
+    await updateMenu({ menuId: 4, requestBody: { options: [] } });
+
+    expect(httpPatch).toHaveBeenCalledWith("/admin/pub/menus/4", { options: [] });
   });
 
   it("sends only the changed field so a sold-out toggle keeps the rest", async () => {

@@ -24,6 +24,7 @@ describe("summarizeKitchenMenus", () => {
             itemId: 1002,
             menuId: 1,
             name: "콜라",
+            options: [],
             price: 2_000,
             quantity: 1,
             servedAt: null,
@@ -32,6 +33,7 @@ describe("summarizeKitchenMenus", () => {
             itemId: 1003,
             menuId: 2,
             name: "닭발",
+            options: [],
             price: 15_000,
             quantity: 1,
             servedAt: null,
@@ -45,6 +47,7 @@ describe("summarizeKitchenMenus", () => {
             itemId: 1004,
             menuId: 2,
             name: "닭발",
+            options: [],
             price: 15_000,
             quantity: 2,
             servedAt: null,
@@ -67,6 +70,7 @@ describe("summarizeKitchenMenus", () => {
             itemId: 1,
             menuId: 1,
             name: "콜라",
+            options: [],
             price: 2_000,
             quantity: 2,
             servedAt: "2026-10-01T18:05:00",
@@ -75,6 +79,7 @@ describe("summarizeKitchenMenus", () => {
             itemId: 2,
             menuId: 2,
             name: "닭발",
+            options: [],
             price: 15_000,
             quantity: 1,
             servedAt: null,
@@ -88,5 +93,28 @@ describe("summarizeKitchenMenus", () => {
 
   it("returns nothing when there is nothing to cook", () => {
     expect(summarizeKitchenMenus([])).toEqual([]);
+  });
+
+  it("counts the same menu separately per option set", () => {
+    // 옵션이 다르면 만드는 법이 달라 주방이 따로 봐야 한다.
+    const line = (itemId: number, labels: string[], quantity: number) => ({
+      itemId,
+      menuId: 30,
+      name: "짜파게티",
+      options: labels.map((label) => ({ label, priceDelta: 1_000 })),
+      price: 5_000,
+      quantity,
+      servedAt: null,
+    });
+
+    const totals = summarizeKitchenMenus([
+      order({ id: 1, lines: [line(1, ["불파게티로 변경"], 2), line(2, [], 1)] }),
+      order({ id: 2, lines: [line(3, ["불파게티로 변경"], 1)] }),
+    ]);
+
+    expect(totals).toEqual([
+      { menuId: 30, name: "짜파게티 (불파게티로 변경)", quantity: 3 },
+      { menuId: 30, name: "짜파게티", quantity: 1 },
+    ]);
   });
 });

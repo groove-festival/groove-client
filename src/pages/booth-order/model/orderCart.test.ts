@@ -2,11 +2,17 @@ import { type BoothMenuItem, type BoothOrderDetail } from "@/entities/booth";
 
 import {
   buildOrderLines,
+  canPlaceOrder,
   changeQuantity,
+  clearOptions,
   createInitialCart,
+  getMinimumQuantity,
   getOrderTotal,
   getQuantity,
   hasSelectedMenu,
+  hasSelectedSeparateCharge,
+  toCreateOrderItems,
+  toggleOption,
 } from "./orderCart";
 
 const createMenuItem = (
@@ -16,6 +22,7 @@ const createMenuItem = (
   description: "",
   imageUrl: null,
   isSoldOut: false,
+  options: [],
   separateCharge: false,
   ...item,
 });
@@ -57,7 +64,7 @@ const booth: BoothOrderDetail = {
     { id: "main", title: "메인 메뉴", items: [chicken, soldOut] },
     { id: "beverage", title: "음료", items: [cider] },
   ],
-  separateChargeItem,
+  separateChargeItems: [separateChargeItem],
 };
 
 describe("orderCart", () => {
@@ -71,24 +78,24 @@ describe("orderCart", () => {
 
   it("keeps the separate charge at one or more and menus at zero or more", () => {
     let cart = createInitialCart(booth);
-    cart = changeQuantity(cart, separateChargeItem, -1);
-    cart = changeQuantity(cart, chicken, -1);
+    cart = changeQuantity(booth, cart, separateChargeItem, -1);
+    cart = changeQuantity(booth, cart, chicken, -1);
 
     expect(getQuantity(cart, separateChargeItem)).toBe(1);
     expect(getQuantity(cart, chicken)).toBe(0);
   });
 
   it("ignores quantity changes for sold-out menus", () => {
-    const cart = changeQuantity(createInitialCart(booth), soldOut, 1);
+    const cart = changeQuantity(booth, createInitialCart(booth), soldOut, 1);
 
     expect(getQuantity(cart, soldOut)).toBe(0);
   });
 
   it("builds order lines with the separate charge first and sums the total", () => {
     let cart = createInitialCart(booth);
-    cart = changeQuantity(cart, cider, 1);
-    cart = changeQuantity(cart, chicken, 1);
-    cart = changeQuantity(cart, chicken, 1);
+    cart = changeQuantity(booth, cart, cider, 1);
+    cart = changeQuantity(booth, cart, chicken, 1);
+    cart = changeQuantity(booth, cart, chicken, 1);
 
     const lines = buildOrderLines(booth, cart);
 
@@ -99,5 +106,158 @@ describe("orderCart", () => {
       ["사이다", 1],
     ]);
     expect(getOrderTotal(lines)).toBe(2_000 + 30_000 + 2_000);
+  });
+
+  it("lets a single separate charge alone satisfy the separate charge rule", () => {
+    const cart = changeQuantity(booth, createInitialCart(booth), chicken, 1);
+
+    expect(getMinimumQuantity(booth, separateChargeItem)).toBe(1);
+    expect(hasSelectedSeparateCharge(booth, cart)).toBe(true);
+    expect(canPlaceOrder(booth, cart)).toBe(true);
+  });
+});
+
+describe("orderCart with several separate charges", () => {
+  const perPerson = createMenuItem({
+    category: "SIDE",
+    description: "1인",
+    id: 20,
+    name: "상차림비 (1인)",
+    price: 2_000,
+    separateCharge: true,
+  });
+  const perTable = createMenuItem({
+    category: "SIDE",
+    description: "3인 이상, 테이블당",
+    id: 21,
+    name: "상차림비 (테이블)",
+    price: 5_000,
+    separateCharge: true,
+  });
+  const jointBooth: BoothOrderDetail = {
+    ...booth,
+    separateChargeItems: [perPerson, perTable],
+  };
+
+  it("starts every separate charge at zero and lets them go back to zero", () => {
+    let cart = createInitialCart(jointBooth);
+
+    expect(getQuantity(cart, perPerson)).toBe(0);
+    expect(getQuantity(cart, perTable)).toBe(0);
+    expect(getMinimumQuantity(jointBooth, perPerson)).toBe(0);
+
+    cart = changeQuantity(jointBooth, cart, perPerson, 1);
+    cart = changeQuantity(jointBooth, cart, perPerson, -1);
+    cart = changeQuantity(jointBooth, cart, perPerson, -1);
+
+    expect(getQuantity(cart, perPerson)).toBe(0);
+  });
+
+  it("needs both a separate charge and a menu before ordering", () => {
+    let cart = changeQuantity(jointBooth, createInitialCart(jointBooth), chicken, 1);
+
+    expect(hasSelectedMenu(jointBooth, cart)).toBe(true);
+    expect(hasSelectedSeparateCharge(jointBooth, cart)).toBe(false);
+    expect(canPlaceOrder(jointBooth, cart)).toBe(false);
+
+    cart = changeQuantity(jointBooth, cart, perTable, 1);
+    expect(canPlaceOrder(jointBooth, cart)).toBe(true);
+
+    // 상차림비만 담고 메뉴가 없으면 여전히 주문할 수 없다.
+    cart = changeQuantity(jointBooth, cart, chicken, -1);
+    expect(canPlaceOrder(jointBooth, cart)).toBe(false);
+  });
+
+  it("puts every chosen separate charge first in the order lines", () => {
+    let cart = createInitialCart(jointBooth);
+    cart = changeQuantity(jointBooth, cart, chicken, 1);
+    cart = changeQuantity(jointBooth, cart, perTable, 1);
+    cart = changeQuantity(jointBooth, cart, perPerson, 2);
+
+    expect(
+      buildOrderLines(jointBooth, cart).map((line) => [line.name, line.quantity]),
+    ).toEqual([
+      ["상차림비 (1인)", 2],
+      ["상차림비 (테이블)", 1],
+      ["닭발", 1],
+    ]);
+  });
+});
+
+describe("orderCart options", () => {
+  const upgrade = { id: 31, label: "불파게티로 변경", priceDelta: 1_000 };
+  const comboDiscount = {
+    id: 32,
+    label: "메인 메뉴와 함께 주문했어요",
+    priceDelta: -1_000,
+  };
+  const noodles = createMenuItem({
+    id: 30,
+    name: "짜파게티",
+    options: [upgrade, comboDiscount],
+    price: 5_000,
+  });
+  const optionBooth: BoothOrderDetail = {
+    ...booth,
+    menuSections: [{ id: "main", title: "메인 메뉴", items: [chicken, noodles] }],
+  };
+
+  it("adds the ticked deltas to the unit price for the whole line", () => {
+    let cart = createInitialCart(optionBooth);
+    cart = changeQuantity(optionBooth, cart, noodles, 1);
+    cart = changeQuantity(optionBooth, cart, noodles, 1);
+    const selection = toggleOption({}, noodles, upgrade.id);
+
+    const lines = buildOrderLines(optionBooth, cart, selection);
+
+    expect(lines[1]).toEqual({
+      menuId: 30,
+      name: "짜파게티",
+      optionIds: [31],
+      options: [{ label: "불파게티로 변경", priceDelta: 1_000 }],
+      price: 6_000,
+      quantity: 2,
+    });
+    expect(getOrderTotal(lines)).toBe(2_000 + 6_000 * 2);
+  });
+
+  it("nets out a discount and keeps the menu's option order", () => {
+    const cart = changeQuantity(
+      optionBooth,
+      createInitialCart(optionBooth),
+      noodles,
+      1,
+    );
+    let selection = toggleOption({}, noodles, comboDiscount.id);
+    selection = toggleOption(selection, noodles, upgrade.id);
+
+    const [, line] = buildOrderLines(optionBooth, cart, selection);
+
+    expect(line.optionIds).toEqual([31, 32]);
+    expect(line.price).toBe(5_000);
+
+    // 다시 누르면 해제된다.
+    selection = toggleOption(selection, noodles, upgrade.id);
+    expect(buildOrderLines(optionBooth, cart, selection)[1].price).toBe(4_000);
+  });
+
+  it("sends option ids only for lines that have them", () => {
+    let cart = createInitialCart(optionBooth);
+    cart = changeQuantity(optionBooth, cart, noodles, 1);
+    cart = changeQuantity(optionBooth, cart, chicken, 1);
+    const selection = toggleOption({}, noodles, comboDiscount.id);
+
+    expect(toCreateOrderItems(buildOrderLines(optionBooth, cart, selection))).toEqual([
+      { menuId: 14, quantity: 1 },
+      { menuId: 4, quantity: 1 },
+      { menuId: 30, optionIds: [32], quantity: 1 },
+    ]);
+  });
+
+  it("clears the options of a menu taken back out of the cart", () => {
+    const selection = toggleOption(toggleOption({}, noodles, upgrade.id), chicken, 99);
+
+    expect(clearOptions(selection, noodles)).toEqual({ 4: [99] });
+    expect(clearOptions({}, noodles)).toEqual({});
   });
 });

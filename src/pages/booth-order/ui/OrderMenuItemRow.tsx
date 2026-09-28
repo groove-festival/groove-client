@@ -1,13 +1,16 @@
-import { type BoothMenuItem } from "@/entities/booth";
+import { type BoothMenuItem, formatMenuOptionPriceDelta } from "@/entities/booth";
 
 import { formatWon } from "../lib/formatWon";
-import { getMinimumQuantity } from "../model/orderCart";
 
 interface OrderMenuItemRowProps {
   className?: string;
+  isOptionSelected?: (optionId: number) => boolean;
   item: BoothMenuItem;
+  minimumQuantity?: number;
   onChangeQuantity: (item: BoothMenuItem, delta: number) => void;
+  onToggleOption?: (item: BoothMenuItem, optionId: number) => void;
   quantity: number;
+  showDescription?: boolean;
 }
 
 const formatItemPrice = (item: BoothMenuItem) => {
@@ -18,46 +21,84 @@ const formatItemPrice = (item: BoothMenuItem) => {
   return item.price === null ? "가격" : formatWon(item.price);
 };
 
-// 주문 화면의 메뉴 한 줄. 메뉴명·가격과 `- n +` 수량 조절로 구성한다.
+// 주문 화면의 메뉴 한 줄. 메뉴명·가격과 `- n +` 수량 조절로 구성한다. 옵션이
+// 있는 메뉴는 담은 뒤에만 옵션 체크를 펼친다 — 담기 전에 보이면 옵션만 체크하고
+// 수량을 안 올린 채 지나치기 쉽다.
 export const OrderMenuItemRow = ({
   className = "",
+  isOptionSelected = () => false,
   item,
+  minimumQuantity = 0,
   onChangeQuantity,
+  onToggleOption,
   quantity,
+  showDescription = false,
 }: OrderMenuItemRowProps) => {
   const isOrderable = !item.isSoldOut && item.price !== null;
+  const showsOptions = item.options.length > 0 && quantity > 0 && onToggleOption;
 
   return (
-    <li
-      className={`flex items-center justify-between px-6 py-4 text-[#fcfcfc] ${className}`}
-    >
-      <div className="flex min-w-0 flex-col gap-2 font-semibold">
-        <p className="text-xl leading-6">{item.name}</p>
-        <p className="text-base leading-[19px]">{formatItemPrice(item)}</p>
+    <li className={`flex flex-col gap-3 px-6 py-4 text-[#fcfcfc] ${className}`}>
+      <div className="flex items-center justify-between">
+        <div className="flex min-w-0 flex-col gap-2 font-semibold">
+          <p className="text-xl leading-6">{item.name}</p>
+          {showDescription && item.description && (
+            <p className="text-sm leading-[17px] font-medium text-[#cfcfcf]">
+              {item.description}
+            </p>
+          )}
+          <p className="text-base leading-[19px]">{formatItemPrice(item)}</p>
+        </div>
+        <div className="flex w-[63px] shrink-0 items-center justify-between">
+          <button
+            aria-label={`${item.name} 수량 줄이기`}
+            className="text-2xl leading-[29px]"
+            disabled={!isOrderable || quantity <= minimumQuantity}
+            onClick={() => onChangeQuantity(item, -1)}
+            type="button"
+          >
+            -
+          </button>
+          <output aria-label={`${item.name} 수량`} className="text-xl leading-6">
+            {quantity}
+          </output>
+          <button
+            aria-label={`${item.name} 수량 늘리기`}
+            className="text-2xl leading-[29px]"
+            disabled={!isOrderable}
+            onClick={() => onChangeQuantity(item, 1)}
+            type="button"
+          >
+            +
+          </button>
+        </div>
       </div>
-      <div className="flex w-[63px] shrink-0 items-center justify-between">
-        <button
-          aria-label={`${item.name} 수량 줄이기`}
-          className="text-2xl leading-[29px]"
-          disabled={!isOrderable || quantity <= getMinimumQuantity(item)}
-          onClick={() => onChangeQuantity(item, -1)}
-          type="button"
-        >
-          -
-        </button>
-        <output aria-label={`${item.name} 수량`} className="text-xl leading-6">
-          {quantity}
-        </output>
-        <button
-          aria-label={`${item.name} 수량 늘리기`}
-          className="text-2xl leading-[29px]"
-          disabled={!isOrderable}
-          onClick={() => onChangeQuantity(item, 1)}
-          type="button"
-        >
-          +
-        </button>
-      </div>
+
+      {showsOptions && (
+        <fieldset className="flex flex-col gap-2 rounded-2xl bg-[#2a2a2a] px-4 py-3">
+          <legend className="sr-only">{item.name} 옵션</legend>
+          <p aria-hidden="true" className="text-xs leading-[14px] text-[#a2a2a2]">
+            해당되면 체크해 주세요
+          </p>
+          {item.options.map((option) => (
+            <label
+              className="flex items-center gap-2 text-sm leading-[17px] font-medium"
+              key={option.id}
+            >
+              <input
+                checked={isOptionSelected(option.id)}
+                className="size-4 shrink-0 accent-[#cfff04]"
+                onChange={() => onToggleOption(item, option.id)}
+                type="checkbox"
+              />
+              <span className="min-w-0 flex-1">{option.label}</span>{" "}
+              <span className="shrink-0 text-[#cfcfcf] tabular-nums">
+                {formatMenuOptionPriceDelta(option.priceDelta)}
+              </span>
+            </label>
+          ))}
+        </fieldset>
+      )}
     </li>
   );
 };

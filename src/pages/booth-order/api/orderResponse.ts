@@ -8,10 +8,18 @@ export interface OrderAccountResponseBody {
   bankName: string;
 }
 
+export interface OrderItemOptionResponseBody {
+  label: string;
+  priceDelta: number;
+}
+
+// unitPrice는 옵션 가격 차이를 이미 더한 값이다 (lineAmount = unitPrice × 수량).
+// 옵션은 나중에 붙은 필드라 옵션이 없는 서버는 보내지 않는다.
 export interface OrderItemResponseBody {
   lineAmount: number;
   menuId: number;
   menuName: string;
+  options?: OrderItemOptionResponseBody[] | null;
   quantity: number;
   unitPrice: number;
 }
@@ -39,6 +47,10 @@ export const toPlacedOrder = (order: OrderResponseBody): PlacedOrder => ({
   lines: order.items.map((item) => ({
     menuId: item.menuId,
     name: item.menuName,
+    options: (item.options ?? []).map(({ label, priceDelta }) => ({
+      label,
+      priceDelta,
+    })),
     price: item.unitPrice,
     quantity: item.quantity,
   })),

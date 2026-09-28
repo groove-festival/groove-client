@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-import { type BoothMenuItem } from "@/entities/booth";
+import { type BoothMenuItem, formatMenuOptionPriceDelta } from "@/entities/booth";
 
 import { menuCategoryLabels } from "../model/menuDraft";
 import { pubImageAccept } from "../model/pubImageFile";
@@ -58,6 +58,17 @@ export const PubMenuRow = ({
           </div>
           {menu.description && (
             <p className="truncate text-xs text-[#a2a2a2]">{menu.description}</p>
+          )}
+          {menu.options.length > 0 && (
+            <p className="text-[11px] leading-snug text-[#c4a6ff]">
+              옵션:{" "}
+              {menu.options
+                .map(
+                  (option) =>
+                    `${option.label} ${formatMenuOptionPriceDelta(option.priceDelta)}`,
+                )
+                .join(" · ")}
+            </p>
           )}
         </div>
         <p className="shrink-0 text-sm font-semibold text-[#fcfcfc]">
