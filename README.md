@@ -18,13 +18,13 @@ pnpm dev
 않습니다. `pnpm hooks:install`은 현재 checkout의 `core.hooksPath`를
 `.githooks`로 설정해 커밋 메시지 형식을 검사합니다.
 
-### 가요제 사연 모집
+### 사연 모집
 
-`/groove/contest`는 서버의 무대 일정에 따라 모집 단계를 표시합니다. 화면 상태는
-`/groove/contest?phase=open`(모집 중)과
-`/groove/contest?phase=closed`(모집 종료)에서 확인할 수 있습니다.
+`/groove/story`는 서버의 무대 일정에 따라 모집 단계를 표시합니다. 화면 상태는
+`/groove/story?phase=before`(모집 전), `/groove/story?phase=open`(모집 중),
+`/groove/story?phase=closed`(모집 종료)에서 확인할 수 있습니다.
 개발 중 사연 제목 표현만 확인하려면
-`/groove/contest?phase=open&preview=stories`를 사용합니다. 이 주소의 예시 제목은
+`/groove/story?phase=open&preview=stories`를 사용합니다. 이 주소의 예시 제목은
 개발 빌드에서만 표시되며 실제 API 응답이나 접수 데이터로 사용하지 않습니다.
 모집 중에는 공개 사연 목록을 조회하고, Google 로그인과 웹서비스 이용약관 및
 개인정보 수집·이용 동의 후 사연을 접수합니다. 실제 로그인을 확인하려면 `.env.local`의

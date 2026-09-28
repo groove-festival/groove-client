@@ -282,7 +282,7 @@ test("not-found page uses the shared mobile frame", async ({ page }) => {
   }
 });
 
-test("contest sections grow with the 600px app frame", async ({ page }) => {
+test("story and contest sections grow with the 600px app frame", async ({ page }) => {
   await mockSubmissionFestivalStatus(page);
   await page.route("**/auth/me", (route) =>
     route.fulfill({
@@ -320,28 +320,22 @@ test("contest sections grow with the 600px app frame", async ({ page }) => {
     }),
   );
 
-  await page.goto("./contest?phase=open");
+  await page.goto("./story?phase=open");
   await expect(page.getByText("함께 부르는 밤")).toBeVisible();
 
   for (const width of widths) {
     await page.setViewportSize({ width, height: 844 });
     const expectedFrameWidth = Math.min(width, 600);
     const frame = page.locator(".page-frame");
-    const overview = page.getByRole("region", { name: "가요제 일정과 경연" });
     const stories = page
       .getByRole("heading", { name: "사연 신청 목록" })
       .locator("xpath=ancestor::section[1]");
 
     await expect(frame).toHaveJSProperty("clientWidth", expectedFrameWidth);
-    expect((await overview.boundingBox())?.width).toBeCloseTo(
-      expectedFrameWidth - 32,
-      0,
-    );
     expect((await stories.boundingBox())?.width).toBeCloseTo(
       expectedFrameWidth - 32,
       0,
     );
-    await expectWithinFrame(page, overview);
     await expectWithinFrame(page, stories);
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
@@ -361,35 +355,97 @@ test("contest sections grow with the 600px app frame", async ({ page }) => {
     );
     await expectWithinFrame(page, formSection);
   }
+
+  await page.goto("./contest");
+  const overview = page.getByRole("region", { name: "가요제 일정과 경연" });
+  await expect(overview).toBeVisible();
+
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: 844 });
+    expect((await overview.boundingBox())?.width).toBeCloseTo(
+      Math.min(width, 600) - 32,
+      0,
+    );
+    await expectWithinFrame(page, overview);
+  }
 });
 
-test("contest phase notices grow with the 600px app frame", async ({ page }) => {
+test("story and contest phase notices grow with the 600px app frame", async ({
+  page,
+}) => {
   await mockSubmissionFestivalStatus(page);
-  await page.goto("./contest");
+  await page.goto("./story");
 
   const storyNotice = page
     .getByRole("heading", { name: "사연 모집을 준비하고 있어요" })
     .locator("xpath=ancestor::section[1]");
-  const sequenceNotice = page.getByRole("region", { name: "가요제 진행 순서" });
-  const voteNotice = page.getByRole("region", {
-    name: "가요제 투표는 경연 당일에 열려요",
-  });
-
-  await expect(sequenceNotice).toContainText(
-    "사연 모집이 먼저 시작되고, 모집이 끝난 뒤 가요제 당일에 투표가 열려요.",
-  );
+  await expect(storyNotice).toBeVisible();
 
   for (const width of widths) {
     await page.setViewportSize({ width, height: 844 });
     const expectedContentWidth = Math.min(width, 600) - 32;
+    const header = page.locator("header");
+    const headerBox = await header.boundingBox();
+    const storyHeadingBox = await page
+      .getByRole("heading", { name: "사연 모집을 준비하고 있어요" })
+      .boundingBox();
 
-    for (const section of [storyNotice, sequenceNotice, voteNotice]) {
-      expect((await section.boundingBox())?.width).toBeCloseTo(expectedContentWidth, 0);
-      await expectWithinFrame(page, section);
-    }
+    expect((await storyNotice.boundingBox())?.width).toBeCloseTo(
+      expectedContentWidth,
+      0,
+    );
+    const storyHeaderGap =
+      (storyHeadingBox?.y ?? 0) - ((headerBox?.y ?? 0) + (headerBox?.height ?? 0));
+    expect(storyHeaderGap).toBeGreaterThanOrEqual(152);
+    expect(storyHeaderGap).toBeLessThanOrEqual(184);
+    const storyIllustration = storyNotice.locator("img");
+    expect((await storyIllustration.boundingBox())?.width).toBeCloseTo(
+      Math.min(expectedContentWidth * 0.73, 360),
+      0,
+    );
+    expect((await storyNotice.locator("p").boundingBox())?.width).toBeCloseTo(
+      expectedContentWidth,
+      0,
+    );
+    await expectWithinFrame(page, storyNotice);
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
     ).toBeLessThanOrEqual(width);
+  }
+
+  await page.goto("./story?phase=open");
+  const storyListHeadingBox = await page
+    .getByRole("heading", { name: "사연 신청 목록" })
+    .boundingBox();
+  const storyHeaderBox = await page.locator("header").boundingBox();
+  const storyListHeaderGap =
+    (storyListHeadingBox?.y ?? 0) -
+    ((storyHeaderBox?.y ?? 0) + (storyHeaderBox?.height ?? 0));
+  expect(storyListHeaderGap).toBeGreaterThanOrEqual(112);
+  expect(storyListHeaderGap).toBeLessThanOrEqual(144);
+
+  await page.goto("./contest");
+  const voteNotice = page
+    .getByRole("heading", { name: "가요제 투표는 경연 당일에 열려요" })
+    .locator("xpath=ancestor::section[1]");
+  await expect(voteNotice).toBeVisible();
+
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: 844 });
+    const expectedContentWidth = Math.min(width, 600) - 32;
+    expect((await voteNotice.boundingBox())?.width).toBeCloseTo(
+      expectedContentWidth,
+      0,
+    );
+    expect((await voteNotice.locator("img").boundingBox())?.width).toBeCloseTo(
+      Math.min(expectedContentWidth * 0.73, 360),
+      0,
+    );
+    expect((await voteNotice.locator("p").boundingBox())?.width).toBeCloseTo(
+      expectedContentWidth,
+      0,
+    );
+    await expectWithinFrame(page, voteNotice);
   }
 });
 
@@ -576,7 +632,7 @@ test("story titles scatter without overlap across mobile and wide frames", async
     }),
   );
 
-  await page.goto("./contest?phase=open");
+  await page.goto("./story?phase=open");
   const cloud = page.getByRole("list", { name: "접수된 사연 제목" });
   const tokens = page.getByTestId("contest-story-title");
   await expect(tokens).toHaveCount(13);
@@ -622,19 +678,19 @@ test("story titles scatter without overlap across mobile and wide frames", async
   }
 });
 
-test("contest and booth notices stay centered and scroll on short screens", async ({
+test("story and booth notices stay centered and scroll on short screens", async ({
   page,
 }) => {
   await mockSubmissionFestivalStatus(page);
   await mockBoothPages(page);
-  await page.goto("./contest?phase=open");
+  await page.goto("./story?phase=open");
   await page.getByRole("button", { name: "신청하기" }).click();
 
-  for (const route of ["contest", "booth", "qr"] as const) {
+  for (const route of ["story", "booth", "qr"] as const) {
     if (route === "booth") await page.goto("./pub");
     if (route === "qr") await page.goto("./pub/electronics-eh");
     const name =
-      route === "contest"
+      route === "story"
         ? "사연 신청 안내 사항"
         : route === "booth"
           ? "주막 이용 안내 사항"
@@ -656,7 +712,7 @@ test("contest and booth notices stay centered and scroll on short screens", asyn
     ).toBe(true);
     await dialog
       .getByRole("button", {
-        name: route === "contest" ? "사연 작성하기" : "확인했습니다",
+        name: route === "story" ? "사연 작성하기" : "확인했습니다",
       })
       .click();
     await expect(dialog).not.toBeVisible();

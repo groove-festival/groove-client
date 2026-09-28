@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 
+import type { FestivalStatusResponseBody, StagePhase } from "@/entities/festival";
 import { httpClient } from "@/shared/api";
 
 import HomePage from "./HomePage";
@@ -51,6 +52,31 @@ const zones = [
   },
 ];
 
+const statusBody = (
+  storyPhase: StagePhase = "CLOSED",
+  contestPhase: StagePhase = "CLOSED",
+): FestivalStatusResponseBody => ({
+  phase: "BEFORE",
+  festivalStartAt: "2026-10-01T00:00:00+09:00",
+  festivalEndAt: "2026-10-03T00:00:00+09:00",
+  stage: {
+    storyPhase,
+    storyCollectionStartAt: "2026-09-20T00:00:00+09:00",
+    storyCollectionEndAt: "2026-09-30T00:00:00+09:00",
+    contestPhase,
+    contestStartAt: "2026-10-01T18:00:00+09:00",
+    contestEndAt: "2026-10-01T21:00:00+09:00",
+  },
+  playlist: {
+    phase: "SUBMISSION",
+    submissionStartAt: "2026-09-12T00:00:00+09:00",
+    submissionEndAt: "2026-09-17T00:00:00+09:00",
+    publishAt: "2026-10-01T00:00:00+09:00",
+  },
+});
+
+let currentFestivalStatus = statusBody();
+
 const envelope = (data: unknown) => ({
   data: { success: true, data, error: null },
   status: 200,
@@ -69,13 +95,18 @@ const renderPage = (initialEntry = "/") =>
 
 beforeEach(() => {
   vi.clearAllMocks();
-  httpGet.mockImplementation((url: string) =>
-    Promise.resolve(
-      url === "/zones"
-        ? envelope({ totalCount: zones.length, zones })
-        : envelope(booths),
-    ),
-  );
+  currentFestivalStatus = statusBody();
+  httpGet.mockImplementation((url: string) => {
+    if (url === "/festival/status") {
+      return Promise.resolve(envelope(currentFestivalStatus));
+    }
+
+    if (url === "/zones") {
+      return Promise.resolve(envelope({ totalCount: zones.length, zones }));
+    }
+
+    return Promise.resolve(envelope(booths));
+  });
 });
 
 const mapFilters = () => within(screen.getByRole("group", { name: "지도 필터" }));
@@ -83,6 +114,15 @@ const placeButton = (name: string) =>
   screen.findByRole("button", { name: `${name} 위치 보기` });
 
 const timetableRegion = () => screen.getByRole("region", { name: "타임테이블" });
+
+const mockScrollIntoView = () => {
+  const scrollIntoView = vi.fn();
+  Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+    configurable: true,
+    value: scrollIntoView,
+  });
+  return scrollIntoView;
+};
 
 const setKstNow = (dateTime: string) => {
   vi.setSystemTime(new Date(`${dateTime}+09:00`));
@@ -108,7 +148,19 @@ describe("HomePage", () => {
       screen
         .getAllByRole("heading", { level: 2 })
         .map((heading) => heading.textContent),
-    ).toEqual(["축제 전체 지도", "바로가기", "타임테이블"]);
+    ).toEqual(["축제 바로가기", "축제 전체 지도", "타임테이블"]);
+  });
+
+  it("labels the hero shortcut control and scrolls to the shortcut section", () => {
+    const scrollIntoView = mockScrollIntoView();
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "축제 바로가기" }));
+
+    expect(scrollIntoView).toHaveBeenCalledWith({
+      behavior: "smooth",
+      block: "start",
+    });
   });
 
   it("lights the booth groups that belong to the selected filter", async () => {
@@ -210,16 +262,23 @@ describe("HomePage", () => {
   it("links each shortcut to its destination", () => {
     renderPage();
 
-    const shortcuts = within(screen.getByRole("region", { name: "바로가기" }));
-    expect(shortcuts.getByRole("link", { name: /주막 바로가기/ })).toHaveAttribute(
+    const shortcuts = within(screen.getByRole("region", { name: "축제 바로가기" }));
+    expect(
+      shortcuts.getAllByRole("link").map((link) => link.getAttribute("href")),
+    ).toEqual(["/pub", "/story", "/contest", "/event", "/playlist"]);
+    expect(shortcuts.getByRole("link", { name: /^주막/ })).toHaveAttribute(
       "href",
       "/pub",
     );
-    expect(shortcuts.getByRole("link", { name: /가요제 바로가기/ })).toHaveAttribute(
+    expect(shortcuts.getByRole("link", { name: /^사연 모집/ })).toHaveAttribute(
       "href",
-      "/coming-soon",
+      "/story",
     );
-    expect(shortcuts.getByRole("link", { name: /이벤트 바로가기/ })).toHaveAttribute(
+    expect(shortcuts.getByRole("link", { name: /^가요제/ })).toHaveAttribute(
+      "href",
+      "/contest",
+    );
+    expect(shortcuts.getByRole("link", { name: /^이벤트/ })).toHaveAttribute(
       "href",
       "/event",
     );
@@ -227,6 +286,37 @@ describe("HomePage", () => {
       "href",
       "/playlist",
     );
+  });
+
+  it.each([
+    ["BEFORE", "CLOSED", "사연 모집", "사연 모집예정"],
+    ["OPEN", "CLOSED", "사연 모집", "사연 모집중"],
+    ["CLOSED", "BEFORE", "가요제", "투표예정"],
+    ["CLOSED", "OPEN", "가요제", "투표진행중"],
+    ["CLOSED", "CLOSED", "가요제", "투표종료"],
+  ] as const)(
+    "shows the stage badge for story phase %s and contest phase %s",
+    async (storyPhase, contestPhase, cardName, label) => {
+      currentFestivalStatus = statusBody(storyPhase, contestPhase);
+      renderPage();
+
+      const card = screen.getByRole("link", { name: new RegExp(`^${cardName}`) });
+      expect(await within(card).findByText(label)).toBeInTheDocument();
+    },
+  );
+
+  it("shows story and contest badges on their own cards when the phases overlap", async () => {
+    currentFestivalStatus = statusBody("OPEN", "OPEN");
+    renderPage();
+
+    expect(
+      await within(screen.getByRole("link", { name: /^사연 모집/ })).findByText(
+        "사연 모집중",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("link", { name: /^가요제/ })).getByText("투표진행중"),
+    ).toBeInTheDocument();
   });
 
   it("shows only today's timetable and highlights the current item", () => {
@@ -309,10 +399,26 @@ describe("HomePage timetable by clock", () => {
   });
 });
 
-describe("ShortcutSection contest badge", () => {
+describe("ShortcutSection stage badges", () => {
   it.each([
-    ["story", "사연 모집중"],
-    ["vote", "투표 진행중"],
+    ["story-upcoming", "사연 모집예정"],
+    ["story-open", "사연 모집중"],
+  ] as const)("shows the %s badge on the story card", (status, label) => {
+    render(
+      <MemoryRouter>
+        <ShortcutSection storyBadgeStatus={status} />
+      </MemoryRouter>,
+    );
+
+    const storyCard = screen.getByRole("link", { name: /^사연 모집/ });
+    expect(within(storyCard).getByText(label)).toBeInTheDocument();
+    expect(screen.getAllByText(label)).toHaveLength(1);
+  });
+
+  it.each([
+    ["contest-upcoming", "투표예정"],
+    ["contest-open", "투표진행중"],
+    ["contest-closed", "투표종료"],
   ] as const)("shows the %s badge on the contest card", (status, label) => {
     render(
       <MemoryRouter>
@@ -320,8 +426,24 @@ describe("ShortcutSection contest badge", () => {
       </MemoryRouter>,
     );
 
-    const contestCard = screen.getByRole("link", { name: /가요제 바로가기/ });
+    const contestCard = screen.getByRole("link", { name: /^가요제/ });
     expect(within(contestCard).getByText(label)).toBeInTheDocument();
-    expect(screen.getAllByText(label)).toHaveLength(1);
+  });
+
+  it("hides stage badges when no phase is available", () => {
+    render(
+      <MemoryRouter>
+        <ShortcutSection />
+      </MemoryRouter>,
+    );
+
+    const contestCard = screen.getByRole("link", { name: /^가요제/ });
+    const storyCard = screen.getByRole("link", { name: /^사연 모집/ });
+    expect(
+      within(storyCard).queryByText(/사연 모집예정|사연 모집중/),
+    ).not.toBeInTheDocument();
+    expect(
+      within(contestCard).queryByText(/투표예정|투표진행중|투표종료/),
+    ).not.toBeInTheDocument();
   });
 });
