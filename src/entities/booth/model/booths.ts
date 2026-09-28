@@ -80,7 +80,10 @@ export const isDayShiftBooth = (booth: Pick<Booth, "operatingDay">) =>
 
 // "2026-10-01" → "10월 1일 (목)" · 짧게는 "10/1 목". 날짜 문자열을 그대로 쪼개 읽어
 // 기기 시간대에 흔들리지 않는다.
-export const formatOperatingDate = (date: string, length: "long" | "short" = "long") => {
+export const formatOperatingDate = (
+  date: string,
+  length: "long" | "short" = "long",
+) => {
   const [year, month, day] = date.split("-").map(Number);
   const weekday = ["일", "월", "화", "수", "목", "금", "토"][
     new Date(Date.UTC(year, month - 1, day)).getUTCDay()

@@ -38,7 +38,11 @@ const zone = (xRatio: number | null, yRatio: number | null): ExperienceZone => (
 
 describe("buildCampusPlaces", () => {
   it("puts pubs sharing a spot on one shape, first operating day first", () => {
-    const shared = (boothCode: string, name: string, operatingDay: "DAY1" | "DAY2") => ({
+    const shared = (
+      boothCode: string,
+      name: string,
+      operatingDay: "DAY1" | "DAY2",
+    ) => ({
       ...booth(boothCode, null, null),
       name,
       operatingDay,

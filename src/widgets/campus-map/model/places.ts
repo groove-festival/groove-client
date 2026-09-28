@@ -144,8 +144,8 @@ interface PlaceBase {
 }
 
 export type CampusPlace = PlaceBase &
+  // spotCode 는 도형이 묶인 자리, boothCodes 는 그 자리를 쓰는 주막들(운영일 순).
   (
-    // spotCode 는 도형이 묶인 자리, boothCodes 는 그 자리를 쓰는 주막들(운영일 순).
     | { group: "pub"; spotCode: string; boothCodes: string[] }
     | { group: "zone"; zoneType: ZoneType }
     | { group: Exclude<PlaceGroup, "pub" | "zone"> }

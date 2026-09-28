@@ -57,7 +57,10 @@ export const getPubsCenter = (
 // 구역 버튼을 눌렀을 때 지도가 갈 자리. "전체"는 주막 전부를 감싸는 한가운데다.
 // 구역에 주막이 하나도 없으면 전체 기준으로 물러난다 (API 명세 §5 PUB-1).
 export const getPubAreaCenter = (
-  booths: readonly Pick<Booth, "area" | "boothCode" | "spotCode" | "xRatio" | "yRatio">[],
+  booths: readonly Pick<
+    Booth,
+    "area" | "boothCode" | "spotCode" | "xRatio" | "yRatio"
+  >[],
   area: PubMapArea,
 ): MapRatioPoint => {
   if (area === "all") return getPubsCenter(booths);

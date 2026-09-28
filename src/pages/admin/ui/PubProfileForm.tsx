@@ -1,10 +1,6 @@
 import { useState } from "react";
 
-import {
-  type Booth,
-  BoothDepartments,
-  formatOperatingDate,
-} from "@/entities/booth";
+import { type Booth, BoothDepartments, formatOperatingDate } from "@/entities/booth";
 
 import { useUpdatePubProfile } from "../api/updatePubProfile";
 import { pubProfileErrorMessage } from "../model/adminErrorMessages";
@@ -15,11 +11,7 @@ const DESCRIPTION_MAX = 200;
 interface PubProfileFormProps {
   booth: Pick<
     Booth,
-    | "departments"
-    | "description"
-    | "name"
-    | "operatingDate"
-    | "spotDepartments"
+    "departments" | "description" | "name" | "operatingDate" | "spotDepartments"
   >;
 }
 
@@ -58,9 +50,7 @@ export const PubProfileForm = ({ booth }: PubProfileFormProps) => {
     >
       <div className="flex flex-col gap-1">
         <h2 className="text-sm font-bold text-[#fcfcfc]">주막 정보</h2>
-        <p className="text-xs text-[#a2a2a2]">
-          손님 목록과 지도에 이 이름이 보여요.
-        </p>
+        <p className="text-xs text-[#a2a2a2]">손님 목록과 지도에 이 이름이 보여요.</p>
       </div>
 
       {booth.operatingDate && (
