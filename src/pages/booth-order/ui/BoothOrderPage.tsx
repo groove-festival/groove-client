@@ -45,6 +45,7 @@ const BoothOrderContent = ({
     hasIncompleteOrder,
     hasSelectedMenu,
     hasSelectedSeparateCharge,
+    isAdditionalOrder,
     isPlacingOrder,
     isTransferDialogOpen,
     order,
@@ -116,6 +117,11 @@ const BoothOrderContent = ({
           <div className="mt-12 flex flex-col gap-10">
             {booth.separateChargeItems.length > 0 && (
               <div className="flex flex-col gap-3" ref={separateChargeRef}>
+                {isAdditionalOrder && (
+                  <p className="px-2 text-sm leading-[17px] font-semibold text-[#cfcfcf]">
+                    추가 주문이라 상차림비는 빼 두었어요. 일행이 늘었다면 담아 주세요.
+                  </p>
+                )}
                 {hasMultipleSeparateCharges && !hasSelectedSeparateCharge && (
                   <p
                     className={`px-2 text-sm leading-[17px] font-semibold ${
@@ -137,7 +143,11 @@ const BoothOrderContent = ({
                       }
                       item={item}
                       key={item.id}
-                      minimumQuantity={getMinimumQuantity(booth, item)}
+                      minimumQuantity={getMinimumQuantity(
+                        booth,
+                        item,
+                        isAdditionalOrder,
+                      )}
                       onChangeQuantity={changeItemQuantity}
                       onToggleOption={toggleItemOption}
                       quantity={getQuantity(cart, item)}

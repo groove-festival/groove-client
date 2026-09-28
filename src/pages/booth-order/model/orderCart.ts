@@ -17,14 +17,27 @@ export interface CartLine extends OrderLine {
 
 // 상차림비가 하나뿐이면 모든 주문에 붙는 항목이라 1 아래로 내릴 수 없다.
 // 여러 개(1인·테이블당, 학과별 등)면 손님이 해당하는 것을 고르므로 0부터 시작한다.
+//
+// 추가 주문(isAdditionalOrder)은 예외다. 상차림비는 자리에 앉을 때 한 번 내는
+// 돈이라 첫 주문에서 이미 냈다. 추가 주문에는 0개로 시작하고 고르지 않아도
+// 주문할 수 있다. 일행이 늘었으면 손님이 직접 담는다.
 const hasSingleSeparateCharge = (booth: BoothOrderDetail) =>
   booth.separateChargeItems.length === 1;
 
-export const getMinimumQuantity = (booth: BoothOrderDetail, item: BoothMenuItem) =>
-  item.separateCharge && hasSingleSeparateCharge(booth) ? 1 : 0;
+export const getMinimumQuantity = (
+  booth: BoothOrderDetail,
+  item: BoothMenuItem,
+  isAdditionalOrder = false,
+) =>
+  !isAdditionalOrder && item.separateCharge && hasSingleSeparateCharge(booth) ? 1 : 0;
 
-export const createInitialCart = (booth: BoothOrderDetail): OrderCart =>
-  hasSingleSeparateCharge(booth) ? { [booth.separateChargeItems[0].id]: 1 } : {};
+export const createInitialCart = (
+  booth: BoothOrderDetail,
+  isAdditionalOrder = false,
+): OrderCart =>
+  !isAdditionalOrder && hasSingleSeparateCharge(booth)
+    ? { [booth.separateChargeItems[0].id]: 1 }
+    : {};
 
 export const getQuantity = (cart: OrderCart, item: BoothMenuItem) => cart[item.id] ?? 0;
 
@@ -33,13 +46,14 @@ export const changeQuantity = (
   cart: OrderCart,
   item: BoothMenuItem,
   delta: number,
+  isAdditionalOrder = false,
 ): OrderCart => {
   if (item.isSoldOut || item.price === null) {
     return cart;
   }
 
   const nextQuantity = Math.max(
-    getMinimumQuantity(booth, item),
+    getMinimumQuantity(booth, item, isAdditionalOrder),
     getQuantity(cart, item) + delta,
   );
   return { ...cart, [item.id]: nextQuantity };
@@ -90,14 +104,24 @@ export const hasSelectedMenu = (booth: BoothOrderDetail, cart: OrderCart) =>
     section.items.some((item) => getQuantity(cart, item) > 0),
   );
 
-// 상차림비가 있는 주막은 그중 하나 이상을 담아야 한다. 하나뿐이면 1 아래로
-// 내려가지 않아 늘 만족한다.
-export const hasSelectedSeparateCharge = (booth: BoothOrderDetail, cart: OrderCart) =>
+// 상차림비가 있는 주막은 첫 주문에서 그중 하나 이상을 담아야 한다. 하나뿐이면
+// 1 아래로 내려가지 않아 늘 만족한다. 추가 주문은 이미 냈으므로 묻지 않는다.
+export const hasSelectedSeparateCharge = (
+  booth: BoothOrderDetail,
+  cart: OrderCart,
+  isAdditionalOrder = false,
+) =>
+  isAdditionalOrder ||
   booth.separateChargeItems.length === 0 ||
   booth.separateChargeItems.some((item) => getQuantity(cart, item) > 0);
 
-export const canPlaceOrder = (booth: BoothOrderDetail, cart: OrderCart) =>
-  hasSelectedMenu(booth, cart) && hasSelectedSeparateCharge(booth, cart);
+export const canPlaceOrder = (
+  booth: BoothOrderDetail,
+  cart: OrderCart,
+  isAdditionalOrder = false,
+) =>
+  hasSelectedMenu(booth, cart) &&
+  hasSelectedSeparateCharge(booth, cart, isAdditionalOrder);
 
 export const buildOrderLines = (
   booth: BoothOrderDetail,
