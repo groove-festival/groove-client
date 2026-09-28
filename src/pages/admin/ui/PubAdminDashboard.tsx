@@ -98,7 +98,10 @@ export const PubAdminDashboard = () => {
                 <PubMenuBoardImageField
                   menuBoardImageUrl={pub.data.menuBoardImageUrl}
                 />
-                <PubTableManager boothCode={pub.data.booth.boothCode} />
+                <PubTableManager
+                  boothCode={pub.data.booth.boothCode}
+                  pubName={pub.data.booth.name}
+                />
               </>
             )}
           </section>
