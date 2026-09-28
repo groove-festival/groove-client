@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { Booth } from "@/entities/booth";
 import { type ExperienceZone, useZones } from "@/entities/zone";
@@ -78,11 +78,15 @@ export const PubBoothMap = ({
     width: AREA_WIDTH[area],
   });
 
-  useEffect(() => {
+  // 목록에서 주막 선택이 풀리면 지도의 주막 핀 선택도 푼다. Effect로 하면 한
+  // 번 그린 뒤 다시 그리므로, 선택이 바뀐 렌더에서 바로 맞춘다.
+  const [prevSelectedBoothCode, setPrevSelectedBoothCode] = useState(selectedBoothCode);
+  if (prevSelectedBoothCode !== selectedBoothCode) {
+    setPrevSelectedBoothCode(selectedBoothCode);
     if (selectedBoothCode === null && selectedPlaceId?.startsWith("pub:")) {
       setSelectedPlaceId(null);
     }
-  }, [selectedBoothCode, selectedPlaceId]);
+  }
 
   const selectArea = (area: PubMapArea) => {
     onSelectArea(area);
