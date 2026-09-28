@@ -4,7 +4,9 @@ import { X } from "lucide-react";
 import {
   BoothCard,
   boothFilterOptions,
+  compareByOperatingDay,
   getBoothDisplayName,
+  getBoothSpotCode,
   getBoothsByFilter,
   type BoothFilter,
   useBooths,
@@ -120,49 +122,51 @@ const BoothFilterMenu = ({
 const BoothListPage = () => {
   const [selectedFilter, setSelectedFilter] = useState<BoothFilter>("all");
   const [selectedArea, setSelectedArea] = useState<PubMapArea>("all");
-  // 지도에서 고른 주막. 구역·단대 필터 위에 한 주막만 남기는 추가 필터다.
-  const [selectedBoothCode, setSelectedBoothCode] = useState<string | null>(null);
+  // 지도에서 고른 자리. 구역·단대 필터 위에 한 자리의 주막만 남기는 추가 필터다.
+  // 날짜별로 나눠 쓰는 사범대 자리는 축제 전에 두 학과가 함께 남는다.
+  const [selectedSpotCode, setSelectedSpotCode] = useState<string | null>(null);
   const [isNoticeOpen, setIsNoticeOpen] = useState(() => !hasDismissedNotice());
   const selectedBoothResultRef = useRef<HTMLLIElement>(null);
   const boothsQuery = useBooths();
   const booths = useMemo(() => boothsQuery.data ?? [], [boothsQuery.data]);
-  // 구역과 단대를 모두 통과한 기본 목록. 주막 한 곳을 고르기 전과 선택을
+  // 구역과 단대를 모두 통과한 기본 목록. 자리 하나를 고르기 전과 선택을
   // 해제한 뒤에는 이 목록을 그대로 보여준다.
   const baseFilteredBooths = useMemo(
     () => getBoothsByArea(getBoothsByFilter(booths, selectedFilter), selectedArea),
     [booths, selectedArea, selectedFilter],
   );
-  const selectedBooth = useMemo(
+  const selectedBooths = useMemo(
     () =>
-      selectedBoothCode === null
-        ? null
-        : (baseFilteredBooths.find(
-            ({ boothCode }) => boothCode === selectedBoothCode,
-          ) ?? null),
-    [baseFilteredBooths, selectedBoothCode],
+      selectedSpotCode === null
+        ? []
+        : baseFilteredBooths
+            .filter((booth) => getBoothSpotCode(booth) === selectedSpotCode)
+            .sort(compareByOperatingDay),
+    [baseFilteredBooths, selectedSpotCode],
   );
   const filteredBooths = useMemo(
-    () => (selectedBooth ? [selectedBooth] : baseFilteredBooths),
-    [baseFilteredBooths, selectedBooth],
+    () => (selectedBooths.length > 0 ? selectedBooths : baseFilteredBooths),
+    [baseFilteredBooths, selectedBooths],
   );
   const selectableCodes = useMemo(
-    () => new Set(baseFilteredBooths.map(({ boothCode }) => boothCode)),
+    () => new Set(baseFilteredBooths.map(getBoothSpotCode)),
     [baseFilteredBooths],
   );
   const highlightedCodes = useMemo(
-    () => new Set(filteredBooths.map(({ boothCode }) => boothCode)),
+    () => new Set(filteredBooths.map(getBoothSpotCode)),
     [filteredBooths],
   );
+  const selectedLabel = selectedBooths.map(getBoothDisplayName).join(" · ");
 
   // 필터를 바꾸면 고른 주막이 목록에서 사라질 수 있어 선택을 함께 푼다.
   const changeFilter = (filter: BoothFilter) => {
     setSelectedFilter(filter);
-    setSelectedBoothCode(null);
+    setSelectedSpotCode(null);
   };
 
   const changeArea = (area: PubMapArea) => {
     setSelectedArea(area);
-    setSelectedBoothCode(null);
+    setSelectedSpotCode(null);
   };
 
   const scrollToSelectedBoothResult = () => {
@@ -185,8 +189,8 @@ const BoothListPage = () => {
     });
   };
 
-  const selectBoothFromMap = (boothCode: string) => {
-    setSelectedBoothCode(boothCode);
+  const selectSpotFromMap = (spotCode: string) => {
+    setSelectedSpotCode(spotCode);
     window.setTimeout(scrollToSelectedBoothResult, 0);
   };
 
@@ -222,24 +226,24 @@ const BoothListPage = () => {
         booths={booths}
         highlightedCodes={highlightedCodes}
         onSelectArea={changeArea}
-        onSelectBooth={selectBoothFromMap}
+        onSelectSpot={selectSpotFromMap}
         selectableCodes={selectableCodes}
         selectedArea={selectedArea}
-        selectedBoothCode={selectedBoothCode}
+        selectedSpotCode={selectedSpotCode}
       />
 
       <div className="mt-4 flex min-w-0 items-center gap-2">
         <BoothFilterMenu onChange={changeFilter} selectedFilter={selectedFilter} />
-        {selectedBooth && (
+        {selectedBooths.length > 0 && (
           <div
             className="animate-booth-filter-chip-in flex h-[37px] min-w-0 items-center gap-1 rounded-full border border-[#cfff04] bg-[rgba(207,255,4,0.12)] py-1 pr-1 pl-4 text-sm font-medium text-[#cfff04] motion-reduce:animate-none"
-            key={selectedBooth.boothCode}
+            key={selectedSpotCode}
           >
-            <span className="truncate">{getBoothDisplayName(selectedBooth)}</span>
+            <span className="truncate">{selectedLabel}</span>
             <button
-              aria-label={`${getBoothDisplayName(selectedBooth)} 주막 필터 해제`}
+              aria-label={`${selectedLabel} 주막 필터 해제`}
               className="flex size-7 shrink-0 items-center justify-center rounded-full transition-[background-color,transform] duration-150 hover:bg-[rgba(207,255,4,0.14)] active:scale-90 active:bg-[rgba(207,255,4,0.24)] motion-reduce:transition-none"
-              onClick={() => setSelectedBoothCode(null)}
+              onClick={() => setSelectedSpotCode(null)}
               type="button"
             >
               <X aria-hidden="true" className="size-4" strokeWidth={2.25} />
@@ -262,16 +266,17 @@ const BoothListPage = () => {
         {filteredBooths.map((booth) => (
           <li
             className={
-              selectedBooth
+              selectedBooths.length > 0
                 ? "animate-booth-filter-result-in motion-reduce:animate-none"
                 : ""
             }
             key={booth.boothCode}
-            ref={booth.boothCode === selectedBoothCode ? selectedBoothResultRef : null}
+            // 여러 장이면 마지막 카드까지 보이도록 끝 카드를 기준으로 내린다.
+            ref={booth === selectedBooths.at(-1) ? selectedBoothResultRef : null}
           >
             <BoothCard
               booth={booth}
-              isSelected={booth.boothCode === selectedBoothCode}
+              isSelected={getBoothSpotCode(booth) === selectedSpotCode}
               to={`/pub/${booth.boothCode}`}
             />
           </li>

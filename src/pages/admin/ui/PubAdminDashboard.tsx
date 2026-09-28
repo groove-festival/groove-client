@@ -15,6 +15,7 @@ import { PubMenuBoardImageField } from "./PubMenuBoardImageField";
 import { PubMenuManager } from "./PubMenuManager";
 import { PubOrderHistory } from "./PubOrderHistory";
 import { PubPaymentBoard } from "./PubPaymentBoard";
+import { PubProfileForm } from "./PubProfileForm";
 import { PubStatusToggle } from "./PubStatusToggle";
 import { PubTableManager } from "./PubTableManager";
 import { TableFilterSheet } from "./TableFilterSheet";
@@ -101,6 +102,7 @@ const PubAdminWorkspace = ({ pub }: PubAdminWorkspaceProps) => {
         )}
         {activeView === "settings" && (
           <>
+            <PubProfileForm booth={pub.booth} />
             <PubStatusToggle
               hasAccount={pub.account !== null}
               status={pub.booth.status}

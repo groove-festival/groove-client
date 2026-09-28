@@ -119,7 +119,7 @@ describe("BoothDetailPage", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("redirects PUB002 to the booth list", async () => {
+  const notFound = () => {
     const axiosError = new AxiosError("not found", "ERR_BAD_RESPONSE");
     axiosError.response = {
       data: {
@@ -132,11 +132,43 @@ describe("BoothDetailPage", () => {
       headers: {},
       config: { headers: new AxiosHeaders() },
     };
-    httpGet.mockRejectedValueOnce(axiosError);
+    return axiosError;
+  };
+
+  const spotBooth = (boothCode: string, operatingDay: "DAY1" | "DAY2") => ({
+    ...detail.pub,
+    boothCode,
+    operatingDay,
+    spotCode: "edu-kor-home",
+  });
+
+  it("redirects PUB002 to the booth list", async () => {
+    httpGet.mockImplementation((url: string) =>
+      url === "/pubs" ? Promise.resolve(envelope([])) : Promise.reject(notFound()),
+    );
 
     renderDetailPage("/pub/not-a-booth");
 
     expect(await screen.findByText("주막 목록")).toBeInTheDocument();
+  });
+
+  it("sends an old spot address to the pub that opens there first", async () => {
+    httpGet.mockImplementation((url: string) => {
+      if (url === "/pubs") {
+        return Promise.resolve(
+          envelope([spotBooth("edu-home", "DAY2"), spotBooth("edu-kor", "DAY1")]),
+        );
+      }
+      if (url === "/pubs/edu-kor") return Promise.resolve(envelope(detail));
+      return Promise.reject(notFound());
+    });
+
+    renderDetailPage("/pub/edu-kor-home");
+
+    expect(
+      await screen.findByRole("heading", { name: "일렉트로닉 나이트" }),
+    ).toBeInTheDocument();
+    expect(httpGet).toHaveBeenCalledWith("/pubs/edu-kor");
   });
 
   it("shows a retry action when PUB-2 fails", async () => {

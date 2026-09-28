@@ -1,4 +1,9 @@
-import { type Booth, getBoothDisplayName } from "@/entities/booth";
+import {
+  type Booth,
+  compareByOperatingDay,
+  getBoothDisplayName,
+  getBoothSpotCode,
+} from "@/entities/booth";
 import type { ExperienceZone, ZoneType } from "@/entities/zone";
 import type { MapRatioPoint } from "@/shared/ui";
 
@@ -71,6 +76,8 @@ export const getShapeCenter = (shape: MapShape) => {
 };
 
 // 주막 도형 (festival-visuals/campus-pubs.svg). 도형과 주막을 잇는 유일한 연결 고리다.
+// 키는 주막 코드가 아니라 자리(천막) 코드다 — 사범대는 한 자리를 날짜별로 두 학과가
+// 나눠 쓰므로 두 주막(edu-kor · edu-home)이 한 도형(edu-kor-home)을 함께 쓴다.
 // 도형 ↔ 주막 짝은 실제 배치 사진(학생주차장 16 · 복지관 6)과 대조해 정했고,
 // 도형 중심은 PUB-1 좌표와 0.1px 안쪽으로 일치한다.
 // ⚠️ 디자인이 배치를 바꿔 SVG 를 다시 내보내면 이 표도 함께 갱신한다.
@@ -138,7 +145,8 @@ interface PlaceBase {
 
 export type CampusPlace = PlaceBase &
   (
-    | { group: "pub"; boothCode: string }
+    // spotCode 는 도형이 묶인 자리, boothCodes 는 그 자리를 쓰는 주막들(운영일 순).
+    | { group: "pub"; spotCode: string; boothCodes: string[] }
     | { group: "zone"; zoneType: ZoneType }
     | { group: Exclude<PlaceGroup, "pub" | "zone"> }
   );
@@ -249,9 +257,9 @@ const getPlacePoint = (
     ? { xRatio: coordinates.xRatio, yRatio: coordinates.yRatio }
     : getShapePoint(shape);
 
-// 디자인에 그려진 주막이면 그 도형의 중심. API 좌표가 비었을 때 대신 쓴다.
-export const getPubDesignPoint = (boothCode: string): MapRatioPoint | null => {
-  const shape = pubShapes[boothCode];
+// 디자인에 그려진 자리면 그 도형의 중심. API 좌표가 비었을 때 대신 쓴다.
+export const getPubDesignPoint = (spotCode: string): MapRatioPoint | null => {
+  const shape = pubShapes[spotCode];
   return shape ? getShapePoint(shape) : null;
 };
 
@@ -262,14 +270,14 @@ const LANDMARK_FOCUS_SPREAD = 1.5;
 export const getPlaceFocusWidth = (place: CampusPlace, width: number) =>
   place.group === "landmark" ? width * LANDMARK_FOCUS_SPREAD : width;
 
-export const pubPlaceId = (boothCode: string) => `pub:${boothCode}`;
+export const pubPlaceId = (spotCode: string) => `pub:${spotCode}`;
 export const zonePlaceId = (zoneType: ZoneType) => `zone:${zoneType}`;
 
 // 색 레이어(campus-pubs.svg · campus-zones.svg)에 칠해진 도형 전부. 켜지 않은 도형은
 // 이 모양대로 회색을 덮어 끈다. 장소 id 와 같은 값이라 켜진 장소와 바로 맞춰 본다.
 export const campusCoverShapes: readonly { id: string; shape: MapShape }[] = [
-  ...Object.entries(pubShapes).map(([boothCode, shape]) => ({
-    id: pubPlaceId(boothCode),
+  ...Object.entries(pubShapes).map(([spotCode, shape]) => ({
+    id: pubPlaceId(spotCode),
     shape,
   })),
   ...(Object.entries(zoneShapes) as [ZoneType, MapShape][]).map(
@@ -287,18 +295,28 @@ export const buildCampusPlaces = (
   booths: readonly Booth[],
   zones: readonly ExperienceZone[],
 ): CampusPlace[] => {
-  const pubs = booths.flatMap((booth): CampusPlace[] => {
-    const shape = pubShapes[booth.boothCode];
+  // 같은 자리를 쓰는 주막을 한 장소로 묶는다. 축제 전에는 사범대 자리에 두 학과가 함께
+  // 들어오고, 축제 날에는 그날 여는 학과 하나만 들어온다 (PUB-1 이 거른다).
+  const spots = new Map<string, Booth[]>();
+  for (const booth of booths) {
+    const spotCode = getBoothSpotCode(booth);
+    spots.set(spotCode, [...(spots.get(spotCode) ?? []), booth]);
+  }
+
+  const pubs = [...spots].flatMap(([spotCode, spotBooths]): CampusPlace[] => {
+    const shape = pubShapes[spotCode];
     if (!shape) return [];
 
+    const ordered = [...spotBooths].sort(compareByOperatingDay);
     return [
       {
-        id: pubPlaceId(booth.boothCode),
-        label: getBoothDisplayName(booth),
+        id: pubPlaceId(spotCode),
+        label: ordered.map(getBoothDisplayName).join(" · "),
         group: "pub",
-        boothCode: booth.boothCode,
+        spotCode,
+        boothCodes: ordered.map(({ boothCode }) => boothCode),
         shape,
-        point: getPlacePoint(booth, shape),
+        point: getPlacePoint(ordered[0], shape),
       },
     ];
   });

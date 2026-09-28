@@ -4,10 +4,13 @@ import { cardChevronIcon } from "@/shared/ui";
 
 import {
   formatBoothDepartments,
+  getBoothDepartmentParts,
   getBoothDisplayName,
   type Booth,
 } from "../model/booths";
+import { BoothDepartments } from "./BoothDepartments";
 import { CollegeBadge } from "./CollegeBadge";
+import { OperatingDateBadge } from "./OperatingDateBadge";
 
 interface BoothCardProps {
   booth: Booth;
@@ -37,6 +40,8 @@ const BoothCollegeBadge = ({ colleges }: Pick<Booth, "colleges">) => {
 export const BoothCard = ({ booth, isSelected = false, to }: BoothCardProps) => {
   const departments = formatBoothDepartments(booth.departments);
   const displayName = getBoothDisplayName(booth);
+  // 날짜별로 나눠 쓰는 자리는 이름이 학과명과 같아도 두 학과를 적어 연합주막임을 보여 준다.
+  const isShared = getBoothDepartmentParts(booth).some(({ isOwn }) => isOwn);
 
   return (
     <Link
@@ -49,9 +54,15 @@ export const BoothCard = ({ booth, isSelected = false, to }: BoothCardProps) => 
       <div className="flex min-w-0 items-center gap-4">
         <BoothCollegeBadge colleges={booth.colleges} />
         <div className="min-w-0 leading-none font-semibold">
-          <p className="truncate text-xl">{displayName}</p>
-          {displayName !== departments && (
-            <p className="mt-1 truncate text-sm font-medium">{departments}</p>
+          <div className="flex min-w-0 items-center gap-2">
+            <p className="truncate text-xl">{displayName}</p>
+            <OperatingDateBadge booth={booth} />
+          </div>
+          {(isShared || displayName !== departments) && (
+            <BoothDepartments
+              booth={booth}
+              className="mt-1 truncate text-sm font-medium"
+            />
           )}
         </div>
       </div>

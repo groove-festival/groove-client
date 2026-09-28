@@ -288,7 +288,9 @@ beforeEach(() => {
     // 같은 주막의 다른 테이블도 유효하다. 배너가 테이블별로 갈리는지 보려면
     // 테이블 코드가 달라도 PUB-3이 성공해야 한다.
     return url.startsWith(`/pubs/${BOOTH_ID}/tables/`)
-      ? Promise.resolve(envelope(tableResponse()))
+      ? Promise.resolve(
+          envelope({ ...tableResponse(), tableCode: url.split("/").at(-1) }),
+        )
       : Promise.reject(apiError("PUB002", 404));
   });
 
@@ -316,6 +318,24 @@ describe("BoothOrderPage", () => {
     expect(screen.queryByRole("button", { name: "메뉴 열기" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "GROOVE 홈" })).not.toBeInTheDocument();
     expect(screen.getByRole("img", { name: "GROOVE" })).toBeInTheDocument();
+  });
+
+  it("moves a shared-spot QR to the table PUB-3 resolved for today", async () => {
+    httpGet.mockImplementation((url: string) => {
+      if (url.includes("/orders/")) return Promise.reject(apiError("PUB005", 404));
+      // 첫째 날 학과가 뽑은 QR(자리 코드)로 둘째 날에 들어오면 서버가 오늘 학과의
+      // 같은 번호 테이블로 옮겨 답한다.
+      if (url === "/pubs/edu-kor-home/tables/day1-table") {
+        return Promise.resolve(envelope({ ...tableResponse(), tableCode: TABLE_CODE }));
+      }
+      return url === `/pubs/${BOOTH_ID}/tables/${TABLE_CODE}`
+        ? Promise.resolve(envelope(tableResponse()))
+        : Promise.reject(apiError("PUB002", 404));
+    });
+
+    await showMenuScreen("/pub/edu-kor-home/day1-table");
+
+    expect(httpGet).toHaveBeenCalledWith(`/pubs/${BOOTH_ID}/tables/${TABLE_CODE}`);
   });
 
   it("sends the PUB-3 table code and groups the menus it returns", async () => {
