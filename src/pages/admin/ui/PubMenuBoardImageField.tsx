@@ -45,7 +45,7 @@ export const PubMenuBoardImageField = ({
       {menuBoardImageUrl && (
         <img
           alt="등록된 메뉴판"
-          className="aspect-[3/4] w-full rounded-xl object-cover"
+          className="max-h-[480px] w-full rounded-xl bg-[#1c1c1c] object-contain"
           src={menuBoardImageUrl}
         />
       )}

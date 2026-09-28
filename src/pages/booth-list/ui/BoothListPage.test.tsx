@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { Link, MemoryRouter, Route, Routes } from "react-router";
 
@@ -13,6 +13,7 @@ vi.mock("@/shared/api", async () => {
 });
 
 const httpGet = vi.mocked(httpClient.get);
+let scrollBy: ReturnType<typeof vi.fn>;
 
 const booths = [
   {
@@ -95,6 +96,15 @@ const renderPage = () => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  scrollBy = vi.fn();
+  Object.defineProperty(window, "innerHeight", {
+    configurable: true,
+    value: 720,
+  });
+  Object.defineProperty(window, "scrollBy", {
+    configurable: true,
+    value: scrollBy,
+  });
   window.localStorage.clear();
   window.sessionStorage.clear();
   httpGet.mockImplementation((url: string) =>
@@ -217,6 +227,20 @@ describe("BoothListPage", () => {
   });
 
   it("filters the list to the picked booth and restores the base filters", async () => {
+    const getBoundingClientRect = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockReturnValue({
+        bottom: window.innerHeight + 80,
+        height: 160,
+        left: 0,
+        right: 0,
+        top: window.innerHeight - 80,
+        width: 0,
+        x: 0,
+        y: window.innerHeight - 80,
+        toJSON: () => ({}),
+      } as DOMRect);
+
     renderPage();
 
     fireEvent.click(await screen.findByRole("button", { name: "확인했습니다" }));
@@ -231,6 +255,18 @@ describe("BoothListPage", () => {
     expect(screen.getByRole("link", { name: /일렉트로닉 나이트/ })).toHaveClass(
       "border-[#cfff04]",
     );
+    expect(screen.getAllByText("일렉트로닉 나이트")).toHaveLength(3);
+    await waitFor(() =>
+      expect(scrollBy).toHaveBeenCalledWith({
+        behavior: "smooth",
+        top: 104,
+      }),
+    );
+    expect(scrollBy).toHaveBeenCalledTimes(1);
+    expect(scrollBy).not.toHaveBeenCalledWith({
+      behavior: "smooth",
+      block: "start",
+    });
     expect(isBoothLit("elec-eh")).toBe(true);
     expect(isBoothLit("elec-b-design")).toBe(false);
     expect(boothButton("elec-b-design")).toBeInTheDocument();
@@ -245,6 +281,7 @@ describe("BoothListPage", () => {
     expect(screen.getByRole("link", { name: /전자공학부B • 디자인학과/ })).toHaveClass(
       "border-[#cfff04]",
     );
+    expect(screen.getAllByText("전자공학부B • 디자인학과")).toHaveLength(3);
     expect(
       screen.getByRole("button", {
         name: "전자공학부B • 디자인학과 주막 필터 해제",
@@ -279,6 +316,7 @@ describe("BoothListPage", () => {
     expect(
       screen.getByRole("button", { name: "지도에서 학생주차장 보기" }),
     ).toHaveAttribute("aria-pressed", "true");
+    getBoundingClientRect.mockRestore();
   });
 
   it("only lets a booth in the base filters be picked and drops the pick when they change", async () => {
@@ -329,10 +367,10 @@ describe("BoothListPage", () => {
     expect(screen.queryByText("RECOVER ZONE")).not.toBeInTheDocument();
     expect(screen.getAllByText("IT1호관")).toHaveLength(1);
 
-    // 주막을 누르면 그 주막만 남기고, 이름은 카드와 필터 칩에만 뜬다 (지도 핀 없음).
+    // 주막을 누르면 그 주막만 남기고, 지도에도 이름 핀이 뜬다.
     fireEvent.click(screen.getByRole("button", { name: "나이팅게일 주막만 보기" }));
     expect(screen.getByText("IT1호관")).toBeInTheDocument();
-    expect(screen.getAllByText("나이팅게일")).toHaveLength(2);
+    expect(screen.getAllByText("나이팅게일")).toHaveLength(3);
   });
 
   it("shows an empty state when PUB-1 has no booths", async () => {

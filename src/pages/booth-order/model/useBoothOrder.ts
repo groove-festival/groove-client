@@ -27,9 +27,12 @@ import {
   toggleOption,
 } from "./orderCart";
 import {
+  getAdditionalOrderStorageKey,
   getOrderStorageKey,
+  readAdditionalOrderMark,
   readStoredOrderRef,
   type StoredOrderRef,
+  writeAdditionalOrderMark,
   writeStoredOrderRef,
 } from "./orderStorage";
 
@@ -38,7 +41,13 @@ import {
 export const useBoothOrder = (booth: BoothOrderDetail, tableCode: string) => {
   const queryClient = useQueryClient();
   const storageKey = getOrderStorageKey(booth.boothCode, tableCode);
-  const [cart, setCart] = useState<OrderCart>(() => createInitialCart(booth));
+  const additionalOrderKey = getAdditionalOrderStorageKey(booth.boothCode, tableCode);
+  const [isAdditionalOrder, setIsAdditionalOrder] = useState(() =>
+    readAdditionalOrderMark(additionalOrderKey),
+  );
+  const [cart, setCart] = useState<OrderCart>(() =>
+    createInitialCart(booth, isAdditionalOrder),
+  );
   const [selectedOptions, setSelectedOptions] = useState<OrderOptionSelection>({});
   const [orderRef, setOrderRef] = useState<StoredOrderRef | null>(() =>
     readStoredOrderRef(storageKey),
@@ -52,8 +61,8 @@ export const useBoothOrder = (booth: BoothOrderDetail, tableCode: string) => {
   const orderQuery = useOrder(target);
   const order = orderQuery.data ?? null;
 
-  const resetCart = () => {
-    setCart(createInitialCart(booth));
+  const resetCart = (nextIsAdditionalOrder = isAdditionalOrder) => {
+    setCart(createInitialCart(booth, nextIsAdditionalOrder));
     setSelectedOptions({});
   };
 
@@ -63,7 +72,7 @@ export const useBoothOrder = (booth: BoothOrderDetail, tableCode: string) => {
   };
 
   // 토큰이 더는 통하지 않으면 붙잡고 있어도 같은 실패만 반복한다.
-  const discardOrder = () => {
+  const discardOrder = (nextIsAdditionalOrder = isAdditionalOrder) => {
     if (orderRef) {
       queryClient.removeQueries({
         queryKey: orderQueryKeys.order(booth.boothCode, tableCode, orderRef.orderId),
@@ -71,7 +80,15 @@ export const useBoothOrder = (booth: BoothOrderDetail, tableCode: string) => {
     }
     saveOrderRef(null);
     setIsTransferDialogOpen(false);
-    resetCart();
+    resetCart(nextIsAdditionalOrder);
+  };
+
+  // "추가 주문하기"는 결제가 확인된 주문 화면에만 있다. 상차림비는 그 주문에서
+  // 냈으므로 여기서부터는 추가 주문으로 본다.
+  const startAdditionalOrder = () => {
+    writeAdditionalOrderMark(additionalOrderKey);
+    setIsAdditionalOrder(true);
+    discardOrder(true);
   };
 
   // 토큰이 더는 통하지 않는 주문은 저장소에서 지워 다음 진입 때 깨끗하게
@@ -129,11 +146,16 @@ export const useBoothOrder = (booth: BoothOrderDetail, tableCode: string) => {
   });
 
   return {
-    canPlaceOrder: canPlaceOrder(booth, cart),
+    canPlaceOrder: canPlaceOrder(booth, cart, isAdditionalOrder),
     cart,
     cartTotal: getOrderTotal(cartLines),
     hasSelectedMenu: hasSelectedMenu(booth, cart),
-    hasSelectedSeparateCharge: hasSelectedSeparateCharge(booth, cart),
+    hasSelectedSeparateCharge: hasSelectedSeparateCharge(
+      booth,
+      cart,
+      isAdditionalOrder,
+    ),
+    isAdditionalOrder,
     selectedOptions,
     errorToast,
     hasIncompleteOrder: isAwaitingDepositorName(order) && !isTransferDialogOpen,
@@ -143,7 +165,7 @@ export const useBoothOrder = (booth: BoothOrderDetail, tableCode: string) => {
     order,
     screen: getOrderScreen(order),
     changeItemQuantity: (item: BoothMenuItem, delta: number) => {
-      const nextCart = changeQuantity(booth, cart, item, delta);
+      const nextCart = changeQuantity(booth, cart, item, delta, isAdditionalOrder);
 
       setCart(nextCart);
       if (getQuantity(nextCart, item) === 0) {
@@ -182,8 +204,9 @@ export const useBoothOrder = (booth: BoothOrderDetail, tableCode: string) => {
       setErrorToast(null);
       depositorNameMutation.mutate(depositorName);
     },
-    startAdditionalOrder: discardOrder,
+    startAdditionalOrder,
     // 취소 안내를 닫으면 토큰까지 버린다. 남겨두면 재진입할 때마다 다시 뜬다.
-    dismissCanceledOrder: discardOrder,
+    // 추가 주문 여부는 그대로 둔다 — 취소된 주문으로는 상차림비를 낸 게 아니다.
+    dismissCanceledOrder: () => discardOrder(),
   };
 };

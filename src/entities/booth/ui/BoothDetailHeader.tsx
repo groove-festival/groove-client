@@ -1,5 +1,6 @@
 import { type BoothDetail } from "../model/boothDetail";
 import { formatBoothDepartments, getBoothDisplayName } from "../model/booths";
+import { MenuBoardImage } from "./MenuBoardImage";
 
 export const BoothDetailHeader = ({
   booth,
@@ -12,16 +13,15 @@ export const BoothDetailHeader = ({
   return (
     <header className={`flex flex-col ${booth.menuBoardImageUrl ? "gap-6" : ""}`}>
       {booth.menuBoardImageUrl && (
-        <img
+        <MenuBoardImage
           alt={`${getBoothDisplayName(booth)} 메뉴판`}
-          className="aspect-[361/512] w-full rounded-3xl object-cover"
           src={booth.menuBoardImageUrl}
         />
       )}
 
       <div className="flex items-start justify-between gap-6">
         <div className="flex min-w-0 flex-col gap-2">
-          <h1 className="text-2xl leading-[29px] font-bold text-[#fcfcfc]">
+          <h1 className="text-2xl leading-[29px] font-bold break-keep text-[#fcfcfc]">
             {getBoothDisplayName(booth)}
           </h1>
           {booth.description && (

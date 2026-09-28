@@ -19,6 +19,8 @@ import { PubBoothMap } from "./PubBoothMap";
 
 // 펼친 단대 목록과 화면 아래 끝 사이에 남길 여백.
 const MENU_BOTTOM_MARGIN_PX = 16;
+// 지도에서 고른 주막 카드가 뷰포트 하단에 보일 때 남길 여백.
+const SELECTED_BOOTH_BOTTOM_MARGIN_PX = 24;
 
 const NOTICE_DISMISSED_STORAGE_KEY = "groove:booth-notice-dismissed";
 // 확인한 안내는 같은 탭에서 다시 띄우지 않는다. 상세에서 뒤로 돌아올 때마다
@@ -121,6 +123,7 @@ const BoothListPage = () => {
   // 지도에서 고른 주막. 구역·단대 필터 위에 한 주막만 남기는 추가 필터다.
   const [selectedBoothCode, setSelectedBoothCode] = useState<string | null>(null);
   const [isNoticeOpen, setIsNoticeOpen] = useState(() => !hasDismissedNotice());
+  const selectedBoothResultRef = useRef<HTMLLIElement>(null);
   const boothsQuery = useBooths();
   const booths = useMemo(() => boothsQuery.data ?? [], [boothsQuery.data]);
   // 구역과 단대를 모두 통과한 기본 목록. 주막 한 곳을 고르기 전과 선택을
@@ -162,6 +165,31 @@ const BoothListPage = () => {
     setSelectedBoothCode(null);
   };
 
+  const scrollToSelectedBoothResult = () => {
+    const target = selectedBoothResultRef.current;
+    if (!target) return;
+
+    const hiddenBelow =
+      target.getBoundingClientRect().bottom +
+      SELECTED_BOOTH_BOTTOM_MARGIN_PX -
+      window.innerHeight;
+    if (hiddenBelow <= 0) return;
+
+    const prefersReducedMotion = window.matchMedia?.(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    window.scrollBy({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      top: hiddenBelow,
+    });
+  };
+
+  const selectBoothFromMap = (boothCode: string) => {
+    setSelectedBoothCode(boothCode);
+    window.setTimeout(scrollToSelectedBoothResult, 0);
+  };
+
   if (boothsQuery.isPending) {
     return <LoadingFallback />;
   }
@@ -194,9 +222,10 @@ const BoothListPage = () => {
         booths={booths}
         highlightedCodes={highlightedCodes}
         onSelectArea={changeArea}
-        onSelectBooth={setSelectedBoothCode}
+        onSelectBooth={selectBoothFromMap}
         selectableCodes={selectableCodes}
         selectedArea={selectedArea}
+        selectedBoothCode={selectedBoothCode}
       />
 
       <div className="mt-4 flex min-w-0 items-center gap-2">
@@ -238,6 +267,7 @@ const BoothListPage = () => {
                 : ""
             }
             key={booth.boothCode}
+            ref={booth.boothCode === selectedBoothCode ? selectedBoothResultRef : null}
           >
             <BoothCard
               booth={booth}

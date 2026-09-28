@@ -47,6 +47,7 @@ interface PubBoothMapProps {
   selectableCodes: ReadonlySet<string>;
   // 구역은 목록도 함께 거르므로 고른 값을 쓰는 쪽이 들고 있는다.
   selectedArea: PubMapArea;
+  selectedBoothCode: string | null;
   onSelectArea: (area: PubMapArea) => void;
   // 색이 들어온 주막을 눌렀을 때. 목록과 지도에 그 주막만 남긴다.
   onSelectBooth: (boothCode: string) => void;
@@ -63,6 +64,7 @@ export const PubBoothMap = ({
   onSelectBooth,
   selectableCodes,
   selectedArea,
+  selectedBoothCode,
 }: PubBoothMapProps) => {
   // 처음 화면은 initialView 가 잡으므로, 버튼이나 장소를 누른 뒤에만 지도를 옮긴다.
   const [focus, setFocus] = useState<CampusMapView | null>(null);
@@ -76,6 +78,16 @@ export const PubBoothMap = ({
     width: AREA_WIDTH[area],
   });
 
+  // 목록에서 주막 선택이 풀리면 지도의 주막 핀 선택도 푼다. Effect로 하면 한
+  // 번 그린 뒤 다시 그리므로, 선택이 바뀐 렌더에서 바로 맞춘다.
+  const [prevSelectedBoothCode, setPrevSelectedBoothCode] = useState(selectedBoothCode);
+  if (prevSelectedBoothCode !== selectedBoothCode) {
+    setPrevSelectedBoothCode(selectedBoothCode);
+    if (selectedBoothCode === null && selectedPlaceId?.startsWith("pub:")) {
+      setSelectedPlaceId(null);
+    }
+  }
+
   const selectArea = (area: PubMapArea) => {
     onSelectArea(area);
     setSelectedPlaceId(null);
@@ -83,10 +95,9 @@ export const PubBoothMap = ({
   };
 
   const selectPlace = (place: CampusPlace | null) => {
-    // 주막은 목록과 지도에 그 주막만 남기고 필터 칩에 이름을 띄우므로, 지도에는
-    // 핀을 따로 띄우지 않고 보던 자리도 그대로 둔다.
     if (place?.group === "pub") {
-      setSelectedPlaceId(null);
+      setSelectedPlaceId(place.id);
+      setFocus({ ...place.point, width: getPlaceFocusWidth(place, SELECTED_WIDTH) });
       onSelectBooth(place.boothCode);
       return;
     }
