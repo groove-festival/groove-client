@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 
 import { httpClient } from "@/shared/api";
 
-import { PubOrderBoard } from "./PubOrderBoard";
+import { PubPaymentBoard } from "./PubPaymentBoard";
 
 vi.mock("@/shared/api", async () => {
   const actual = await vi.importActual<Record<string, unknown>>("@/shared/api");
@@ -18,7 +18,14 @@ const orderBody = (over: Record<string, unknown>) => ({
   depositorName: null,
   depositorSubmittedAt: null,
   items: [
-    { lineAmount: 15_000, menuId: 4, menuName: "닭발", quantity: 1, unitPrice: 15_000 },
+    {
+      lineAmount: 15_000,
+      menuId: 4,
+      orderItemId: 40,
+      menuName: "닭발",
+      quantity: 1,
+      unitPrice: 15_000,
+    },
   ],
   orderId: 1,
   orderedAt: new Date().toISOString(),
@@ -44,7 +51,7 @@ const renderBoard = () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  return render(<PubOrderBoard />, { wrapper });
+  return render(<PubPaymentBoard visibleTables={[]} />, { wrapper });
 };
 
 const groupSection = (title: string) => screen.findByRole("region", { name: title });
@@ -53,8 +60,8 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe("PubOrderBoard", () => {
-  it("separates orders awaiting payment confirmation from confirmed ones", async () => {
+describe("PubPaymentBoard", () => {
+  it("keeps only orders awaiting payment confirmation, split by depositor submission", async () => {
     respondWith([
       orderBody({ orderId: 1, status: "PENDING_DEPOSIT", tableNumber: 1 }),
       orderBody({
@@ -80,8 +87,8 @@ describe("PubOrderBoard", () => {
     expect(within(pending).getByText("1번 테이블")).toBeInTheDocument();
     expect(within(pending).getByText("미제출")).toBeInTheDocument();
 
-    const paid = await groupSection("결제완료 · 조리 중");
-    expect(within(paid).getByText("3번 테이블")).toBeInTheDocument();
+    // 결제완료된 주문은 주방 화면으로 넘어간다.
+    expect(screen.queryByText("3번 테이블")).not.toBeInTheDocument();
   });
 
   it("offers only the transitions PUB-A9 accepts for each status", async () => {
@@ -91,6 +98,9 @@ describe("PubOrderBoard", () => {
     renderBoard();
 
     expect(await screen.findByRole("button", { name: "결제완료" })).toBeInTheDocument();
+    // 되돌릴 수 없는 취소는 행을 펼쳐야 보인다 — 결제완료 옆에서 잘못 누르지 않게.
+    expect(screen.queryByRole("button", { name: "주문취소" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
     expect(screen.getByRole("button", { name: "주문취소" })).toBeInTheDocument();
     // 입금확인중에서 곧바로 서빙완료로 보내지 않는다.
     expect(screen.queryByRole("button", { name: "서빙완료" })).not.toBeInTheDocument();
@@ -142,10 +152,13 @@ describe("PubOrderBoard", () => {
   });
 
   it("asks before canceling, since cancellation cannot be undone", async () => {
-    respondWith([orderBody({ orderId: 7, status: "PAID" })]);
+    respondWith([
+      orderBody({ orderId: 7, status: "DEPOSIT_CLAIMED", depositorName: "김입금" }),
+    ]);
     renderBoard();
 
-    fireEvent.click(await screen.findByRole("button", { name: "주문취소" }));
+    fireEvent.click(await screen.findByRole("button", { expanded: false }));
+    fireEvent.click(screen.getByRole("button", { name: "주문취소" }));
 
     const dialog = await screen.findByRole("dialog", {
       name: "이 주문을 취소할까요?",
@@ -163,22 +176,6 @@ describe("PubOrderBoard", () => {
     );
   });
 
-  it("folds finished orders away so the working queue stays readable", async () => {
-    respondWith([
-      orderBody({ orderId: 8, status: "COMPLETED", tableNumber: 8 }),
-      orderBody({ orderId: 9, status: "CANCELED", tableNumber: 9 }),
-    ]);
-    renderBoard();
-
-    const toggle = await screen.findByRole("button", { name: /완료·취소된 주문 2건/ });
-    expect(screen.queryByText("8번 테이블")).not.toBeInTheDocument();
-
-    fireEvent.click(toggle);
-
-    expect(screen.getByText("8번 테이블")).toBeInTheDocument();
-    expect(screen.getByText("9번 테이블")).toBeInTheDocument();
-  });
-
   it("folds long-unpaid orders without canceling them", async () => {
     const fortyMinutesAgo = new Date(Date.now() - 40 * 60 * 1000).toISOString();
     respondWith([
@@ -194,5 +191,68 @@ describe("PubOrderBoard", () => {
     fireEvent.click(toggle);
 
     expect(screen.getByText("1번 테이블")).toBeInTheDocument();
+  });
+
+  it("numbers orders by arrival and shows how long each has waited, oldest first", async () => {
+    const minutesAgo = (minutes: number) =>
+      new Date(Date.now() - minutes * 60_000).toISOString();
+    respondWith([
+      orderBody({
+        orderId: 30,
+        status: "DEPOSIT_CLAIMED",
+        depositorName: "늦은손님",
+        orderedAt: minutesAgo(2),
+        tableNumber: 5,
+      }),
+      orderBody({
+        orderId: 10,
+        status: "DEPOSIT_CLAIMED",
+        depositorName: "먼저손님",
+        orderedAt: minutesAgo(12),
+        tableNumber: 3,
+      }),
+    ]);
+    renderBoard();
+
+    await screen.findByText("먼저손님");
+    const rows = within(await groupSection("입금확인중")).getAllByRole("article");
+    expect(rows[0]).toHaveAccessibleName("주문 1번 · 3번 테이블");
+    expect(rows[0]).toHaveTextContent("#1");
+    expect(rows[0]).toHaveTextContent("12분 전");
+    expect(rows[1]).toHaveTextContent("#2");
+    expect(rows[1]).toHaveTextContent("2분 전");
+  });
+
+  it("uses the pub-wide arrival number even when only some tables are shown", async () => {
+    const minutesAgo = (minutes: number) =>
+      new Date(Date.now() - minutes * 60_000).toISOString();
+    respondWith([
+      orderBody({
+        orderId: 1,
+        status: "DEPOSIT_CLAIMED",
+        depositorName: "일번",
+        orderedAt: minutesAgo(9),
+        tableNumber: 1,
+      }),
+      orderBody({
+        orderId: 2,
+        status: "DEPOSIT_CLAIMED",
+        depositorName: "사번",
+        orderedAt: minutesAgo(3),
+        tableNumber: 4,
+      }),
+    ]);
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PubPaymentBoard visibleTables={[4]} />
+      </QueryClientProvider>,
+    );
+
+    const row = await screen.findByRole("article", { name: "주문 2번 · 4번 테이블" });
+    expect(row).toHaveTextContent("#2");
+    expect(screen.queryByText("일번")).not.toBeInTheDocument();
   });
 });

@@ -10,7 +10,9 @@ export interface AdminOrderLineResponseBody {
   lineAmount: number;
   menuId: number;
   menuName: string;
+  orderItemId: number;
   quantity: number;
+  servedAt?: string | null;
   unitPrice: number;
 }
 
@@ -31,10 +33,12 @@ export const toAdminOrder = (order: AdminOrderResponseBody): AdminOrder => ({
   depositorSubmittedAt: order.depositorSubmittedAt ?? null,
   id: order.orderId,
   lines: order.items.map((item) => ({
+    itemId: item.orderItemId,
     menuId: item.menuId,
     name: item.menuName,
     price: item.unitPrice,
     quantity: item.quantity,
+    servedAt: item.servedAt ?? null,
   })),
   orderedAt: order.orderedAt,
   paymentMethod: order.paymentMethod,

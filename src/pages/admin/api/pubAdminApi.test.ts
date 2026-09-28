@@ -53,7 +53,14 @@ const orderBody = {
   depositorName: "김입금",
   depositorSubmittedAt: "2026-10-01T20:03:00Z",
   items: [
-    { lineAmount: 30_000, menuId: 4, menuName: "닭발", quantity: 2, unitPrice: 15_000 },
+    {
+      lineAmount: 30_000,
+      menuId: 4,
+      orderItemId: 40,
+      menuName: "닭발",
+      quantity: 2,
+      unitPrice: 15_000,
+    },
   ],
   orderId: 7,
   orderedAt: "2026-10-01T20:00:00Z",
@@ -142,7 +149,16 @@ describe("order endpoints", () => {
       depositorName: "김입금",
       depositorSubmittedAt: "2026-10-01T20:03:00Z",
       id: 7,
-      lines: [{ menuId: 4, name: "닭발", price: 15_000, quantity: 2 }],
+      lines: [
+        {
+          itemId: 40,
+          menuId: 4,
+          name: "닭발",
+          price: 15_000,
+          quantity: 2,
+          servedAt: null,
+        },
+      ],
       orderedAt: "2026-10-01T20:00:00Z",
       paymentMethod: "TRANSFER",
       status: "DEPOSIT_CLAIMED",

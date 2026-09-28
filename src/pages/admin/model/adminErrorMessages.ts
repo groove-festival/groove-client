@@ -117,6 +117,23 @@ export function orderStatusErrorMessage(error: unknown): string {
   );
 }
 
+// PUB-A14. 다른 직원이 먼저 주문을 끝내거나 취소하면 PUB010이 온다.
+export function orderItemServedErrorMessage(error: unknown): string {
+  if (error instanceof ApiError && error.code === "PUB010") {
+    return "이미 끝났거나 취소된 주문이에요. 목록을 새로고침했어요.";
+  }
+  if (
+    error instanceof ApiError &&
+    (error.code === "PUB005" || error.code === "PUB011")
+  ) {
+    return "존재하지 않는 주문 항목이에요. 목록을 새로고침했어요.";
+  }
+  return (
+    adminAccessErrorMessage(error) ??
+    "서빙 체크에 실패했어요. 잠시 후 다시 시도해 주세요."
+  );
+}
+
 export function menuMutationErrorMessage(error: unknown): string {
   if (error instanceof ApiError && error.code === "PUB004") {
     return "이미 삭제된 메뉴예요. 목록을 새로고침해 주세요.";
