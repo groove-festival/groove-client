@@ -1,5 +1,9 @@
 import {
+  ADDITIONAL_ORDER_TTL_MS,
+  getAdditionalOrderStorageKey,
   getOrderStorageKey,
+  readAdditionalOrderMark,
+  writeAdditionalOrderMark,
   readStoredOrderRef,
   type StoredOrderRef,
   writeStoredOrderRef,
@@ -35,5 +39,32 @@ describe("orderStorage", () => {
     // 토큰 없이 주문 식별자만 남은 값은 PUB-5를 호출할 수 없다.
     window.localStorage.setItem(storageKey, JSON.stringify({ orderId: 1 }));
     expect(readStoredOrderRef(storageKey)).toBeNull();
+  });
+});
+
+describe("additional order mark", () => {
+  const key = getAdditionalOrderStorageKey("booth", "table");
+
+  afterEach(() => window.localStorage.clear());
+
+  it("remembers that this device already ordered at this table, for a while", () => {
+    expect(readAdditionalOrderMark(key)).toBe(false);
+
+    writeAdditionalOrderMark(key, 1_000);
+
+    expect(readAdditionalOrderMark(key, 1_000 + ADDITIONAL_ORDER_TTL_MS - 1)).toBe(
+      true,
+    );
+    // 몇 시간 뒤 같은 자리에 다시 앉은 건 새 방문이다.
+    expect(readAdditionalOrderMark(key, 1_000 + ADDITIONAL_ORDER_TTL_MS)).toBe(false);
+    expect(
+      readAdditionalOrderMark(getAdditionalOrderStorageKey("booth", "other"), 1_000),
+    ).toBe(false);
+  });
+
+  it("treats a broken value as a first order", () => {
+    window.localStorage.setItem(key, "not-a-time");
+
+    expect(readAdditionalOrderMark(key)).toBe(false);
   });
 });

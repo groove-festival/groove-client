@@ -76,6 +76,20 @@ describe("orderCart", () => {
     expect(hasSelectedMenu(booth, cart)).toBe(false);
   });
 
+  it("leaves the separate charge out of an additional order, but lets it be added back", () => {
+    let cart = createInitialCart(booth, true);
+
+    expect(getQuantity(cart, separateChargeItem)).toBe(0);
+    cart = changeQuantity(booth, cart, chicken, 1, true);
+    // 상차림비는 첫 주문에서 냈으므로 메뉴만 담아도 주문할 수 있다.
+    expect(canPlaceOrder(booth, cart, true)).toBe(true);
+    expect(canPlaceOrder(booth, cart)).toBe(false);
+
+    cart = changeQuantity(booth, cart, separateChargeItem, 1, true);
+    cart = changeQuantity(booth, cart, separateChargeItem, -1, true);
+    expect(getQuantity(cart, separateChargeItem)).toBe(0);
+  });
+
   it("keeps the separate charge at one or more and menus at zero or more", () => {
     let cart = createInitialCart(booth);
     cart = changeQuantity(booth, cart, separateChargeItem, -1);

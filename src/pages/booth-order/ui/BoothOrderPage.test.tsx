@@ -13,7 +13,10 @@ import { MemoryRouter, Route, Routes } from "react-router";
 import { httpClient } from "@/shared/api";
 
 import { type OrderStatus, type PaymentMethod } from "../model/order";
-import { getOrderStorageKey } from "../model/orderStorage";
+import {
+  getAdditionalOrderStorageKey,
+  getOrderStorageKey,
+} from "../model/orderStorage";
 import BoothOrderPage from "./BoothOrderPage";
 
 vi.mock("@/shared/api", async () => {
@@ -656,6 +659,30 @@ describe("BoothOrderPage", () => {
     expect(
       window.localStorage.getItem(getOrderStorageKey(BOOTH_ID, TABLE_CODE)),
     ).toBeNull();
+    // 상차림비는 첫 주문에서 냈다. 추가 주문에는 0개로 시작한다.
+    const separateCharge = screen.getByRole("list", { name: "상차림비" });
+    expect(within(separateCharge).getByLabelText("상차림비 수량")).toHaveTextContent(
+      "0",
+    );
+    expect(
+      screen.getByText(/추가 주문이라 상차림비는 빼 두었어요/),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps skipping the separate charge when the page is reopened for another order", async () => {
+    window.localStorage.setItem(
+      getAdditionalOrderStorageKey(BOOTH_ID, TABLE_CODE),
+      String(Date.now()),
+    );
+    await showMenuScreen();
+
+    const separateCharge = screen.getByRole("list", { name: "상차림비" });
+    expect(within(separateCharge).getByLabelText("상차림비 수량")).toHaveTextContent(
+      "0",
+    );
+    expect(
+      within(separateCharge).getByRole("button", { name: "상차림비 수량 줄이기" }),
+    ).toBeDisabled();
   });
 
   it("lists the chosen options under the menu on the receipt", async () => {
