@@ -218,6 +218,8 @@ describe("SongContestPage", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "경연 결과" }));
     expect(screen.getByText("가요제 결선")).toBeInTheDocument();
-    expect(screen.getByText("우승")).toBeInTheDocument();
+    // 위쪽 카드는 폭이 좁아 배지 대신 칩 색으로만 우승을 나타낸다.
+    expect(screen.queryByText("우승")).not.toBeInTheDocument();
+    expect(screen.getByText("IT대학").closest("div")).toHaveClass("bg-[#d2066c]");
   });
 });

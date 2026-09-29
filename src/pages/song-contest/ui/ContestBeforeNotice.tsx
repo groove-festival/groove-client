@@ -4,7 +4,7 @@ export function ContestBeforeNotice() {
   return (
     <section
       aria-labelledby="contest-before-heading"
-      className="mx-auto mt-12 flex w-full flex-col items-center gap-12 pb-16 text-center"
+      className="mx-auto mt-40 flex w-full flex-col items-center gap-12 pb-16 text-center"
     >
       <h2
         className="w-full text-2xl font-semibold text-[#fcfcfc] min-[480px]:text-3xl"

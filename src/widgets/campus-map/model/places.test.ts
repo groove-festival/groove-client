@@ -37,6 +37,32 @@ const zone = (xRatio: number | null, yRatio: number | null): ExperienceZone => (
 });
 
 describe("buildCampusPlaces", () => {
+  it("puts pubs sharing a spot on one shape, first operating day first", () => {
+    const shared = (
+      boothCode: string,
+      name: string,
+      operatingDay: "DAY1" | "DAY2",
+    ) => ({
+      ...booth(boothCode, null, null),
+      name,
+      operatingDay,
+      spotCode: "edu-kor-home",
+    });
+    const pubs = buildCampusPlaces(
+      [shared("edu-home", "가리고", "DAY2"), shared("edu-kor", "취향", "DAY1")],
+      [],
+    ).filter((place) => place.group === "pub");
+
+    expect(pubs).toHaveLength(1);
+    expect(pubs[0]).toMatchObject({
+      boothCodes: ["edu-kor", "edu-home"],
+      id: pubPlaceId("edu-kor-home"),
+      label: "취향 · 가리고",
+      spotCode: "edu-kor-home",
+    });
+    expect(pubs[0].point).toEqual(getPubDesignPoint("edu-kor-home"));
+  });
+
   it("uses the API coordinates and falls back to the design shape center", () => {
     const places = buildCampusPlaces(
       [booth("nursing", 0.7221, 0.6786), booth("cse", null, null)],

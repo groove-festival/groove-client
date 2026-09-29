@@ -184,19 +184,6 @@
   }
 }
 
-@keyframes contest-scroll-nudge {
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.7;
-  }
-
-  50% {
-    transform: translateY(28px);
-    opacity: 1;
-  }
-}
-
 /* Figma GLASS 효과(메인 지도 필터·확대 버튼)의 근사. 위아래 가장자리에 빛
    반사 테두리를 두고, 채움은 아래로 갈수록 조금 밝아진다. 흐림 정도는
    요소마다 backdrop-blur로 따로 준다. */

@@ -1,3 +1,5 @@
+import { Fragment } from "react";
+
 import type { Vote } from "@/entities/contest";
 
 import { ParticipantChip } from "./ParticipantChip";
@@ -6,24 +8,28 @@ interface BracketMatchRowProps {
   vote: Vote;
   // 제목 옆 보조 텍스트("n분 남음" 등). 경연 결과 목록에서는 생략한다.
   metaLabel?: string;
-  // 경연 결과 카드에서만 우승자 배지를 보여준다. 피그마 원본엔 우승 표시가
-  // 없어 이 배지는 요청에 따라 추가한 부분이다.
-  showWinnerBadge?: boolean;
+  // 우승 표시 방식. "badge"는 칩 위에 배지를 얹고(밑 섹션 "경연 결과" 카드),
+  // "color"는 배지 없이 칩 색으로만 나타낸다(위 섹션 "경연 결과" 탭 — 카드
+  // 폭이 좁아 오른쪽 참가자일 때 배지가 잘리는 문제가 있었다). 생략하면
+  // 우승 표시를 하지 않는다.
+  winnerDisplay?: "badge" | "color";
 }
 
 export function BracketMatchRow({
   vote,
   metaLabel,
-  showWinnerBadge = false,
+  winnerDisplay,
 }: BracketMatchRowProps) {
   // 3라운드(결선)만 1·2·3위를 가리는 3자 대결이라 참가팀이 3명이다. 그 외에는
   // 항상 2명(VS)이거나, 앞 라운드 결과가 아직 없어 빈 배열이다.
   const isMultiWay = vote.participants.length > 2;
+  const isWinner = (resultRank: number | null) =>
+    winnerDisplay !== undefined && resultRank === 1;
 
   return (
     <div className="flex w-full flex-col gap-3">
       <div className="flex items-center justify-between text-[#fcfcfc]">
-        <p className="text-xl font-bold">{vote.title}</p>
+        <p className="text-xl font-semibold">{vote.title}</p>
         {metaLabel && <p className="text-xs font-medium text-[#fcfcfc]">{metaLabel}</p>}
       </div>
 
@@ -32,28 +38,46 @@ export function BracketMatchRow({
           아직 참가팀이 정해지지 않았어요
         </p>
       ) : isMultiWay ? (
-        <div className="flex flex-col gap-2">
-          {vote.participants.map((participant) => (
-            <div className="relative w-full" key={participant.voteParticipantId}>
-              <ParticipantChip name={participant.name} />
-              {showWinnerBadge && participant.resultRank === 1 && <WinnerBadge />}
-            </div>
+        <div className="flex flex-col items-center gap-2">
+          {vote.participants.map((participant, index) => (
+            <Fragment key={participant.voteParticipantId}>
+              <div className="relative w-full">
+                <ParticipantChip
+                  name={participant.name}
+                  winner={winnerDisplay === "color" && isWinner(participant.resultRank)}
+                />
+                {winnerDisplay === "badge" && isWinner(participant.resultRank) && (
+                  <WinnerBadge />
+                )}
+              </div>
+              {index < vote.participants.length - 1 && (
+                <span className="text-xl font-medium text-[#fcfcfc]">vs</span>
+              )}
+            </Fragment>
           ))}
         </div>
       ) : (
-        <div className="flex w-full items-center justify-center gap-3">
+        <div className="flex w-full items-center justify-center gap-2">
           <div className="relative min-w-0 flex-1">
-            <ParticipantChip name={vote.participants[0].name} />
-            {showWinnerBadge && vote.participants[0].resultRank === 1 && (
+            <ParticipantChip
+              name={vote.participants[0].name}
+              winner={
+                winnerDisplay === "color" && isWinner(vote.participants[0].resultRank)
+              }
+            />
+            {winnerDisplay === "badge" && isWinner(vote.participants[0].resultRank) && (
               <WinnerBadge />
             )}
           </div>
-          <span className="w-[22px] shrink-0 text-xl font-medium text-[#fcfcfc]">
-            vs
-          </span>
+          <span className="shrink-0 text-xl font-medium text-[#fcfcfc]">vs</span>
           <div className="relative min-w-0 flex-1">
-            <ParticipantChip name={vote.participants[1].name} />
-            {showWinnerBadge && vote.participants[1].resultRank === 1 && (
+            <ParticipantChip
+              name={vote.participants[1].name}
+              winner={
+                winnerDisplay === "color" && isWinner(vote.participants[1].resultRank)
+              }
+            />
+            {winnerDisplay === "badge" && isWinner(vote.participants[1].resultRank) && (
               <WinnerBadge />
             )}
           </div>
