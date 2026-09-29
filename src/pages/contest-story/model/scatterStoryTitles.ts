@@ -2,6 +2,13 @@ export interface StoryTitleSize {
   width: number;
   height: number;
   seed: number;
+  variants?: readonly StoryTitleVariant[];
+}
+
+export interface StoryTitleVariant {
+  width: number;
+  height: number;
+  rotation: number;
 }
 
 export interface StoryTitlePlacement {
@@ -9,11 +16,12 @@ export interface StoryTitlePlacement {
   top: number;
   width: number;
   height: number;
+  rotation: number;
 }
 
 const edge = 8;
-const gap = 24;
-const minHeight = 336;
+const gap = 4;
+const defaultMinHeight = 336;
 
 function seededRandom(seed: number): () => number {
   let value = seed >>> 0;
@@ -42,64 +50,144 @@ function overlaps(
 export function scatterStoryTitles(
   sizes: StoryTitleSize[],
   containerWidth: number,
+  minimumHeight = defaultMinHeight,
 ): { placements: StoryTitlePlacement[]; height: number } {
   const width = Math.max(1, Math.floor(containerWidth));
   const availableWidth = Math.max(1, width - edge * 2);
-  const totalArea = sizes.reduce(
-    (sum, size) =>
+  const items = sizes.map((size, index) => {
+    const variants = (
+      size.variants?.length
+        ? size.variants
+        : [{ height: size.height, rotation: 0, width: size.width }]
+    ).map((variant) => ({
+      height: Math.max(variant.height, 1),
+      rotation: variant.rotation,
+      width: Math.min(Math.max(variant.width, 1), availableWidth),
+    }));
+
+    return { index, seed: size.seed, variants };
+  });
+  const totalArea = items.reduce(
+    (sum, item) =>
       sum +
-      (Math.min(Math.max(size.width, 1), availableWidth) + gap) *
-        (Math.max(size.height, 1) + gap),
+      Math.min(
+        ...item.variants.map(
+          (variant) => (variant.width + gap) * (variant.height + gap),
+        ),
+      ),
     0,
   );
-  let height = Math.max(minHeight, Math.ceil(totalArea / (width * 0.55)));
-  const placements: StoryTitlePlacement[] = [];
+  let height = Math.max(
+    defaultMinHeight,
+    Math.floor(minimumHeight),
+    Math.ceil(totalArea / (width * 0.88)),
+  );
+  const packingOrder = [...items].sort(
+    (first, second) =>
+      Math.min(...second.variants.map((variant) => variant.width * variant.height)) -
+      Math.min(...first.variants.map((variant) => variant.width * variant.height)),
+  );
 
-  for (const [index, size] of sizes.entries()) {
-    const itemWidth = Math.min(Math.max(size.width, 1), availableWidth);
-    const itemHeight = Math.max(size.height, 1);
-    const random = seededRandom(size.seed ^ Math.imul(index + 1, 0x9e3779b1));
-    let placement: StoryTitlePlacement | undefined;
+  for (let round = 0; round < 18; round += 1) {
+    const placed: StoryTitlePlacement[] = [];
+    const placements = Array<StoryTitlePlacement | undefined>(items.length);
+    let complete = true;
 
-    for (let round = 0; round < 5 && !placement; round += 1) {
-      const maxLeft = Math.max(0, availableWidth - itemWidth);
-      const maxTop = Math.max(0, height - itemHeight - edge * 2);
+    for (const item of packingOrder) {
+      const random = seededRandom(
+        item.seed ^
+          Math.imul(item.index + 1, 0x9e3779b1) ^
+          Math.imul(round + 1, 0x85ebca6b),
+      );
+      let placement: StoryTitlePlacement | undefined;
+      let placementScore = Number.POSITIVE_INFINITY;
+      const preferredVariantIndex = item.seed % item.variants.length;
 
-      for (let attempt = 0; attempt < 100; attempt += 1) {
+      for (let attempt = 0; attempt < 900; attempt += 1) {
+        const variantIndex = Math.floor(random() * item.variants.length);
+        const variant = item.variants[variantIndex]!;
+        const maxLeft = Math.max(0, availableWidth - variant.width);
+        const maxTop = Math.max(0, height - variant.height - edge * 2);
         const candidate = {
           left: edge + Math.round(random() * maxLeft),
           top: edge + Math.round(random() * maxTop),
-          width: itemWidth,
-          height: itemHeight,
+          width: variant.width,
+          height: variant.height,
+          rotation: variant.rotation,
         };
 
-        if (placements.every((placed) => !overlaps(candidate, placed))) {
-          placement = candidate;
-          break;
+        if (placed.every((other) => !overlaps(candidate, other))) {
+          const score =
+            candidate.top +
+            random() * height * 0.18 -
+            (variantIndex === preferredVariantIndex ? height * 0.06 : 0) +
+            (variant.width * variant.height * 0.12) / availableWidth;
+
+          if (score < placementScore) {
+            placement = candidate;
+            placementScore = score;
+          }
         }
       }
 
-      if (!placement) height += Math.max(itemHeight + gap, 72);
+      if (!placement) {
+        complete = false;
+        break;
+      }
+
+      placed.push(placement);
+      placements[item.index] = placement;
     }
 
-    if (!placement) {
-      placement = {
-        left: edge + Math.round(random() * Math.max(0, availableWidth - itemWidth)),
-        top: height + gap,
-        width: itemWidth,
-        height: itemHeight,
+    if (complete) {
+      const usedHeight = Math.max(
+        defaultMinHeight,
+        Math.floor(minimumHeight),
+        ...placed.map((placement) => placement.top + placement.height + edge),
+      );
+
+      return {
+        placements: placements as StoryTitlePlacement[],
+        height: Math.min(height, usedHeight),
       };
-      height = placement.top + itemHeight + edge;
     }
 
-    placements.push(placement);
+    if ((round + 1) % 4 === 0) {
+      height = Math.ceil(height * 1.06) + gap;
+    }
+  }
+
+  const placements: StoryTitlePlacement[] = [];
+  let rowLeft = edge;
+  let rowTop = edge;
+  let rowHeight = 0;
+
+  for (const item of items) {
+    const variant = item.variants[0]!;
+
+    if (rowLeft > edge && rowLeft + variant.width > width - edge) {
+      rowLeft = edge;
+      rowTop += rowHeight + gap;
+      rowHeight = 0;
+    }
+
+    placements.push({
+      left: rowLeft,
+      top: rowTop,
+      width: variant.width,
+      height: variant.height,
+      rotation: variant.rotation,
+    });
+    rowLeft += variant.width + gap;
+    rowHeight = Math.max(rowHeight, variant.height);
   }
 
   return {
     placements,
     height: Math.max(
-      height,
-      ...placements.map((item) => item.top + item.height + edge),
+      defaultMinHeight,
+      Math.floor(minimumHeight),
+      rowTop + rowHeight + edge,
     ),
   };
 }

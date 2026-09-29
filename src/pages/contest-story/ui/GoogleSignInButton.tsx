@@ -73,10 +73,10 @@ export const GoogleSignInButton = ({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex w-full flex-col gap-2">
       <div
         aria-label="Google 계정으로 로그인"
-        className={disabled ? "pointer-events-none opacity-60" : ""}
+        className={`w-full ${disabled ? "pointer-events-none opacity-60" : ""}`}
         ref={buttonRef}
       />
       {errorMessage && (

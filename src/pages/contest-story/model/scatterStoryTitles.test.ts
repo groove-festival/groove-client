@@ -49,4 +49,30 @@ describe("scatterStoryTitles", () => {
     expect(scatterStoryTitles(titles, 361)).toEqual(scatterStoryTitles(titles, 361));
     expect(scatterStoryTitles([], 361)).toEqual({ placements: [], height: 336 });
   });
+
+  it("uses the available story section height when it is taller than the content", () => {
+    const layout = scatterStoryTitles(titles.slice(0, 2), 361, 520);
+
+    expect(layout.height).toBeGreaterThanOrEqual(520);
+    for (const item of layout.placements) {
+      expect(item.top + item.height).toBeLessThanOrEqual(layout.height);
+    }
+  });
+
+  it("turns titles into narrow gaps to keep the story section compact", () => {
+    const rotatableTitles = titles.map((title) => ({
+      ...title,
+      variants: [
+        { height: title.height, rotation: 0, width: title.width },
+        { height: title.width, rotation: 90, width: title.height },
+      ],
+    }));
+    const layout = scatterStoryTitles(rotatableTitles, 361);
+
+    expect(layout.height).toBeLessThanOrEqual(420);
+    expect(layout.placements.some(({ rotation }) => rotation === 0)).toBe(true);
+    expect(layout.placements.some(({ rotation }) => Math.abs(rotation) >= 45)).toBe(
+      true,
+    );
+  });
 });

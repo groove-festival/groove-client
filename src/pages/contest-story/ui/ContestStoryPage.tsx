@@ -35,20 +35,22 @@ import {
   toSubmitContestStoryBody,
   useSubmitContestStory,
 } from "../api/submitContestStory";
-import microphone from "../festival-visuals/microphone.png";
 import { contestStorySubmitErrorMessage } from "../model/contestStoryErrorMessages";
 import { googleLoginErrorMessage } from "../model/googleLoginErrorMessage";
 import { scatterStoryTitles } from "../model/scatterStoryTitles";
+import {
+  createStoryCloudSeed,
+  createStoryTitleAppearances,
+  type StoryTitleAppearance,
+} from "../model/storyTitleAppearance";
 import { nextStoryBoundaryAt, parseStoryPhaseOverride } from "../model/storyPhase";
-import { GoogleSignInButton } from "./GoogleSignInButton";
 import { StoryForm } from "./StoryForm";
+import { StoryGuideModal } from "./StoryGuideModal";
 
 type StoryView = "list" | "form" | "success";
 type StoryTitleStyle = CSSProperties & Record<`--${string}`, string>;
 
-const titleCloudFontSizes = ["1rem", "1.125rem", "1.25rem", "1.5rem", "1.75rem"];
-const titleCloudFontWeights = [520, 620, 720, 820, 900];
-const titleCloudColors = ["#ff0080", "#00ffff", "#fcfcfc", "#cfff04", "#ff2e9a"];
+const storyCloudMinHeight = "clamp(340px, calc(100dvh - 470px), 500px)";
 const previewStoryTitles = [
   "우리의 첫 축제",
   "밤하늘 아래서",
@@ -71,65 +73,81 @@ const previewStories: PublicContestStory[] = previewStoryTitles.map((title, inde
   submittedAt: "2026-09-23T00:00:00+09:00",
 }));
 
-function hashStorySeed(story: Pick<PublicContestStory, "storyId" | "title">): number {
-  const source = `${story.storyId}:${story.title}`;
-  let hash = 0;
-
-  for (let index = 0; index < source.length; index += 1) {
-    hash = (hash * 31 + source.charCodeAt(index)) >>> 0;
-  }
-
-  return hash;
+function storyTitleStyle(appearance: StoryTitleAppearance): StoryTitleStyle {
+  return {
+    "--story-drift-x": `${appearance.driftX.toFixed(1)}px`,
+    "--story-drift-y": `${appearance.driftY.toFixed(1)}px`,
+    "--story-rotate-from": `${appearance.fromRotate.toFixed(2)}deg`,
+    "--story-rotate-to": `${appearance.toRotate.toFixed(2)}deg`,
+    "--story-float-duration": `${appearance.duration.toFixed(2)}s`,
+    "--story-float-delay": `${appearance.delay.toFixed(2)}s`,
+    color: appearance.color,
+    fontSize: appearance.fontSize,
+    fontWeight: appearance.fontWeight,
+    lineHeight: 1.05,
+    maxWidth: "calc(min(100vw, 600px) - 48px)",
+  };
 }
 
-function getSeedValue(seed: number, salt: number, min: number, max: number): number {
-  const normalized = ((seed * (salt * 17 + 23)) % 10_000) / 10_000;
-
-  return min + normalized * (max - min);
-}
-
-function storyTitleStyle(story: PublicContestStory): StoryTitleStyle {
-  const seed = hashStorySeed(story);
-  const fontSize = titleCloudFontSizes[seed % titleCloudFontSizes.length];
-  const fontWeight =
-    titleCloudFontWeights[Math.floor(seed / 7) % titleCloudFontWeights.length];
-  const color = titleCloudColors[Math.floor(seed / 11) % titleCloudColors.length];
-  const driftX = getSeedValue(seed, 3, -7, 7).toFixed(1);
-  const driftY = getSeedValue(seed, 5, -12, -5).toFixed(1);
-  const fromRotate = getSeedValue(seed, 7, -4, 4).toFixed(2);
-  const toRotate = getSeedValue(seed, 9, -5, 5).toFixed(2);
-  const duration = getSeedValue(seed, 11, 2.6, 4.8).toFixed(2);
-  const delay = getSeedValue(seed, 13, -2.4, 0).toFixed(2);
+function rotatedStoryTitleSize(
+  width: number,
+  height: number,
+  appearance: StoryTitleAppearance,
+  baseRotation: number,
+): { height: number; rotation: number; width: number } {
+  const bounds = [appearance.fromRotate, appearance.toRotate].map((offset) => {
+    const degrees = baseRotation + offset;
+    const radians = (Math.abs(degrees) * Math.PI) / 180;
+    return {
+      height:
+        Math.abs(width * Math.sin(radians)) + Math.abs(height * Math.cos(radians)),
+      width: Math.abs(width * Math.cos(radians)) + Math.abs(height * Math.sin(radians)),
+    };
+  });
 
   return {
-    "--story-drift-x": `${driftX}px`,
-    "--story-drift-y": `${driftY}px`,
-    "--story-rotate-from": `${fromRotate}deg`,
-    "--story-rotate-to": `${toRotate}deg`,
-    "--story-float-duration": `${duration}s`,
-    "--story-float-delay": `${delay}s`,
-    color,
-    fontSize,
-    fontWeight,
-    lineHeight: 1.05,
+    height:
+      Math.ceil(Math.max(...bounds.map((item) => item.height))) +
+      Math.ceil(Math.abs(appearance.driftY) * 2),
+    rotation: baseRotation,
+    width:
+      Math.ceil(Math.max(...bounds.map((item) => item.width))) +
+      Math.ceil(Math.abs(appearance.driftX) * 2),
   };
+}
+
+function storyTitleRotationCandidates(
+  appearance: StoryTitleAppearance,
+  index: number,
+  titleWidth: number,
+): number[] {
+  const direction = appearance.seed % 2 === 0 ? 1 : -1;
+  const diagonal = 45 + (appearance.seed % 19);
+  const vertical = 76 + ((appearance.seed >>> 8) % 9);
+  const rotatedCandidates =
+    titleWidth >= 220
+      ? [-direction * vertical]
+      : [direction * diagonal, -direction * vertical];
+
+  if (index % 4 === 0) return rotatedCandidates;
+  if (index % 4 === 1) return [0, -direction * vertical];
+  return [0, ...rotatedCandidates];
 }
 
 function StoryTitleTokens({ stories }: { stories: PublicContestStory[] }) {
   const listRef = useRef<HTMLUListElement>(null);
+  const [cloudSeed] = useState(createStoryCloudSeed);
   const displayStories = useMemo(
-    () =>
-      [...stories].sort(
-        (first, second) => hashStorySeed(first) - hashStorySeed(second),
-      ),
-    [stories],
+    () => createStoryTitleAppearances(stories, cloudSeed),
+    [cloudSeed, stories],
   );
 
   useLayoutEffect(() => {
     const list = listRef.current;
     if (!list) return;
 
-    const tokens = Array.from(list.children) as HTMLElement[];
+    const wrappers = Array.from(list.children) as HTMLElement[];
+    const tokens = wrappers.map((wrapper) => wrapper.firstElementChild as HTMLElement);
     let lastMeasurements = "";
     let active = true;
 
@@ -137,51 +155,84 @@ function StoryTitleTokens({ stories }: { stories: PublicContestStory[] }) {
       const width = list.clientWidth;
       if (!active || width === 0) return;
 
-      const sizes = tokens.map((token, index) => ({
-        width: token.offsetWidth,
-        height: token.offsetHeight,
-        seed: hashStorySeed(displayStories[index]!),
-      }));
-      const measurements = `${width}:${sizes.map(({ width: tokenWidth, height }) => `${tokenWidth}x${height}`).join(",")}`;
+      const minimumHeight = Math.min(500, Math.max(340, window.innerHeight - 470));
+      const sizes = tokens.map((token, index) => {
+        const appearance = displayStories[index]!.appearance;
+        const variants = storyTitleRotationCandidates(
+          appearance,
+          index,
+          token.offsetWidth,
+        ).map((rotation) =>
+          rotatedStoryTitleSize(
+            token.offsetWidth,
+            token.offsetHeight,
+            appearance,
+            rotation,
+          ),
+        );
+        const baseVariant = variants[0]!;
+
+        return {
+          height: baseVariant.height,
+          seed: appearance.seed,
+          variants,
+          width: baseVariant.width,
+        };
+      });
+      const measurements = `${width}:${minimumHeight}:${sizes.map(({ width: tokenWidth, height }) => `${tokenWidth}x${height}`).join(",")}`;
       if (measurements === lastMeasurements) return;
       lastMeasurements = measurements;
 
-      const scattered = scatterStoryTitles(sizes, width);
+      const scattered = scatterStoryTitles(sizes, width, minimumHeight);
       list.style.height = `${scattered.height}px`;
-      tokens.forEach((token, index) => {
+      wrappers.forEach((wrapper, index) => {
         const placement = scattered.placements[index]!;
-        token.style.left = `${placement.left}px`;
-        token.style.top = `${placement.top}px`;
+        const appearance = displayStories[index]!.appearance;
+        const token = tokens[index]!;
+        wrapper.style.left = `${placement.left}px`;
+        wrapper.style.top = `${placement.top}px`;
+        wrapper.style.width = `${placement.width}px`;
+        wrapper.style.height = `${placement.height}px`;
+        token.style.setProperty(
+          "--story-rotate-from",
+          `${(placement.rotation + appearance.fromRotate).toFixed(2)}deg`,
+        );
+        token.style.setProperty(
+          "--story-rotate-to",
+          `${(placement.rotation + appearance.toRotate).toFixed(2)}deg`,
+        );
       });
     };
 
     layout();
-    const observer =
-      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(layout);
-    observer?.observe(list);
-    tokens.forEach((token) => observer?.observe(token));
+    window.addEventListener("resize", layout);
     void document.fonts?.ready.then(layout);
 
     return () => {
       active = false;
-      observer?.disconnect();
+      window.removeEventListener("resize", layout);
     };
   }, [displayStories]);
 
   return (
     <ul
       aria-label="접수된 사연 제목"
-      className="relative mt-12 min-h-[336px] w-full text-center"
+      className="relative mt-6 min-h-[340px] w-full text-center"
       ref={listRef}
+      style={{ minHeight: storyCloudMinHeight }}
     >
-      {displayStories.map((story) => (
+      {displayStories.map(({ appearance, story }) => (
         <li
-          className="absolute top-0 left-0 w-max max-w-[calc(100%-16px)] font-semibold [overflow-wrap:anywhere] break-keep drop-shadow-[0_0_12px_rgba(255,255,255,0.18)] motion-safe:[animation:contest-story-float_var(--story-float-duration)_ease-in-out_var(--story-float-delay)_infinite]"
-          data-testid="contest-story-title"
+          className="absolute top-0 left-0 flex items-center justify-center"
           key={story.storyId}
-          style={storyTitleStyle(story)}
         >
-          {story.title}
+          <span
+            className="block w-max font-semibold [overflow-wrap:anywhere] break-keep drop-shadow-[0_0_12px_rgba(255,255,255,0.18)] motion-safe:[animation:contest-story-float_var(--story-float-duration)_ease-in-out_var(--story-float-delay)_infinite]"
+            data-testid="contest-story-title"
+            style={storyTitleStyle(appearance)}
+          >
+            {story.title}
+          </span>
         </li>
       ))}
     </ul>
@@ -203,7 +254,8 @@ function PublicStoryTitleCloud({
     return (
       <div
         aria-label="접수된 사연 제목"
-        className="mt-[84px] flex min-h-[300px] items-center justify-center text-center text-sm text-[#a2a2a2]"
+        className="mt-6 flex min-h-[340px] items-center justify-center text-center text-sm text-[#a2a2a2]"
+        style={{ minHeight: storyCloudMinHeight }}
       >
         사연 목록을 불러오는 중입니다
       </div>
@@ -214,7 +266,8 @@ function PublicStoryTitleCloud({
     return (
       <div
         aria-label="접수된 사연 제목"
-        className="mt-[84px] flex min-h-[300px] flex-col items-center justify-center gap-4 text-center text-sm text-[#a2a2a2]"
+        className="mt-6 flex min-h-[340px] flex-col items-center justify-center gap-4 text-center text-sm text-[#a2a2a2]"
+        style={{ minHeight: storyCloudMinHeight }}
       >
         <p>사연 목록을 불러오지 못했어요.</p>
         <button className="text-sm underline" onClick={onRetry} type="button">
@@ -228,7 +281,8 @@ function PublicStoryTitleCloud({
     return (
       <div
         aria-label="접수된 사연 제목"
-        className="mt-[84px] flex min-h-[300px] items-center justify-center text-center text-sm text-[#a2a2a2]"
+        className="mt-6 flex min-h-[340px] items-center justify-center text-center text-sm text-[#a2a2a2]"
+        style={{ minHeight: storyCloudMinHeight }}
       >
         아직 접수된 사연이 없어요
       </div>
@@ -236,85 +290,6 @@ function PublicStoryTitleCloud({
   }
 
   return <StoryTitleTokens stories={stories} />;
-}
-
-function StoryLoginPanel({
-  authError,
-  authPending,
-  isLoginPending,
-  loginError,
-  onCredential,
-  onRetryAuth,
-  wrongRole,
-}: {
-  authError: boolean;
-  authPending: boolean;
-  isLoginPending: boolean;
-  loginError: unknown;
-  onCredential: (credential: string) => void;
-  onRetryAuth: () => void;
-  wrongRole: boolean;
-}) {
-  return (
-    <section className="mx-auto mt-20 flex w-full flex-col gap-6">
-      <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-bold">Google 로그인</h1>
-        <p className="text-sm leading-6 text-[#a2a2a2]">
-          <span className="block">사연은 Google 계정당 하나만 접수할 수 있어요.</span>
-          <span className="block">
-            다시 제출하면 기존 사연이 새 내용으로 덮어쓰기돼요.
-          </span>
-        </p>
-        <p className="text-sm leading-6 text-[#a2a2a2]">
-          <span className="block">학교 계정이 아니어도 참여할 수 있어요.</span>
-          <span className="block">1인 1회 참여 원칙을 위해</span>
-          <span className="block">Google 로그인과 학번 입력을 부탁드려요.</span>
-        </p>
-      </div>
-
-      {authPending && (
-        <p className="text-sm text-[#a2a2a2]" role="status">
-          로그인 상태를 확인하는 중입니다
-        </p>
-      )}
-      {authError && (
-        <div className="flex flex-col gap-3 rounded-2xl border border-[#ff5b5b] bg-[#323232] p-4">
-          <p className="text-sm text-[#ff9ab0]">로그인 상태를 확인하지 못했어요.</p>
-          <button
-            className="text-left text-sm underline"
-            onClick={onRetryAuth}
-            type="button"
-          >
-            다시 확인하기
-          </button>
-        </div>
-      )}
-      {wrongRole && (
-        <p className="rounded-2xl border border-[#565656] bg-[#323232] p-4 text-xs leading-5 text-[#cfcfcf]">
-          현재 계정은 가요제 참여자 계정이 아니에요. Google 계정으로 로그인해 주세요.
-        </p>
-      )}
-
-      <GoogleSignInButton disabled={isLoginPending} onCredential={onCredential} />
-      <p className="text-xs leading-5 text-[#a2a2a2]">
-        <span className="block">Google 비밀번호는 GROOVE에 전달되지 않아요.</span>
-        <span className="block">
-          Google에서 발급한 인증 정보로 로그인 상태만 확인해요.
-        </span>
-      </p>
-
-      {isLoginPending && (
-        <p className="text-sm text-[#a2a2a2]" role="status">
-          Google 로그인을 처리하는 중입니다
-        </p>
-      )}
-      {loginError != null && (
-        <p className="text-xs leading-[15px] text-[#ff5b5b]" role="alert">
-          {googleLoginErrorMessage(loginError)}
-        </p>
-      )}
-    </section>
-  );
 }
 
 export default function ContestStoryPage() {
@@ -333,11 +308,17 @@ export default function ContestStoryPage() {
     mutate: loginWithGoogle,
     isPending: isLoginPending,
     error: loginError,
+    reset: resetGoogleLogin,
   } = useLoginWithGoogle();
   const submitStory = useSubmitContestStory();
   const [view, setView] = useState<StoryView>("list");
   const [guideOpen, setGuideOpen] = useState(false);
+  const guideOpenRef = useRef(false);
+  const [hasGoogleLogin, setHasGoogleLogin] = useState(false);
   const [submitErrorMessage, setSubmitErrorMessage] = useState<string | undefined>();
+  const isLoggedInContestUser = isGoogleParticipant(auth.data);
+  const canWriteStory = isLoggedInContestUser || hasGoogleLogin;
+  const wrongRole = auth.data?.loggedIn === true && auth.data.role !== "USER";
 
   useScheduledRefetch(
     override ? undefined : nextStoryBoundaryAt(storyPhase, status.data?.stage),
@@ -346,10 +327,34 @@ export default function ContestStoryPage() {
 
   const handleGoogleCredential = useCallback(
     (idToken: string) => {
-      loginWithGoogle(idToken);
+      loginWithGoogle(idToken, {
+        onSuccess: () => {
+          if (!guideOpenRef.current) return;
+
+          guideOpenRef.current = false;
+          setHasGoogleLogin(true);
+          setGuideOpen(false);
+          setView("form");
+        },
+      });
     },
     [loginWithGoogle],
   );
+
+  const handleCloseGuide = useCallback(() => {
+    guideOpenRef.current = false;
+    setGuideOpen(false);
+  }, []);
+
+  const handleContinueToForm = useCallback(() => {
+    guideOpenRef.current = false;
+    setGuideOpen(false);
+    setView("form");
+  }, []);
+
+  const handleRetryAuth = useCallback(() => {
+    void auth.refetch();
+  }, [auth]);
 
   const handleSubmit = async (
     values: Parameters<typeof toSubmitContestStoryBody>[0],
@@ -363,14 +368,18 @@ export default function ContestStoryPage() {
     } catch (error) {
       if (error instanceof ApiError && error.code === "C003") {
         void queryClient.invalidateQueries({ queryKey: authQueryKeys.me() });
+        setHasGoogleLogin(false);
+        setView("list");
+        resetGoogleLogin();
+        guideOpenRef.current = true;
+        setGuideOpen(true);
       }
       setSubmitErrorMessage(contestStorySubmitErrorMessage(error));
     }
   };
 
-  const isLoggedInContestUser = isGoogleParticipant(auth.data);
-  const wrongRole = auth.data?.loggedIn === true && auth.data.role !== "USER";
-  const effectiveView = storyPhase === "OPEN" ? view : "list";
+  const effectiveView =
+    storyPhase === "OPEN" && (view !== "form" || canWriteStory) ? view : "list";
 
   if (!storyPhase && status.isPending) {
     return <LoadingFallback />;
@@ -415,39 +424,27 @@ export default function ContestStoryPage() {
       )}
 
       {storyPhase === "OPEN" && effectiveView === "list" && (
-        <section className="mx-auto w-full pt-[120px]">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h1 className="text-2xl font-bold">사연 신청 목록</h1>
-            {isStoryPreview && (
-              <span className="text-xs text-[#cfff04]">예시 미리보기</span>
-            )}
-          </div>
+        <section className="mx-auto w-full pt-10">
+          {isStoryPreview && <p className="text-xs text-[#cfff04]">예시 미리보기</p>}
           <PublicStoryTitleCloud
             isError={!isStoryPreview && stories.isError}
             isPending={!isStoryPreview && stories.isPending}
             onRetry={() => void stories.refetch()}
             stories={isStoryPreview ? previewStories : stories.data}
           />
-          <div className="mt-[84px] flex flex-col gap-6">
-            <section
-              aria-labelledby="story-event-heading"
-              className="flex flex-col gap-2 text-center"
-            >
-              <h2 className="text-lg font-semibold" id="story-event-heading">
+          <div className="mt-8 flex flex-col gap-6">
+            <section aria-labelledby="story-event-heading" className="text-center">
+              <h1 className="text-lg font-semibold" id="story-event-heading">
                 GROOVE 사연 모집 이벤트
-              </h2>
-              <p className="text-sm leading-6 text-[#cfcfcf]">
-                <span className="block">
-                  신청한 사연은 축제 무대에서 MC가 소개합니다.
-                </span>
-                <span className="block">함께 나누고 싶은 이야기를 남겨 주세요.</span>
-              </p>
+              </h1>
             </section>
             <button
               className="h-14 w-full rounded-2xl bg-[#ff0080] text-base font-semibold"
               onClick={() => {
                 setSubmitErrorMessage(undefined);
                 submitStory.reset();
+                resetGoogleLogin();
+                guideOpenRef.current = true;
                 setGuideOpen(true);
               }}
               type="button"
@@ -458,19 +455,7 @@ export default function ContestStoryPage() {
         </section>
       )}
 
-      {storyPhase === "OPEN" && effectiveView === "form" && !isLoggedInContestUser && (
-        <StoryLoginPanel
-          authError={auth.isError}
-          authPending={auth.isPending}
-          isLoginPending={isLoginPending}
-          loginError={loginError}
-          onCredential={handleGoogleCredential}
-          onRetryAuth={() => void auth.refetch()}
-          wrongRole={wrongRole}
-        />
-      )}
-
-      {storyPhase === "OPEN" && effectiveView === "form" && isLoggedInContestUser && (
+      {storyPhase === "OPEN" && effectiveView === "form" && canWriteStory && (
         <StoryForm
           isSubmitting={submitStory.isPending}
           onSubmit={handleSubmit}
@@ -502,63 +487,21 @@ export default function ContestStoryPage() {
         </section>
       )}
 
-      {guideOpen && storyPhase === "OPEN" && (
-        <div
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setGuideOpen(false);
-          }}
-        >
-          <section
-            aria-label="사연 신청 안내 사항"
-            aria-modal="true"
-            className="relative flex max-h-[calc(100dvh-32px)] w-[320px] max-w-full flex-col items-center overflow-y-auto rounded-[36px] bg-[#bbb4ae] px-8 pt-[52px] pb-8 text-[#fcfcfc] shadow-xl"
-            role="dialog"
-          >
-            <button
-              aria-label="안내 닫기"
-              className="absolute top-6 right-6 size-5"
-              onClick={() => setGuideOpen(false)}
-              type="button"
-            >
-              <svg
-                aria-hidden="true"
-                className="size-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                viewBox="0 0 20 20"
-              >
-                <path d="M1 1l18 18M19 1 1 19" />
-              </svg>
-            </button>
-            <img
-              alt=""
-              className="h-[83px] w-20 shrink-0 object-contain"
-              src={microphone}
-            />
-            <h2 className="mt-3 w-full text-center text-2xl font-semibold">
-              사연 신청 안내 사항
-            </h2>
-            <ul className="mt-7 w-full list-disc space-y-4 pl-6 text-xs leading-[15px]">
-              <li>신청한 사연은 무대 진행 중 MC가 낭독하는 이벤트입니다.</li>
-              <li>별명을 입력하지 않을 경우, 본명으로 사연을 소개합니다.</li>
-              <li>한 계정당 하나의 사연만 등록할 수 있습니다.</li>
-              <li>실제 신청에는 Google 로그인이 필요합니다.</li>
-            </ul>
-            <button
-              className="mt-7 h-14 w-full shrink-0 rounded-2xl bg-[#ff0080] text-base font-semibold"
-              onClick={() => {
-                setGuideOpen(false);
-                setView("form");
-              }}
-              type="button"
-            >
-              사연 작성하기
-            </button>
-          </section>
-        </div>
-      )}
+      <StoryGuideModal
+        authError={auth.isError}
+        authPending={auth.isPending}
+        isLoggedIn={canWriteStory}
+        isLoginPending={isLoginPending}
+        loginErrorMessage={
+          loginError == null ? undefined : googleLoginErrorMessage(loginError)
+        }
+        onClose={handleCloseGuide}
+        onContinue={handleContinueToForm}
+        onCredential={handleGoogleCredential}
+        onRetryAuth={handleRetryAuth}
+        open={guideOpen && storyPhase === "OPEN"}
+        wrongRole={wrongRole}
+      />
     </main>
   );
 }
