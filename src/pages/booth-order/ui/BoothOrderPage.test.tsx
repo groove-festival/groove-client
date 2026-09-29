@@ -329,7 +329,7 @@ describe("BoothOrderPage", () => {
     const boothName = screen.getByRole("heading", { name: "주막 이름" });
     const departments = boothName.previousElementSibling;
     const description = screen.getByText("부스 설명");
-    expect(boothName.parentElement).toHaveClass("gap-0");
+    expect(boothName.parentElement).toHaveClass("gap-1.5");
     expect(departments).toHaveTextContent("단대 • 학과");
     expect(departments).toHaveClass("font-medium", "text-[#fcfcfc]");
     expect(boothName).toHaveClass("font-bold", "text-[#fcfcfc]");
@@ -379,8 +379,10 @@ describe("BoothOrderPage", () => {
     expect(within(separateCharge).getByLabelText("상차림비 수량")).toHaveTextContent(
       "0",
     );
-    expect(screen.getByTestId("separate-charge-notice")).toHaveTextContent(
-      "상차림비는 직접 담아 주세요. 같은 테이블에서 이미 냈다면 담지 않아도 돼요.",
+    const separateChargeNotice = screen.getByTestId("separate-charge-notice");
+    expect(separateChargeNotice).toHaveTextContent("* 상차림비는 직접 담아 주세요.");
+    expect(separateChargeNotice).toHaveTextContent(
+      "같은 테이블에서 이미 냈다면 담지 않아도 돼요.",
     );
 
     // 첫 주문인지는 알 수 없으므로 상차림비 없이도 주문된다.
@@ -593,7 +595,7 @@ describe("BoothOrderPage", () => {
     expect(screen.getByText("입금자명")).toBeInTheDocument();
     expect(screen.getByText("김입금")).toBeInTheDocument();
     expect(screen.getByText("계좌 번호")).toBeInTheDocument();
-    expect(screen.getByText("홍길동")).toBeInTheDocument();
+    expect(screen.getByText(/홍길동$/)).toBeInTheDocument();
     expect(screen.getByText("27,000원")).toBeInTheDocument();
     expect(scrollTo).toHaveBeenCalledWith({ top: 0, left: 0, behavior: "auto" });
   });
@@ -627,11 +629,11 @@ describe("BoothOrderPage", () => {
     renderOrderPage();
 
     fireEvent.click(await screen.findByRole("button", { name: "입금자명 수정하기" }));
-    const dialog = screen.getByRole("dialog", { name: "입금자명을 수정하시겠어요?" });
+    const dialog = screen.getByRole("dialog", { name: "입금자명 수정" });
     fireEvent.change(within(dialog).getByLabelText(/입금자명/), {
       target: { value: "김철수" },
     });
-    fireEvent.click(within(dialog).getByRole("button", { name: "수정" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "완료" }));
 
     expect(await screen.findByText("김철수")).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -765,11 +767,11 @@ describe("BoothOrderPage", () => {
     renderOrderPage();
 
     const dialog = await screen.findByRole("dialog", { name: "주문 취소 안내" });
-    expect(within(dialog).getByText("내 주문이 취소되었어요.")).toBeInTheDocument();
+    expect(
+      within(dialog).getByText("품절 등의 이유로 주문이 취소되었어요."),
+    ).toBeInTheDocument();
 
-    fireEvent.click(
-      within(dialog).getByRole("button", { name: "주문 취소 안내 닫기" }),
-    );
+    fireEvent.click(within(dialog).getByRole("button", { name: "확인했습니다" }));
 
     // 토큰을 남기면 재진입할 때마다 같은 안내가 다시 뜬다.
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

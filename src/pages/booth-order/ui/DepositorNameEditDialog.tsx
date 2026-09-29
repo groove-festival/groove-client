@@ -20,7 +20,7 @@ export const DepositorNameEditDialog = ({
 
   return (
     <OrderDialogFrame
-      className="flex flex-col items-center gap-4 rounded-[23px] p-6"
+      className="flex flex-col items-center gap-6 rounded-[36px] px-6 py-6"
       labelledBy="depositor-name-edit-title"
       onClose={onCancel}
     >
@@ -28,24 +28,24 @@ export const DepositorNameEditDialog = ({
         className="text-center text-base leading-[19px] font-bold text-[#fcfcfc]"
         id="depositor-name-edit-title"
       >
-        입금자명을 수정하시겠어요?
+        입금자명 수정
       </h1>
       <DepositorNameField onChange={setDepositorName} value={depositorName} />
       <div className="flex items-center gap-4">
         <button
-          className="w-[120px] rounded-[10px] bg-[#cfcfcf] px-5 py-3 text-base leading-[19px] font-semibold text-[#767676]"
+          className="w-[120px] rounded-[12px] bg-[rgba(252,252,252,0.3)] px-5 py-3 text-base leading-[19px] font-semibold text-[#fcfcfc] transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
           onClick={onCancel}
           type="button"
         >
           취소
         </button>
         <button
-          className="w-[120px] rounded-[10px] bg-[#cfff04] px-5 py-3 text-base leading-[19px] font-semibold text-[#1c1c1c]"
+          className="w-[120px] rounded-[12px] bg-[#cfff04] px-5 py-3 text-base leading-[19px] font-semibold text-[#1c1c1c] transition-transform duration-150 ease-out active:scale-[0.97] disabled:active:scale-100 motion-reduce:transition-none"
           disabled={!normalizedDepositorName}
           onClick={() => onSubmit(normalizedDepositorName)}
           type="button"
         >
-          수정
+          완료
         </button>
       </div>
     </OrderDialogFrame>

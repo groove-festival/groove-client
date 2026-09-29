@@ -44,7 +44,6 @@ const BoothOrderContent = ({
     errorToast,
     hasIncompleteOrder,
     hasSelectedMenu,
-    hasSelectedSeparateCharge,
     isPlacingOrder,
     isTransferDialogOpen,
     order,
@@ -96,21 +95,20 @@ const BoothOrderContent = ({
         >
           <BoothDetailHeader booth={booth} />
 
-          <div className="mt-12 flex flex-col gap-10">
+          <hr className="mt-6 border-t border-[#565656]" />
+
+          <div className="mt-6 flex flex-col gap-8">
             {booth.separateChargeItems.length > 0 && (
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-4">
                 {/* 상차림비는 늘 0개로 시작하고 안 담아도 주문된다. 같은 테이블 일행이
                     이미 냈는지는 손님과 서빙 직원이 판단한다. */}
                 <p
-                  className={`px-2 text-sm leading-[17px] font-semibold ${
-                    !hasSelectedSeparateCharge && hasSelectedMenu
-                      ? "text-[#cfff04]"
-                      : "text-[#cfcfcf]"
-                  }`}
+                  className="px-2 text-sm leading-[17px] font-semibold text-[#cfcfcf]"
                   data-testid="separate-charge-notice"
                 >
-                  상차림비는 직접 담아 주세요. 같은 테이블에서 이미 냈다면 담지 않아도
-                  돼요.
+                  * 상차림비는 직접 담아 주세요.
+                  <br />
+                  같은 테이블에서 이미 냈다면 담지 않아도 돼요.
                 </p>
                 <ul
                   aria-label="상차림비"
@@ -119,6 +117,7 @@ const BoothOrderContent = ({
                   {booth.separateChargeItems.map((item) => (
                     <OrderMenuItemRow
                       className="border-b border-[#767676] last:border-b-0"
+                      insetClassName="pr-3 pl-5"
                       isOptionSelected={(optionId) =>
                         isOptionSelected(selectedOptions, item, optionId)
                       }
@@ -133,7 +132,7 @@ const BoothOrderContent = ({
                 </ul>
               </div>
             )}
-            <div className="flex flex-col gap-12">
+            <div className="flex flex-col gap-8">
               {booth.menuSections.map((section) => (
                 <OrderMenuSection
                   cart={cart}
@@ -171,7 +170,7 @@ const BoothOrderContent = ({
           </OrderStatusScreen>
           <div className="mt-12 flex flex-col gap-3">
             <ul className="list-disc pl-[18px] text-xs leading-[14px] text-[#a2a2a2]">
-              <li>직원이 입금 확인을 완료하기 전까지 수정 및 재제출이 가능해요</li>
+              <li>직원이 입금 확인을 완료하기 전까지 입금자명 수정이 가능해요</li>
             </ul>
             <OrderActionButton
               label="입금자명 수정하기"

@@ -13,7 +13,7 @@ export const DepositorNameField = ({ onChange, value }: DepositorNameFieldProps)
   const inputId = useId();
 
   return (
-    <div className="relative h-14 w-64 shrink-0 rounded-2xl border border-[#fcfcfc] bg-[#a2a2a2]">
+    <div className="relative h-12 w-full shrink-0 rounded-2xl border border-[#fcfcfc] bg-[#a2a2a2]">
       <label
         className={`pointer-events-none absolute top-1/2 left-5 -translate-y-1/2 text-sm leading-[17px] font-medium text-[#fcfcfc] ${
           value ? "sr-only" : ""
@@ -25,7 +25,7 @@ export const DepositorNameField = ({ onChange, value }: DepositorNameFieldProps)
       <input
         aria-required="true"
         autoComplete="off"
-        className="size-full rounded-2xl bg-transparent px-5 text-sm font-medium text-[#fcfcfc] outline-none focus-visible:ring-2 focus-visible:ring-[#cfff04]"
+        className="size-full rounded-2xl bg-transparent px-5 text-sm font-medium text-[#fcfcfc] outline-none focus-visible:ring-1 focus-visible:ring-[#cfff04]"
         data-clarity-mask="true"
         id={inputId}
         maxLength={DEPOSITOR_NAME_MAX_LENGTH}

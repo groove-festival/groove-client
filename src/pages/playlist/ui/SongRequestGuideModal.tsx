@@ -112,7 +112,7 @@ export const SongRequestGuideModal = ({
         aria-describedby={descriptionId}
         aria-labelledby={titleId}
         aria-modal="true"
-        className="font-pretendard flex w-[320px] max-w-full items-center justify-center rounded-[36px] bg-[#fcfcfc]/40 p-8 backdrop-blur-[24px] outline-none"
+        className="font-pretendard flex w-[320px] max-w-full items-center justify-center rounded-[36px] bg-[#fcfcfc]/40 px-6 py-8 backdrop-blur-[24px] outline-none"
         onClick={(event) => event.stopPropagation()}
         ref={dialogRef}
         role="dialog"
@@ -143,7 +143,7 @@ export const SongRequestGuideModal = ({
           </div>
 
           <button
-            className="flex h-14 items-center justify-center rounded-2xl bg-[#5d00ff] text-base font-semibold text-[#fcfcfc]"
+            className="flex h-14 items-center justify-center rounded-[12px] bg-[#5d00ff] text-base font-semibold text-[#fcfcfc] transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
             onClick={onClose}
             ref={confirmButtonRef}
             type="button"

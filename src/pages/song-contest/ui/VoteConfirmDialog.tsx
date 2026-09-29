@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 
+import { ParticipantAvatar } from "./ParticipantAvatar";
+
 interface VoteConfirmDialogProps {
   participantName: string;
   pending: boolean;
@@ -41,44 +43,45 @@ export function VoteConfirmDialog({
       <div
         aria-labelledby={titleId}
         aria-modal="true"
-        className="flex flex-col items-center gap-9 rounded-[36px] bg-[#fcfcfc]/50 px-7 py-8 backdrop-blur-xl outline-none"
+        className="flex flex-col items-center gap-6 rounded-[36px] bg-[rgba(252,252,252,0.5)] px-7 py-8 backdrop-blur-[4px] outline-none"
         ref={dialogRef}
         role="dialog"
         tabIndex={-1}
       >
-        <div className="flex w-[256px] flex-col items-center gap-7">
-          <p className="text-2xl font-semibold text-[#fcfcfc]" id={titleId}>
-            투표 완료!
+        {/* 두 버튼 모달은 입금자명 수정 모달(DepositorNameEditDialog)과 같은 틀을 쓴다. */}
+        <p
+          className="text-center text-xl leading-6 font-semibold text-[#fcfcfc]"
+          id={titleId}
+        >
+          투표하시겠어요?
+        </p>
+        <div className="flex flex-col items-center gap-4">
+          <ParticipantAvatar className="size-[135px]" name={participantName} />
+          <p className="text-xl leading-6 font-semibold text-[#fcfcfc]">
+            {participantName}
           </p>
-          <div className="flex flex-col items-center gap-4">
-            <span
-              aria-hidden="true"
-              className="size-[135px] shrink-0 rounded-full bg-[#fcfcfc]"
-            />
-            <p className="text-xl font-semibold text-[#fcfcfc]">{participantName}</p>
-          </div>
-          {errorMessage && (
-            <p className="text-center text-xs text-[#ff5b5b]" role="alert">
-              {errorMessage}
-            </p>
-          )}
         </div>
+        {errorMessage && (
+          <p className="text-center text-xs text-[#ff5b5b]" role="alert">
+            {errorMessage}
+          </p>
+        )}
         <div className="flex items-center gap-4">
           <button
-            className="w-[120px] rounded-[10px] bg-[#cfcfcf] px-5 py-3 text-base font-semibold text-[#767676] disabled:opacity-60"
+            className="w-[120px] rounded-[12px] bg-[rgba(252,252,252,0.3)] px-5 py-3 text-base leading-[19px] font-semibold text-[#fcfcfc] transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60 disabled:active:scale-100 motion-reduce:transition-none"
             disabled={pending}
             onClick={onCancel}
             type="button"
           >
-            변경
+            닫기
           </button>
           <button
-            className="w-[120px] rounded-[10px] bg-[#d50970] px-5 py-3 text-base font-semibold text-[#fcfcfc] disabled:opacity-60"
+            className="w-[120px] rounded-[12px] bg-[#ff0080] px-5 py-3 text-base leading-[19px] font-semibold text-[#fcfcfc] transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60 disabled:active:scale-100 motion-reduce:transition-none"
             disabled={pending}
             onClick={onConfirm}
             type="button"
           >
-            확인
+            투표하기
           </button>
         </div>
       </div>

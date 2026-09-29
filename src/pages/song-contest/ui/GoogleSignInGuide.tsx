@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { appConfig } from "@/shared/config";
@@ -19,6 +19,29 @@ export function GoogleSignInGuide({ onClose, onIdToken }: GoogleSignInGuideProps
     clientId: appConfig.googleClientId ?? "",
     onIdToken,
   });
+  const [isPressed, setIsPressed] = useState(false);
+  const pressTimerRef = useRef<number | undefined>(undefined);
+
+  const showPress = () => {
+    window.clearTimeout(pressTimerRef.current);
+    setIsPressed(true);
+    pressTimerRef.current = window.setTimeout(() => setIsPressed(false), 150);
+  };
+
+  // 실제 구글 버튼은 교차 출처 iframe이라 :active가 이 문서에 오지 않는다.
+  // iframe이 포커스를 가져가며 창이 blur되는 순간을 눌림으로 본다.
+  useEffect(() => {
+    const handleBlur = () => {
+      window.setTimeout(() => {
+        if (hiddenButtonRef.current?.contains(document.activeElement)) showPress();
+      });
+    };
+    window.addEventListener("blur", handleBlur);
+    return () => {
+      window.removeEventListener("blur", handleBlur);
+      window.clearTimeout(pressTimerRef.current);
+    };
+  }, [hiddenButtonRef]);
 
   useEffect(() => {
     dialogRef.current?.focus();
@@ -39,14 +62,14 @@ export function GoogleSignInGuide({ onClose, onIdToken }: GoogleSignInGuideProps
       <section
         aria-label="가요제 투표 안내 사항"
         aria-modal="true"
-        className="relative flex max-h-[calc(100dvh-32px)] w-[320px] max-w-full flex-col items-center gap-10 overflow-y-auto rounded-[36px] bg-[rgba(252,252,252,0.5)] px-7 py-8 text-[#fcfcfc] shadow-xl backdrop-blur-xl"
+        className="relative flex max-h-[calc(100dvh-32px)] w-[320px] max-w-full flex-col items-center gap-7 overflow-y-auto rounded-[36px] bg-[rgba(252,252,252,0.5)] px-6 pt-[52px] pb-8 text-[#fcfcfc] shadow-xl backdrop-blur-xl"
         ref={dialogRef}
         role="dialog"
         tabIndex={-1}
       >
         <button
           aria-label="안내 닫기"
-          className="absolute top-6 right-6 size-5"
+          className="absolute top-7 right-7 size-5"
           onClick={onClose}
           type="button"
         >
@@ -67,14 +90,34 @@ export function GoogleSignInGuide({ onClose, onIdToken }: GoogleSignInGuideProps
           <h2 className="text-center text-2xl font-semibold">가요제 투표 안내 사항</h2>
         </div>
 
-        <ul className="list-disc space-y-2 self-start ps-[18px] text-xs leading-[15px]">
-          <li>투표 후에는 수정할 수 없습니다.</li>
-          <li>투표는 하나의 계정 기준, 한 경연당 한 번만 참여가능 합니다.</li>
-          <li>공정한 투표를 위해 구글 로그인을 하여야 투표가 가능합니다.</li>
+        <ul className="w-full list-disc space-y-4 ps-6 text-xs leading-[15px]">
+          {/* 줄바꿈은 <br />, 강조는 <strong className="font-bold">…</strong> */}
+          <li>
+            투표를 한 번 확정하면{" "}
+            <strong className="font-bold">이후 변경이 불가합니다.</strong>
+          </li>
+          <li>
+            공정한 투표를 위해 <strong className="font-bold">Google 로그인</strong>이
+            필요합니다.
+            <br />한 계정당 경연마다 <strong className="font-bold">한 번만</strong>{" "}
+            투표할 수 있습니다.
+          </li>
+          <li className="font-bold">
+            Google 비밀번호는 GROOVE에 전달되지 않습
+            <br />
+            니다.
+          </li>
+          <li className="font-bold">
+            Google에서 발급한 인증 정보로 로그인 상태만
+            <br />
+            확인합니다.
+          </li>
         </ul>
 
-        <div className="relative h-14 w-full">
-          <div className="flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-[#ff0080]">
+        <div className="relative h-14 w-full" onPointerDown={showPress}>
+          <div
+            className={`flex h-14 w-full items-center justify-center gap-2.5 rounded-[12px] bg-[#ff0080] transition-transform duration-150 ease-out motion-reduce:transition-none ${isPressed ? "scale-[0.97]" : ""}`}
+          >
             <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#fcfcfc] p-1">
               <img alt="" className="size-full" src={googleLogo} />
             </span>
@@ -84,7 +127,7 @@ export function GoogleSignInGuide({ onClose, onIdToken }: GoogleSignInGuideProps
           </div>
           <div
             aria-hidden="true"
-            className="absolute inset-0 overflow-hidden opacity-0"
+            className="absolute inset-0 flex items-center justify-center overflow-hidden opacity-0 [&>div]:scale-x-110 [&>div]:scale-y-150"
             data-testid="google-sign-in-overlay"
             ref={hiddenButtonRef}
           />
