@@ -15,26 +15,10 @@ export interface CartLine extends OrderLine {
   optionIds: number[];
 }
 
-// 상차림비가 하나뿐이면 첫 주문에 1개를 담아 둔다. 여러 개(1인·테이블당 등)면
-// 손님이 해당하는 것을 고르므로 0부터 시작한다.
-//
-// 추가 주문(isAdditionalOrder)은 0개로 시작한다. 상차림비는 자리에 앉을 때 한 번
-// 내는 돈이라 첫 주문에서 이미 냈다.
-//
-// 어느 경우든 상차림비는 뺄 수 있고, 안 담아도 주문할 수 있다. 첫 주문인지는 이
-// 폰만 기억하므로, 같은 테이블 일행이 다른 폰으로 QR 을 찍으면 첫 주문처럼 보인다.
-// 그때 상차림비를 못 빼면 두 번 내게 된다. 빠뜨린 상차림비는 서빙하는 직원이
-// 테이블을 보고 판단한다.
-const hasSingleSeparateCharge = (booth: BoothOrderDetail) =>
-  booth.separateChargeItems.length === 1;
-
-export const createInitialCart = (
-  booth: BoothOrderDetail,
-  isAdditionalOrder = false,
-): OrderCart =>
-  !isAdditionalOrder && hasSingleSeparateCharge(booth)
-    ? { [booth.separateChargeItems[0].id]: 1 }
-    : {};
+// 상차림비는 늘 0개로 시작하고, 손님이 직접 담는다. 안 담아도 주문할 수 있다.
+// 첫 주문인지 추가 주문인지는 폰마다 따로 기억할 수밖에 없어, 같은 테이블 일행이
+// 다른 폰으로 QR 을 찍으면 어긋난다. 그래서 판단은 서빙하는 직원이 테이블을 보고 한다.
+export const createInitialCart = (): OrderCart => ({});
 
 export const getQuantity = (cart: OrderCart, item: BoothMenuItem) => cart[item.id] ?? 0;
 
