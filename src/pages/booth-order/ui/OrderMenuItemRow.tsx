@@ -6,7 +6,6 @@ interface OrderMenuItemRowProps {
   className?: string;
   isOptionSelected?: (optionId: number) => boolean;
   item: BoothMenuItem;
-  minimumQuantity?: number;
   onChangeQuantity: (item: BoothMenuItem, delta: number) => void;
   onToggleOption?: (item: BoothMenuItem, optionId: number) => void;
   quantity: number;
@@ -28,7 +27,6 @@ export const OrderMenuItemRow = ({
   className = "",
   isOptionSelected = () => false,
   item,
-  minimumQuantity = 0,
   onChangeQuantity,
   onToggleOption,
   quantity,
@@ -53,7 +51,7 @@ export const OrderMenuItemRow = ({
           <button
             aria-label={`${item.name} 수량 줄이기`}
             className="text-2xl leading-[29px]"
-            disabled={!isOrderable || quantity <= minimumQuantity}
+            disabled={!isOrderable || quantity <= 0}
             onClick={() => onChangeQuantity(item, -1)}
             type="button"
           >
