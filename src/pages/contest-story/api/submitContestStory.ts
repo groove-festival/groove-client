@@ -14,6 +14,8 @@ export interface SubmitContestStoryRequestBody {
   studentNumber: string;
   name: string;
   nickname: string | null;
+  // 사연과 관련된 노래 ("가수 - 노래 제목").
+  song: string;
   title: string;
   content: string;
 }
@@ -38,6 +40,7 @@ export function toSubmitContestStoryBody(
     studentNumber: values.studentNumber.trim(),
     name: values.name.trim(),
     nickname: nickname ? nickname : null,
+    song: values.song.trim(),
     title: values.title.trim(),
     content: values.content.trim(),
   };

@@ -36,6 +36,11 @@ export const storyFormSchema = z.object({
     .trim()
     .min(1, "제목을 입력해 주세요.")
     .max(40, "40자 이내로 입력해 주세요."),
+  song: z
+    .string()
+    .trim()
+    .min(1, "가수와 노래 제목을 입력해 주세요.")
+    .max(100, "100자 이내로 입력해 주세요."),
   content: z
     .string()
     .trim()

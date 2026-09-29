@@ -281,6 +281,17 @@ describe("ContestStoryPage", () => {
       target: { value: "함께 노래해요." },
     });
     fireEvent.click(submitButton);
+    expect(
+      await screen.findByText("가수와 노래 제목을 입력해 주세요."),
+    ).toBeInTheDocument();
+
+    fireEvent.change(
+      screen.getByRole("textbox", {
+        name: "관련 노래: 가수 - 노래 제목 (예: 오반 - flower) *",
+      }),
+      { target: { value: "오반 - flower" } },
+    );
+    fireEvent.click(submitButton);
 
     await waitFor(() =>
       expect(submitStoryMutateAsync).toHaveBeenCalledWith({
@@ -289,6 +300,7 @@ describe("ContestStoryPage", () => {
         studentNumber: "20241234",
         name: "홍길동",
         nickname: null,
+        song: "오반 - flower",
         title: "축제 이야기",
         content: "함께 노래해요.",
       }),

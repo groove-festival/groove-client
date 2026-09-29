@@ -46,6 +46,7 @@ export function StoryForm({
       name: "",
       nickname: "",
       title: "",
+      song: "",
       content: "",
       termsAgreed: false,
       personalInfoCollectionAgreed: false,
@@ -56,7 +57,7 @@ export function StoryForm({
   const personalInfoCollectionAgreed = watch("personalInfoCollectionAgreed");
 
   const input = (
-    name: "department" | "studentNumber" | "name" | "nickname" | "title",
+    name: "department" | "studentNumber" | "name" | "nickname" | "title" | "song",
     label: string,
     maxLength?: number,
   ) => (
@@ -116,6 +117,7 @@ export function StoryForm({
         {input("name", "이름 *", 30)}
         {input("nickname", "별명 (미입력 시 본명으로 사연 소개)", 30)}
         {input("title", "사연 제목 *", 40)}
+        {input("song", "관련 노래: 가수 - 노래 제목 (예: 오반 - flower) *", 100)}
         <div className="relative">
           <textarea
             {...register("content")}

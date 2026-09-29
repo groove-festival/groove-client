@@ -18,6 +18,7 @@ const formValues = {
   name: " 김그루브 ",
   nickname: " ",
   title: " 축제 이야기 ",
+  song: " 오반 - flower ",
   content: " 함께 노래해요. ",
   termsAgreed: true,
   personalInfoCollectionAgreed: true,
@@ -35,6 +36,7 @@ describe("toSubmitContestStoryBody", () => {
       studentNumber: "20241234",
       name: "김그루브",
       nickname: null,
+      song: "오반 - flower",
       title: "축제 이야기",
       content: "함께 노래해요.",
     });
