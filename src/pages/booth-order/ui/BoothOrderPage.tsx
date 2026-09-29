@@ -45,7 +45,6 @@ const BoothOrderContent = ({
     hasIncompleteOrder,
     hasSelectedMenu,
     hasSelectedSeparateCharge,
-    isAdditionalOrder,
     isPlacingOrder,
     isTransferDialogOpen,
     order,
@@ -100,21 +99,18 @@ const BoothOrderContent = ({
           <div className="mt-12 flex flex-col gap-10">
             {booth.separateChargeItems.length > 0 && (
               <div className="flex flex-col gap-3">
-                {/* 상차림비는 빼거나 안 담아도 주문된다. 첫 주문인지는 이 폰만 알므로
-                    같은 테이블 일행이 이미 냈으면 손님이 직접 빼게 안내한다. */}
+                {/* 상차림비는 늘 0개로 시작하고 안 담아도 주문된다. 같은 테이블 일행이
+                    이미 냈는지는 손님과 서빙 직원이 판단한다. */}
                 <p
                   className={`px-2 text-sm leading-[17px] font-semibold ${
-                    !isAdditionalOrder && !hasSelectedSeparateCharge && hasSelectedMenu
+                    !hasSelectedSeparateCharge && hasSelectedMenu
                       ? "text-[#cfff04]"
                       : "text-[#cfcfcf]"
                   }`}
                   data-testid="separate-charge-notice"
                 >
-                  {isAdditionalOrder
-                    ? "추가 주문이라 상차림비는 빼 두었어요. 일행이 늘었다면 담아 주세요."
-                    : hasSelectedSeparateCharge
-                      ? "같은 테이블에서 이미 상차림비를 냈다면 빼 주세요."
-                      : "처음 주문이라면 해당하는 상차림비를 담아 주세요. 같은 테이블에서 이미 냈다면 담지 않아도 돼요."}
+                  상차림비는 직접 담아 주세요. 같은 테이블에서 이미 냈다면 담지 않아도
+                  돼요.
                 </p>
                 <ul
                   aria-label="상차림비"
