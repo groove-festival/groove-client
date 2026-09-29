@@ -28,7 +28,11 @@ export function ContestResults({ votes }: ContestResultsProps) {
       ) : (
         <div className="flex w-full flex-col gap-5">
           {finishedVotes.map((vote) => (
-            <BracketMatchRow key={vote.singingVoteId} vote={vote} winnerDisplay="badge" />
+            <BracketMatchRow
+              key={vote.singingVoteId}
+              vote={vote}
+              winnerDisplay="badge"
+            />
           ))}
         </div>
       )}

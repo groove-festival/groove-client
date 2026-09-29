@@ -15,7 +15,11 @@ interface BracketMatchRowProps {
   winnerDisplay?: "badge" | "color";
 }
 
-export function BracketMatchRow({ vote, metaLabel, winnerDisplay }: BracketMatchRowProps) {
+export function BracketMatchRow({
+  vote,
+  metaLabel,
+  winnerDisplay,
+}: BracketMatchRowProps) {
   // 3라운드(결선)만 1·2·3위를 가리는 3자 대결이라 참가팀이 3명이다. 그 외에는
   // 항상 2명(VS)이거나, 앞 라운드 결과가 아직 없어 빈 배열이다.
   const isMultiWay = vote.participants.length > 2;
@@ -57,7 +61,9 @@ export function BracketMatchRow({ vote, metaLabel, winnerDisplay }: BracketMatch
           <div className="relative min-w-0 flex-1">
             <ParticipantChip
               name={vote.participants[0].name}
-              winner={winnerDisplay === "color" && isWinner(vote.participants[0].resultRank)}
+              winner={
+                winnerDisplay === "color" && isWinner(vote.participants[0].resultRank)
+              }
             />
             {winnerDisplay === "badge" && isWinner(vote.participants[0].resultRank) && (
               <WinnerBadge />
@@ -67,7 +73,9 @@ export function BracketMatchRow({ vote, metaLabel, winnerDisplay }: BracketMatch
           <div className="relative min-w-0 flex-1">
             <ParticipantChip
               name={vote.participants[1].name}
-              winner={winnerDisplay === "color" && isWinner(vote.participants[1].resultRank)}
+              winner={
+                winnerDisplay === "color" && isWinner(vote.participants[1].resultRank)
+              }
             />
             {winnerDisplay === "badge" && isWinner(vote.participants[1].resultRank) && (
               <WinnerBadge />
