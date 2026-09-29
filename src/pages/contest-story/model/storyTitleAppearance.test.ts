@@ -25,10 +25,10 @@ describe("createStoryTitleAppearances", () => {
     expect(appearances.map(({ fontSize }) => fontSize)).toContain("0.75rem");
     expect(appearances.map(({ fontSize }) => fontSize)).toContain("2.5rem");
     for (const appearance of appearances) {
-      expect(appearance.fromRotate).toBeGreaterThanOrEqual(-14);
-      expect(appearance.fromRotate).toBeLessThanOrEqual(14);
-      expect(appearance.toRotate).toBeGreaterThanOrEqual(-18);
-      expect(appearance.toRotate).toBeLessThanOrEqual(18);
+      expect(appearance.fromRotate).toBeGreaterThanOrEqual(-4);
+      expect(appearance.fromRotate).toBeLessThanOrEqual(4);
+      expect(appearance.toRotate).toBeGreaterThanOrEqual(-7);
+      expect(appearance.toRotate).toBeLessThanOrEqual(7);
     }
   });
 });

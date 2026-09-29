@@ -83,8 +83,8 @@ export function createStoryTitleAppearances<TStory extends StoryTitleIdentity>(
     appearance: {
       color: colors[mixSeed(seed, 2) % colors.length]!,
       delay: randomBetween(seed, 17, -4, 0),
-      driftX: randomBetween(seed, 5, -14, 14),
-      driftY: randomBetween(seed, 7, -18, 10),
+      driftX: randomBetween(seed, 5, -9, 9),
+      driftY: randomBetween(seed, 7, -10, 8),
       duration: randomBetween(seed, 13, 3.2, 6.2),
       fontSize: fontSizeForPosition(
         index,
@@ -92,9 +92,9 @@ export function createStoryTitleAppearances<TStory extends StoryTitleIdentity>(
         story.title.length,
       ),
       fontWeight: fontWeights[mixSeed(seed, 3) % fontWeights.length]!,
-      fromRotate: randomBetween(seed, 9, -14, 14),
+      fromRotate: randomBetween(seed, 9, -4, 4),
       seed,
-      toRotate: randomBetween(seed, 11, -18, 18),
+      toRotate: randomBetween(seed, 11, -7, 7),
     },
   }));
 }

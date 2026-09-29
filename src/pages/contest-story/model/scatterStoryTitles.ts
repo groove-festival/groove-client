@@ -2,6 +2,13 @@ export interface StoryTitleSize {
   width: number;
   height: number;
   seed: number;
+  variants?: readonly StoryTitleVariant[];
+}
+
+export interface StoryTitleVariant {
+  width: number;
+  height: number;
+  rotation: number;
 }
 
 export interface StoryTitlePlacement {
@@ -9,10 +16,11 @@ export interface StoryTitlePlacement {
   top: number;
   width: number;
   height: number;
+  rotation: number;
 }
 
 const edge = 8;
-const gap = 18;
+const gap = 4;
 const defaultMinHeight = 336;
 
 function seededRandom(seed: number): () => number {
@@ -46,26 +54,41 @@ export function scatterStoryTitles(
 ): { placements: StoryTitlePlacement[]; height: number } {
   const width = Math.max(1, Math.floor(containerWidth));
   const availableWidth = Math.max(1, width - edge * 2);
-  const items = sizes.map((size, index) => ({
-    height: Math.max(size.height, 1),
-    index,
-    seed: size.seed,
-    width: Math.min(Math.max(size.width, 1), availableWidth),
-  }));
+  const items = sizes.map((size, index) => {
+    const variants = (
+      size.variants?.length
+        ? size.variants
+        : [{ height: size.height, rotation: 0, width: size.width }]
+    ).map((variant) => ({
+      height: Math.max(variant.height, 1),
+      rotation: variant.rotation,
+      width: Math.min(Math.max(variant.width, 1), availableWidth),
+    }));
+
+    return { index, seed: size.seed, variants };
+  });
   const totalArea = items.reduce(
-    (sum, item) => sum + (item.width + gap) * (item.height + gap),
+    (sum, item) =>
+      sum +
+      Math.min(
+        ...item.variants.map(
+          (variant) => (variant.width + gap) * (variant.height + gap),
+        ),
+      ),
     0,
   );
   let height = Math.max(
     defaultMinHeight,
     Math.floor(minimumHeight),
-    Math.ceil(totalArea / (width * 0.68)),
+    Math.ceil(totalArea / (width * 0.88)),
   );
   const packingOrder = [...items].sort(
-    (first, second) => second.width * second.height - first.width * first.height,
+    (first, second) =>
+      Math.min(...second.variants.map((variant) => variant.width * variant.height)) -
+      Math.min(...first.variants.map((variant) => variant.width * variant.height)),
   );
 
-  for (let round = 0; round < 9; round += 1) {
+  for (let round = 0; round < 18; round += 1) {
     const placed: StoryTitlePlacement[] = [];
     const placements = Array<StoryTitlePlacement | undefined>(items.length);
     let complete = true;
@@ -76,21 +99,34 @@ export function scatterStoryTitles(
           Math.imul(item.index + 1, 0x9e3779b1) ^
           Math.imul(round + 1, 0x85ebca6b),
       );
-      const maxLeft = Math.max(0, availableWidth - item.width);
-      const maxTop = Math.max(0, height - item.height - edge * 2);
       let placement: StoryTitlePlacement | undefined;
+      let placementScore = Number.POSITIVE_INFINITY;
+      const preferredVariantIndex = item.seed % item.variants.length;
 
-      for (let attempt = 0; attempt < 600; attempt += 1) {
+      for (let attempt = 0; attempt < 900; attempt += 1) {
+        const variantIndex = Math.floor(random() * item.variants.length);
+        const variant = item.variants[variantIndex]!;
+        const maxLeft = Math.max(0, availableWidth - variant.width);
+        const maxTop = Math.max(0, height - variant.height - edge * 2);
         const candidate = {
           left: edge + Math.round(random() * maxLeft),
           top: edge + Math.round(random() * maxTop),
-          width: item.width,
-          height: item.height,
+          width: variant.width,
+          height: variant.height,
+          rotation: variant.rotation,
         };
 
         if (placed.every((other) => !overlaps(candidate, other))) {
-          placement = candidate;
-          break;
+          const score =
+            candidate.top +
+            random() * height * 0.18 -
+            (variantIndex === preferredVariantIndex ? height * 0.06 : 0) +
+            (variant.width * variant.height * 0.12) / availableWidth;
+
+          if (score < placementScore) {
+            placement = candidate;
+            placementScore = score;
+          }
         }
       }
 
@@ -104,13 +140,21 @@ export function scatterStoryTitles(
     }
 
     if (complete) {
+      const usedHeight = Math.max(
+        defaultMinHeight,
+        Math.floor(minimumHeight),
+        ...placed.map((placement) => placement.top + placement.height + edge),
+      );
+
       return {
         placements: placements as StoryTitlePlacement[],
-        height,
+        height: Math.min(height, usedHeight),
       };
     }
 
-    height = Math.ceil(height * 1.16) + gap;
+    if ((round + 1) % 4 === 0) {
+      height = Math.ceil(height * 1.06) + gap;
+    }
   }
 
   const placements: StoryTitlePlacement[] = [];
@@ -119,7 +163,9 @@ export function scatterStoryTitles(
   let rowHeight = 0;
 
   for (const item of items) {
-    if (rowLeft > edge && rowLeft + item.width > width - edge) {
+    const variant = item.variants[0]!;
+
+    if (rowLeft > edge && rowLeft + variant.width > width - edge) {
       rowLeft = edge;
       rowTop += rowHeight + gap;
       rowHeight = 0;
@@ -128,11 +174,12 @@ export function scatterStoryTitles(
     placements.push({
       left: rowLeft,
       top: rowTop,
-      width: item.width,
-      height: item.height,
+      width: variant.width,
+      height: variant.height,
+      rotation: variant.rotation,
     });
-    rowLeft += item.width + gap;
-    rowHeight = Math.max(rowHeight, item.height);
+    rowLeft += variant.width + gap;
+    rowHeight = Math.max(rowHeight, variant.height);
   }
 
   return {

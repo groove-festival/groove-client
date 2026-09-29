@@ -50,7 +50,7 @@ import { StoryGuideModal } from "./StoryGuideModal";
 type StoryView = "list" | "form" | "success";
 type StoryTitleStyle = CSSProperties & Record<`--${string}`, string>;
 
-const storyCloudMinHeight = "clamp(420px, calc(100dvh - 388px), 640px)";
+const storyCloudMinHeight = "clamp(340px, calc(100dvh - 470px), 500px)";
 const previewStoryTitles = [
   "우리의 첫 축제",
   "밤하늘 아래서",
@@ -93,8 +93,10 @@ function rotatedStoryTitleSize(
   width: number,
   height: number,
   appearance: StoryTitleAppearance,
-): { height: number; width: number } {
-  const bounds = [appearance.fromRotate, appearance.toRotate].map((degrees) => {
+  baseRotation: number,
+): { height: number; rotation: number; width: number } {
+  const bounds = [appearance.fromRotate, appearance.toRotate].map((offset) => {
+    const degrees = baseRotation + offset;
     const radians = (Math.abs(degrees) * Math.PI) / 180;
     return {
       height:
@@ -107,10 +109,29 @@ function rotatedStoryTitleSize(
     height:
       Math.ceil(Math.max(...bounds.map((item) => item.height))) +
       Math.ceil(Math.abs(appearance.driftY) * 2),
+    rotation: baseRotation,
     width:
       Math.ceil(Math.max(...bounds.map((item) => item.width))) +
       Math.ceil(Math.abs(appearance.driftX) * 2),
   };
+}
+
+function storyTitleRotationCandidates(
+  appearance: StoryTitleAppearance,
+  index: number,
+  titleWidth: number,
+): number[] {
+  const direction = appearance.seed % 2 === 0 ? 1 : -1;
+  const diagonal = 45 + (appearance.seed % 19);
+  const vertical = 76 + ((appearance.seed >>> 8) % 9);
+  const rotatedCandidates =
+    titleWidth >= 220
+      ? [-direction * vertical]
+      : [direction * diagonal, -direction * vertical];
+
+  if (index % 4 === 0) return rotatedCandidates;
+  if (index % 4 === 1) return [0, -direction * vertical];
+  return [0, ...rotatedCandidates];
 }
 
 function StoryTitleTokens({ stories }: { stories: PublicContestStory[] }) {
@@ -134,12 +155,28 @@ function StoryTitleTokens({ stories }: { stories: PublicContestStory[] }) {
       const width = list.clientWidth;
       if (!active || width === 0) return;
 
-      const minimumHeight = Math.min(640, Math.max(420, window.innerHeight - 388));
+      const minimumHeight = Math.min(500, Math.max(340, window.innerHeight - 470));
       const sizes = tokens.map((token, index) => {
         const appearance = displayStories[index]!.appearance;
+        const variants = storyTitleRotationCandidates(
+          appearance,
+          index,
+          token.offsetWidth,
+        ).map((rotation) =>
+          rotatedStoryTitleSize(
+            token.offsetWidth,
+            token.offsetHeight,
+            appearance,
+            rotation,
+          ),
+        );
+        const baseVariant = variants[0]!;
+
         return {
-          ...rotatedStoryTitleSize(token.offsetWidth, token.offsetHeight, appearance),
+          height: baseVariant.height,
           seed: appearance.seed,
+          variants,
+          width: baseVariant.width,
         };
       });
       const measurements = `${width}:${minimumHeight}:${sizes.map(({ width: tokenWidth, height }) => `${tokenWidth}x${height}`).join(",")}`;
@@ -150,10 +187,20 @@ function StoryTitleTokens({ stories }: { stories: PublicContestStory[] }) {
       list.style.height = `${scattered.height}px`;
       wrappers.forEach((wrapper, index) => {
         const placement = scattered.placements[index]!;
+        const appearance = displayStories[index]!.appearance;
+        const token = tokens[index]!;
         wrapper.style.left = `${placement.left}px`;
         wrapper.style.top = `${placement.top}px`;
         wrapper.style.width = `${placement.width}px`;
         wrapper.style.height = `${placement.height}px`;
+        token.style.setProperty(
+          "--story-rotate-from",
+          `${(placement.rotation + appearance.fromRotate).toFixed(2)}deg`,
+        );
+        token.style.setProperty(
+          "--story-rotate-to",
+          `${(placement.rotation + appearance.toRotate).toFixed(2)}deg`,
+        );
       });
     };
 
@@ -170,7 +217,7 @@ function StoryTitleTokens({ stories }: { stories: PublicContestStory[] }) {
   return (
     <ul
       aria-label="접수된 사연 제목"
-      className="relative mt-6 min-h-[420px] w-full text-center"
+      className="relative mt-6 min-h-[340px] w-full text-center"
       ref={listRef}
       style={{ minHeight: storyCloudMinHeight }}
     >
@@ -207,7 +254,7 @@ function PublicStoryTitleCloud({
     return (
       <div
         aria-label="접수된 사연 제목"
-        className="mt-6 flex min-h-[420px] items-center justify-center text-center text-sm text-[#a2a2a2]"
+        className="mt-6 flex min-h-[340px] items-center justify-center text-center text-sm text-[#a2a2a2]"
         style={{ minHeight: storyCloudMinHeight }}
       >
         사연 목록을 불러오는 중입니다
@@ -219,7 +266,7 @@ function PublicStoryTitleCloud({
     return (
       <div
         aria-label="접수된 사연 제목"
-        className="mt-6 flex min-h-[420px] flex-col items-center justify-center gap-4 text-center text-sm text-[#a2a2a2]"
+        className="mt-6 flex min-h-[340px] flex-col items-center justify-center gap-4 text-center text-sm text-[#a2a2a2]"
         style={{ minHeight: storyCloudMinHeight }}
       >
         <p>사연 목록을 불러오지 못했어요.</p>
@@ -234,7 +281,7 @@ function PublicStoryTitleCloud({
     return (
       <div
         aria-label="접수된 사연 제목"
-        className="mt-6 flex min-h-[420px] items-center justify-center text-center text-sm text-[#a2a2a2]"
+        className="mt-6 flex min-h-[340px] items-center justify-center text-center text-sm text-[#a2a2a2]"
         style={{ minHeight: storyCloudMinHeight }}
       >
         아직 접수된 사연이 없어요

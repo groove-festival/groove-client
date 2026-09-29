@@ -58,4 +58,21 @@ describe("scatterStoryTitles", () => {
       expect(item.top + item.height).toBeLessThanOrEqual(layout.height);
     }
   });
+
+  it("turns titles into narrow gaps to keep the story section compact", () => {
+    const rotatableTitles = titles.map((title) => ({
+      ...title,
+      variants: [
+        { height: title.height, rotation: 0, width: title.width },
+        { height: title.width, rotation: 90, width: title.height },
+      ],
+    }));
+    const layout = scatterStoryTitles(rotatableTitles, 361);
+
+    expect(layout.height).toBeLessThanOrEqual(420);
+    expect(layout.placements.some(({ rotation }) => rotation === 0)).toBe(true);
+    expect(layout.placements.some(({ rotation }) => Math.abs(rotation) >= 45)).toBe(
+      true,
+    );
+  });
 });
