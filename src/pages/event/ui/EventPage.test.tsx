@@ -386,6 +386,37 @@ describe("EventPage", () => {
     expect(callsFor("/zones")).toBe(1);
   });
 
+  it("counts up the new score and lights the college that moved up", async () => {
+    await renderLoadedPage();
+
+    const moved = rivalScores.map((entry) =>
+      entry.college === "IT" ? { ...entry, score: 400, rank: 3 } : entry,
+    );
+    const reordered = [...moved].sort((a, b) => b.score - a.score);
+    httpGet.mockImplementation((url: string) =>
+      url === "/rivals/scores"
+        ? Promise.resolve(envelope({ scores: reordered, updatedAt: null }))
+        : Promise.resolve(envelope(url === "/pubs" ? pubs : { totalCount: 5, zones })),
+    );
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(RIVAL_SCORES_POLL_INTERVAL_MS);
+    });
+    await act(async () => {
+      // 응답이 화면까지 반영될 틈을 준다.
+      await vi.advanceTimersByTimeAsync(50);
+    });
+    // 새 순서로 곧장 다시 그리고, 오른 단대만 비춘다.
+    const podium = screen.getByRole("list", { name: "라이벌스 1~3위" });
+    expect(within(podium).getAllByRole("listitem")[2]).toHaveTextContent("IT대학");
+    expect(podium.querySelectorAll("[data-rising]")).toHaveLength(1);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1500);
+    });
+    expect(within(podium).getAllByRole("listitem")[2]).toHaveTextContent("400점");
+  });
+
   it("offers a retry when the zones request fails", async () => {
     respond({ zonesFail: true });
     await renderPage();

@@ -1,3 +1,5 @@
+import { useRef, useState } from "react";
+
 import collegeArt from "../festival-visuals/college-art.png";
 import collegeEdu from "../festival-visuals/college-edu.png";
 import collegeIt from "../festival-visuals/college-it.png";
@@ -5,6 +7,7 @@ import collegeNature from "../festival-visuals/college-nature.png";
 import collegeNursing from "../festival-visuals/college-nursing.png";
 import collegeSocial from "../festival-visuals/college-social.png";
 import { type College, type RivalScore, splitRivalStandings } from "../model/rivals";
+import { getRisenColleges, useCountUpScores, useRankFlip } from "../model/rivalsMotion";
 
 // 단대 아이콘(34:3686). 원형 그라데이션 위에 패딩 8을 두고 아이콘을 얹는다.
 const collegeIcons: Record<College, { icon: string; background: string }> = {
@@ -25,18 +28,32 @@ const collegeIcons: Record<College, { icon: string; background: string }> = {
   },
 };
 
+// 순위가 오른 단대는 아이콘 둘레에 라임 빛이 잠깐 번졌다가 사라진다.
+// 연달아 오르면 key 로 다시 그려 효과를 처음부터 튼다.
+interface RiseState {
+  id: number;
+  colleges: ReadonlySet<College>;
+}
+
 const CollegeIcon = ({
   college,
   sizeClass,
+  rise,
 }: {
   college: College;
   sizeClass: string;
+  rise: RiseState;
 }) => {
   const { icon, background } = collegeIcons[college];
+  const isRising = rise.colleges.has(college);
 
   return (
     <span
-      className={`flex shrink-0 items-center justify-center rounded-full p-2 ${sizeClass}`}
+      className={`flex shrink-0 items-center justify-center rounded-full p-2 ${sizeClass} ${
+        isRising ? "motion-safe:animate-rival-rise" : ""
+      }`}
+      data-rising={isRising || undefined}
+      key={isRising ? `rise-${rise.id}` : "still"}
       style={{ backgroundImage: background }}
     >
       <img alt="" className="w-full" src={icon} />
@@ -82,15 +99,21 @@ const podiumSlotStyles: PodiumSlotStyle[] = [
   },
 ];
 
+interface RankItemProps {
+  entry: RivalScore;
+  shownScore: number;
+  rise: RiseState;
+}
+
 const PodiumItem = ({
   entry,
+  shownScore,
+  rise,
   style,
-}: {
-  entry: RivalScore;
-  style: PodiumSlotStyle;
-}) => (
+}: RankItemProps & { style: PodiumSlotStyle }) => (
   <li
     className={`flex flex-col items-center gap-3 ${style.orderClass} ${style.widthClass}`}
+    data-rank-item={entry.college}
   >
     <span
       className={`w-full text-center leading-[normal] font-semibold ${style.rankClass}`}
@@ -98,25 +121,27 @@ const PodiumItem = ({
       {entry.rank}
     </span>
     <span className={`flex w-full flex-col items-center ${style.detailGapClass}`}>
-      <CollegeIcon college={entry.college} sizeClass={style.iconClass} />
+      <CollegeIcon college={entry.college} rise={rise} sizeClass={style.iconClass} />
       <span className={`font-bold whitespace-nowrap ${style.textClass}`}>
         {entry.collegeName}
       </span>
-      <span className={`font-medium ${style.textClass}`}>{entry.score}점</span>
+      <span className={`font-medium tabular-nums ${style.textClass}`}>
+        {shownScore}점
+      </span>
     </span>
   </li>
 );
 
-const StandingRow = ({ entry }: { entry: RivalScore }) => (
-  <li className="flex w-full items-center gap-4">
+const StandingRow = ({ entry, shownScore, rise }: RankItemProps) => (
+  <li className="flex w-full items-center gap-4" data-rank-item={entry.college}>
     <span className="w-3 shrink-0 text-right text-xl leading-[normal] font-medium">
       {entry.rank}
     </span>
     <span className="flex h-[72px] min-w-0 flex-1 items-center gap-4 rounded-full border border-[#fcfcfc] bg-[#767676] pr-[24.5px] pl-[20.5px]">
-      <CollegeIcon college={entry.college} sizeClass="size-12" />
+      <CollegeIcon college={entry.college} rise={rise} sizeClass="size-12" />
       <span className="flex min-w-0 flex-1 items-center justify-between gap-3 text-sm leading-[17px] whitespace-nowrap">
         <span className="truncate font-bold">{entry.collegeName}</span>
-        <span className="font-medium">{entry.score}점</span>
+        <span className="font-medium tabular-nums">{shownScore}점</span>
       </span>
     </span>
   </li>
@@ -127,8 +152,21 @@ interface RivalsSectionProps {
 }
 
 // GROOVE RIVALS 순위 (Figma 34:3619). 1~3위는 단상, 4위부터는 목록 행이다.
+// 5초마다 새 순위가 오면 자리를 옮기고, 점수를 올리고, 오른 단대를 비춘다.
+// 순위 변동 효과는 시안이 없어 이 화면에서 정했다.
 export const RivalsSection = ({ scores }: RivalsSectionProps) => {
   const { podium, others } = splitRivalStandings(scores);
+  const standingsRef = useRef<HTMLDivElement>(null);
+  // 폴링 응답이 그대로면 쿼리가 같은 배열을 돌려주므로, 배열이 바뀔 때만 비교한다.
+  const [previousScores, setPreviousScores] = useState(scores);
+  const [rise, setRise] = useState<RiseState>({ id: 0, colleges: new Set() });
+  if (scores !== previousScores) {
+    setPreviousScores(scores);
+    setRise({ id: rise.id + 1, colleges: getRisenColleges(previousScores, scores) });
+  }
+
+  const getShownScore = useCountUpScores(scores);
+  useRankFlip(standingsRef, scores);
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -141,7 +179,7 @@ export const RivalsSection = ({ scores }: RivalsSectionProps) => {
         </p>
       </div>
 
-      <div className="flex w-full flex-col gap-5 pr-px pl-[5px]">
+      <div className="flex w-full flex-col gap-5 pr-px pl-[5px]" ref={standingsRef}>
         <ol
           aria-label="라이벌스 1~3위"
           className="flex items-end justify-center gap-4 min-[393px]:gap-10"
@@ -150,13 +188,20 @@ export const RivalsSection = ({ scores }: RivalsSectionProps) => {
             <PodiumItem
               entry={entry}
               key={entry.college}
+              rise={rise}
+              shownScore={getShownScore(entry.college, entry.score)}
               style={podiumSlotStyles[index]}
             />
           ))}
         </ol>
         <ol aria-label="라이벌스 4위 이하" className="flex w-full flex-col gap-4">
           {others.map((entry) => (
-            <StandingRow entry={entry} key={entry.college} />
+            <StandingRow
+              entry={entry}
+              key={entry.college}
+              rise={rise}
+              shownScore={getShownScore(entry.college, entry.score)}
+            />
           ))}
         </ol>
       </div>
