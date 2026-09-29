@@ -37,6 +37,8 @@
   /* 지도에서 고른 주막의 필터 칩과 한 장만 남은 결과 카드 전환. */
   --animate-booth-filter-chip-in: booth-filter-chip-in 180ms ease-out;
   --animate-booth-filter-result-in: booth-filter-result-in 220ms ease-out;
+  /* 라이벌스에서 순위가 오른 단대 아이콘에 라임 빛이 한 번 번졌다가 사라진다. */
+  --animate-rival-rise: rival-rise 2s ease-out;
 
   @keyframes float {
     0%,
@@ -89,6 +91,20 @@
     to {
       opacity: 1;
       transform: translateX(0) scale(1);
+    }
+  }
+
+  @keyframes rival-rise {
+    0% {
+      box-shadow: 0 0 0 0 rgb(207 255 4 / 0);
+    }
+    25% {
+      box-shadow:
+        0 0 0 2px rgb(207 255 4 / 0.55),
+        0 0 12px 2px rgb(207 255 4 / 0.3);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgb(207 255 4 / 0);
     }
   }
 
