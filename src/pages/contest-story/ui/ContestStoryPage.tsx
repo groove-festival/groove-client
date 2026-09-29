@@ -44,12 +44,15 @@ import {
   type StoryTitleAppearance,
 } from "../model/storyTitleAppearance";
 import { nextStoryBoundaryAt, parseStoryPhaseOverride } from "../model/storyPhase";
+import storyIconSprite from "../festival-visuals/story-icon-sprite.png";
 import { StoryForm } from "./StoryForm";
 import { StoryGuideModal } from "./StoryGuideModal";
 
 type StoryView = "list" | "form" | "success";
 type StoryTitleStyle = CSSProperties & Record<`--${string}`, string>;
 
+// 접수된 사연 제목 클라우드(빈 상태 포함)를 임시로 숨기고 아이콘으로 대신한다.
+const SHOW_STORY_TITLE_CLOUD = false;
 const storyCloudMinHeight = "clamp(340px, calc(100dvh - 470px), 500px)";
 const previewStoryTitles = [
   "우리의 첫 축제",
@@ -390,7 +393,14 @@ export default function ContestStoryPage() {
   }
 
   return (
-    <main className="relative min-h-[calc(100dvh-64px)] w-full bg-[#1c1c1c] px-4 pt-20 pb-24 text-[#fcfcfc]">
+    <main
+      className={`relative w-full bg-[#1c1c1c] px-4 pt-20 text-[#fcfcfc] ${
+        // 모집 목록 화면은 신청하기 버튼 바로 아래에 푸터가 오도록 여백을 줄인다.
+        storyPhase === "OPEN" && effectiveView === "list"
+          ? "pb-10"
+          : "min-h-[calc(100dvh-64px)] pb-24"
+      }`}
+    >
       {storyPhase === "BEFORE" && (
         <section className="mx-auto flex w-full flex-col items-center gap-12 pt-[160px] text-center">
           <h1 className="w-full text-2xl font-semibold min-[480px]:text-3xl">
@@ -425,16 +435,39 @@ export default function ContestStoryPage() {
 
       {storyPhase === "OPEN" && effectiveView === "list" && (
         <section className="mx-auto w-full pt-10">
-          {isStoryPreview && <p className="text-xs text-[#cfff04]">예시 미리보기</p>}
-          <PublicStoryTitleCloud
-            isError={!isStoryPreview && stories.isError}
-            isPending={!isStoryPreview && stories.isPending}
-            onRetry={() => void stories.refetch()}
-            stories={isStoryPreview ? previewStories : stories.data}
-          />
-          <div className="mt-8 flex flex-col gap-6">
+          {SHOW_STORY_TITLE_CLOUD ? (
+            <>
+              {isStoryPreview && (
+                <p className="text-xs text-[#cfff04]">예시 미리보기</p>
+              )}
+              <PublicStoryTitleCloud
+                isError={!isStoryPreview && stories.isError}
+                isPending={!isStoryPreview && stories.isPending}
+                onRetry={() => void stories.refetch()}
+                stories={isStoryPreview ? previewStories : stories.data}
+              />
+            </>
+          ) : (
+            // 메인 사연신청 바로가기와 같은 스프라이트 크롭을 크게 키운다.
+            // 헤더(80px) 아래로 120px 떨어뜨린다 (section pt-10 + mt-20).
+            <div className="mt-20 flex justify-center">
+              <span
+                aria-hidden="true"
+                className="relative h-[221px] w-60 shrink-0 overflow-hidden"
+              >
+                <img
+                  alt=""
+                  className="absolute top-[-5.35%] left-[-28.65%] h-[114.47%] w-[156.45%] max-w-none"
+                  src={storyIconSprite}
+                />
+              </span>
+            </div>
+          )}
+          <div
+            className={`${SHOW_STORY_TITLE_CLOUD ? "mt-8" : "mt-[120px]"} flex flex-col gap-6`}
+          >
             <section aria-labelledby="story-event-heading" className="text-center">
-              <h1 className="text-lg font-semibold" id="story-event-heading">
+              <h1 className="text-xl font-semibold" id="story-event-heading">
                 GROOVE 사연 모집 이벤트
               </h1>
             </section>

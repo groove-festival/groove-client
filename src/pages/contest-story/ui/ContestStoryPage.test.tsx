@@ -165,7 +165,8 @@ describe("ContestStoryPage", () => {
     expect(screen.queryByRole("button", { name: "신청하기" })).not.toBeInTheDocument();
   });
 
-  it("renders public story titles in the open phase", () => {
+  // 사연 제목 클라우드 임시 숨김(SHOW_STORY_TITLE_CLOUD) 동안 건너뛴다.
+  it.skip("renders public story titles in the open phase", () => {
     renderPage("/story?phase=open");
 
     expect(
@@ -192,7 +193,8 @@ describe("ContestStoryPage", () => {
     expect(screen.queryByRole("tab", { name: "타임테이블" })).not.toBeInTheDocument();
   });
 
-  it("shows the story list error and retries", () => {
+  // 사연 제목 클라우드 임시 숨김(SHOW_STORY_TITLE_CLOUD) 동안 건너뛴다.
+  it.skip("shows the story list error and retries", () => {
     const refetch = vi.fn();
     usePublicContestStoriesMock.mockReturnValue({
       data: undefined,
@@ -207,7 +209,8 @@ describe("ContestStoryPage", () => {
     expect(refetch).toHaveBeenCalledOnce();
   });
 
-  it("shows clearly labeled sample titles without fetching stories in development preview", () => {
+  // 사연 제목 클라우드 임시 숨김(SHOW_STORY_TITLE_CLOUD) 동안 건너뛴다.
+  it.skip("shows clearly labeled sample titles without fetching stories in development preview", () => {
     usePublicContestStoriesMock.mockReturnValue({
       data: undefined,
       isError: true,
