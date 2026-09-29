@@ -1,4 +1,3 @@
-import { BookOpenText } from "lucide-react";
 import { Link } from "react-router";
 
 import {
@@ -37,7 +36,7 @@ export const BoothCard = ({ booth, onSelectLocation, to }: BoothCardProps) => {
 
   return (
     <div
-      className="flex h-[90px] w-full items-center justify-between rounded-3xl border border-[#fcfcfc] bg-[#767676] px-6 py-5 text-[#fcfcfc] transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
+      className="flex h-[90px] w-full items-center justify-between rounded-3xl border border-[#fcfcfc] bg-[#767676] px-6 py-5 text-[#fcfcfc] transition-transform duration-150 ease-out has-[>button:active]:scale-[0.97] motion-reduce:transition-none"
       data-testid="booth-card"
     >
       <button
@@ -56,11 +55,10 @@ export const BoothCard = ({ booth, onSelectLocation, to }: BoothCardProps) => {
       </button>
       <Link
         aria-label={`${displayName} 메뉴 보기`}
-        className="ml-3 flex h-12 w-[74px] shrink-0 items-center justify-center gap-1 rounded-2xl border border-[rgba(252,252,252,0.7)] text-xs font-semibold transition-[background-color,transform] duration-150 hover:bg-[rgba(252,252,252,0.12)] active:scale-95 motion-reduce:transition-none"
+        className="ml-3 flex h-8 shrink-0 items-center justify-center rounded-2xl bg-[#cfff04] px-3 text-xs font-semibold text-[#1c1c1c] transition-transform duration-150 active:scale-95 motion-reduce:transition-none"
         to={to}
       >
-        <BookOpenText aria-hidden="true" className="size-[18px]" strokeWidth={2.2} />
-        메뉴
+        메뉴 보기
       </Link>
     </div>
   );
