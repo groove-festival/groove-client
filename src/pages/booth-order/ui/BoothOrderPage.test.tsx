@@ -629,11 +629,11 @@ describe("BoothOrderPage", () => {
     renderOrderPage();
 
     fireEvent.click(await screen.findByRole("button", { name: "입금자명 수정하기" }));
-    const dialog = screen.getByRole("dialog", { name: "입금자명을 수정하시겠어요?" });
+    const dialog = screen.getByRole("dialog", { name: "입금자명 수정" });
     fireEvent.change(within(dialog).getByLabelText(/입금자명/), {
       target: { value: "김철수" },
     });
-    fireEvent.click(within(dialog).getByRole("button", { name: "수정" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "완료" }));
 
     expect(await screen.findByText("김철수")).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
