@@ -49,4 +49,13 @@ describe("scatterStoryTitles", () => {
     expect(scatterStoryTitles(titles, 361)).toEqual(scatterStoryTitles(titles, 361));
     expect(scatterStoryTitles([], 361)).toEqual({ placements: [], height: 336 });
   });
+
+  it("uses the available story section height when it is taller than the content", () => {
+    const layout = scatterStoryTitles(titles.slice(0, 2), 361, 520);
+
+    expect(layout.height).toBeGreaterThanOrEqual(520);
+    for (const item of layout.placements) {
+      expect(item.top + item.height).toBeLessThanOrEqual(layout.height);
+    }
+  });
 });
