@@ -329,7 +329,7 @@ describe("BoothOrderPage", () => {
     const boothName = screen.getByRole("heading", { name: "주막 이름" });
     const departments = boothName.previousElementSibling;
     const description = screen.getByText("부스 설명");
-    expect(boothName.parentElement).toHaveClass("gap-0");
+    expect(boothName.parentElement).toHaveClass("gap-1.5");
     expect(departments).toHaveTextContent("단대 • 학과");
     expect(departments).toHaveClass("font-medium", "text-[#fcfcfc]");
     expect(boothName).toHaveClass("font-bold", "text-[#fcfcfc]");

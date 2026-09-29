@@ -29,10 +29,10 @@ export const BoothDetailHeader = ({
 
       <div className="flex min-w-0 flex-col gap-2">
         <div className="flex min-w-0 flex-col gap-2">
-          <div className="flex min-w-0 flex-col gap-0">
+          <div className="flex min-w-0 flex-col gap-1.5">
             <BoothDepartments
               booth={booth}
-              className="w-full text-xl leading-6 font-medium text-[#fcfcfc]"
+              className="w-full text-lg leading-[22px] font-medium text-[#fcfcfc]"
             />
             <h1 className="text-2xl leading-[29px] font-bold break-keep text-[#fcfcfc]">
               {getBoothDisplayName(booth)}

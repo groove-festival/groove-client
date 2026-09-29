@@ -88,9 +88,9 @@ describe("BoothDetailPage", () => {
     const boothName = screen.getByRole("heading", { name: "일렉트로닉 나이트" });
     const departments = boothName.previousElementSibling;
     const description = screen.getByText("전자공학부 주막");
-    expect(boothName.parentElement).toHaveClass("gap-0");
+    expect(boothName.parentElement).toHaveClass("gap-1.5");
     expect(departments).toHaveTextContent("전자공학부E • 전자공학부H");
-    expect(departments).toHaveClass("font-medium", "text-[#fcfcfc]");
+    expect(departments).toHaveClass("text-lg", "font-medium", "text-[#fcfcfc]");
     expect(boothName).toHaveClass("font-bold", "text-[#fcfcfc]");
     expect(description).toHaveClass("text-base", "leading-[19px]", "font-medium");
     expect(description.parentElement).toHaveClass("gap-2");
