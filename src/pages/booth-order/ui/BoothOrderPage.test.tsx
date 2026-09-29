@@ -379,8 +379,10 @@ describe("BoothOrderPage", () => {
     expect(within(separateCharge).getByLabelText("상차림비 수량")).toHaveTextContent(
       "0",
     );
-    expect(screen.getByTestId("separate-charge-notice")).toHaveTextContent(
-      "상차림비는 직접 담아 주세요. 같은 테이블에서 이미 냈다면 담지 않아도 돼요.",
+    const separateChargeNotice = screen.getByTestId("separate-charge-notice");
+    expect(separateChargeNotice).toHaveTextContent("* 상차림비는 직접 담아 주세요.");
+    expect(separateChargeNotice).toHaveTextContent(
+      "같은 테이블에서 이미 냈다면 담지 않아도 돼요.",
     );
 
     // 첫 주문인지는 알 수 없으므로 상차림비 없이도 주문된다.
