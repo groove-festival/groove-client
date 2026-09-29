@@ -103,6 +103,9 @@ export const EventBoothMap = ({
           ? selectedZone === null || place.zoneType === selectedZone
           : true
       }
+      // 회색으로 끈 체험존도 곧장 골라 바꿀 수 있어야 한다. 켜진 곳만 누를 수 있으면
+      // 다른 체험존을 눌렀을 때 빈 곳으로 잡혀 선택이 먼저 풀린다.
+      isSelectable={() => true}
       onSelect={selectPlace}
       places={places}
       selectedId={selectedZone ? zonePlaceId(selectedZone) : (otherPlace?.id ?? null)}

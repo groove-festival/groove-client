@@ -222,6 +222,19 @@ describe("EventPage", () => {
     expect(screen.getByTestId("campus-map-cover-pub:nursing").style.opacity).toBe("0");
   });
 
+  it("switches straight to a dimmed booth tapped on the map", async () => {
+    await renderLoadedPage();
+
+    fireEvent.click(booth("LOVE ZONE"));
+    expect(isZoneLit("MOVE")).toBe(false);
+
+    fireEvent.click(booth("MOVE ZONE"));
+
+    expect(isZoneLit("MOVE")).toBe(true);
+    expect(isZoneLit("LOVE")).toBe(false);
+    expect(card("MOVE ZONE")).toHaveAttribute("aria-pressed", "true");
+  });
+
   it("clears the selection when an empty part of the map is tapped", async () => {
     await renderLoadedPage();
 
