@@ -1,3 +1,5 @@
+import { ParticipantAvatar } from "./ParticipantAvatar";
+
 interface ParticipantSelectChipProps {
   name: string;
   selected: boolean;
@@ -24,10 +26,7 @@ export function ParticipantSelectChip({
       onClick={onClick}
       type="button"
     >
-      <span
-        aria-hidden="true"
-        className={`size-14 shrink-0 rounded-full ${selected ? "bg-[#fcfcfc]" : "bg-[#a2a2a2]"}`}
-      />
+      <ParticipantAvatar className="size-14" dimmed={!selected} name={name} />
       <span
         className={`text-base font-semibold ${selected ? "text-[#fcfcfc]" : "text-[#a2a2a2]"}`}
       >
