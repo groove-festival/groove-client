@@ -167,15 +167,13 @@ export const FestivalMap = ({
   const focusScale = focus?.scale ?? initialScale;
 
   useEffect(() => {
-    // 첫 선택이 지도 크기 측정보다 빨라도 요청을 버리지 않는다. 측정 완료로
-    // isMeasured가 바뀌면 같은 focus를 다시 적용해 두 번째 클릭이 필요 없게 한다.
-    if (!isMeasured || focusX === null || focusY === null) return;
+    if (focusX === null || focusY === null) return;
     moveToRef.current(
       { xRatio: focusX, yRatio: focusY },
       focusScale,
       FOCUS_ANIMATION_MS,
     );
-  }, [focusX, focusY, focusScale, isMeasured]);
+  }, [focusX, focusY, focusScale]);
 
   // 확대·축소 버튼은 보던 자리를 그대로 두고 배율만 바꾼다. 라이브러리의
   // zoomIn·zoomOut이 화면 한가운데를 기준으로 삼아 주므로 그대로 쓰되,

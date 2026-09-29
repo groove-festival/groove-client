@@ -65,9 +65,6 @@ const ShapePath = ({
 
 export interface CampusMapLayerProps {
   places: readonly CampusPlace[];
-  // 이 화면에서 아예 그리지 않을 장소. 배경 SVG에 이미 색이 칠해진 장소도 회색으로
-  // 덮어 숨기고, 이름표·선택 영역·선택 핀에서도 제외한다.
-  isVisible?: (place: CampusPlace) => boolean;
   // 색을 켤 장소. 꺼진 장소는 배경 회색으로 보인다.
   isLit: (place: CampusPlace) => boolean;
   // 누를 수 있는 장소. 없으면 켜진 장소만 누를 수 있다. 회색이어도 골라 바꿀 수 있어야
@@ -96,7 +93,6 @@ const defaultActionLabel = (place: CampusPlace) => `${place.label} 위치 보기
 // 커지는데, 덮개는 작은 도형 몇 개뿐이라 가볍다.
 export const CampusMapLayer = ({
   places,
-  isVisible = () => true,
   isLit,
   isSelectable = isLit,
   selectedId,
@@ -106,11 +102,9 @@ export const CampusMapLayer = ({
   keepDimmedPubNumbers = false,
 }: CampusMapLayerProps) => {
   const pressPoint = useRef<{ x: number; y: number } | null>(null);
-  const visiblePlaces = places.filter(isVisible);
-  const hiddenPlaces = places.filter((place) => !isVisible(place));
-  const litPlaces = visiblePlaces.filter(isLit);
+  const litPlaces = places.filter(isLit);
   const litIds = new Set(litPlaces.map(({ id }) => id));
-  const selectablePlaces = visiblePlaces.filter(isSelectable);
+  const selectablePlaces = places.filter(isSelectable);
   const labeledPlaces = litPlaces.filter(({ group }) => alwaysLabeledGroups.has(group));
   // 지명이 적힌 장소는 골라도 핀을 한 번 더 띄우지 않는다.
   const selectedPlace = litPlaces.find(
@@ -191,7 +185,7 @@ export const CampusMapLayer = ({
         {/* 덮개보다 위에 그리면 회색 주막에도 번호가 남는다. */}
         {keepDimmedPubNumbers && pubNumbers}
 
-        {visiblePlaces.map((place) => {
+        {places.map((place) => {
           const color = overlayColors[place.group];
           if (!color) return null;
 
@@ -206,19 +200,6 @@ export const CampusMapLayer = ({
             />
           );
         })}
-
-        {/* 배경 SVG에 색이 들어 있는 고정 부스도 화면별 요구에 따라 완전히 숨긴다. */}
-        {hiddenPlaces.map((place) => (
-          <ShapePath
-            className="pointer-events-none"
-            data-testid={`campus-map-hidden-${place.id}`}
-            fill={COVER_COLOR}
-            key={place.id}
-            shape={place.shape}
-            stroke={COVER_COLOR}
-            strokeWidth={COVER_STROKE_WIDTH}
-          />
-        ))}
 
         {/* 장소가 아닌 빈 곳을 탭하면 선택을 푼다. 장소 도형보다 먼저 그려
             장소 위에서는 이 영역이 잡히지 않는다. */}

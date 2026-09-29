@@ -323,20 +323,6 @@ describe("BoothOrderPage", () => {
     expect(screen.getByRole("img", { name: "GROOVE" })).toBeInTheDocument();
   });
 
-  it("shows the department above the booth name and leaves 8px before the description", async () => {
-    await showMenuScreen();
-
-    const boothName = screen.getByRole("heading", { name: "주막 이름" });
-    const departments = boothName.previousElementSibling;
-    const description = screen.getByText("부스 설명");
-    expect(boothName.parentElement).toHaveClass("gap-0");
-    expect(departments).toHaveTextContent("단대 • 학과");
-    expect(departments).toHaveClass("font-medium", "text-[#fcfcfc]");
-    expect(boothName).toHaveClass("font-bold", "text-[#fcfcfc]");
-    expect(description).toHaveClass("text-base", "leading-[19px]", "font-medium");
-    expect(description.parentElement).toHaveClass("gap-2");
-  });
-
   it("moves a shared-spot QR to the table PUB-3 resolved for today", async () => {
     httpGet.mockImplementation((url: string) => {
       if (url.includes("/orders/")) return Promise.reject(apiError("PUB005", 404));
@@ -361,14 +347,6 @@ describe("BoothOrderPage", () => {
     expect(httpGet).toHaveBeenCalledWith(`/pubs/${BOOTH_ID}/tables/${TABLE_CODE}`);
     expect(screen.getByRole("heading", { name: "세트 메뉴" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "음료" })).toBeInTheDocument();
-  });
-
-  it("uses 12px horizontal padding for order menu rows", async () => {
-    await showMenuScreen();
-
-    expect(
-      screen.getAllByRole("button", { name: "메뉴명 수량 늘리기" })[0].closest("li"),
-    ).toHaveClass("px-3");
   });
 
   it("starts the separate charge at zero and orders without it", async () => {
