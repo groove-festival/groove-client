@@ -93,7 +93,7 @@ export const SongRequestCompleteModal = ({
         aria-describedby={descriptionId}
         aria-labelledby={titleId}
         aria-modal="true"
-        className="font-pretendard flex w-[320px] max-w-full items-center justify-center rounded-[36px] bg-[#fcfcfc]/40 px-8 py-9 backdrop-blur-[24px] outline-none"
+        className="font-pretendard flex w-[320px] max-w-full items-center justify-center rounded-[36px] bg-[#fcfcfc]/40 px-6 py-9 backdrop-blur-[24px] outline-none"
         onClick={(event) => event.stopPropagation()}
         ref={dialogRef}
         role="dialog"
@@ -136,7 +136,7 @@ export const SongRequestCompleteModal = ({
 
           <div className="flex items-center gap-4">
             <button
-              className="flex h-[43px] w-[120px] items-center justify-center rounded-[10px] bg-[#cfcfcf] px-5 text-base font-semibold text-[#767676]"
+              className="flex h-[43px] w-[120px] items-center justify-center rounded-[12px] bg-[rgba(252,252,252,0.3)] px-5 text-base font-semibold text-[#fcfcfc] transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
               onClick={onChange}
               ref={changeButtonRef}
               type="button"
@@ -144,7 +144,7 @@ export const SongRequestCompleteModal = ({
               변경
             </button>
             <button
-              className="flex h-[43px] w-[120px] items-center justify-center rounded-[10px] bg-[#5d00ff] px-5 text-base font-semibold text-[#fcfcfc]"
+              className="flex h-[43px] w-[120px] items-center justify-center rounded-[12px] bg-[#5d00ff] px-5 text-base font-semibold text-[#fcfcfc] transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
               onClick={onConfirm}
               ref={confirmButtonRef}
               type="button"
