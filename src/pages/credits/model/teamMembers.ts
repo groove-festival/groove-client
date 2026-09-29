@@ -11,6 +11,9 @@ import kimJiHunProfile1x from "../festival-visuals/profile-kimjihun-64.png";
 import kimJiHunProfile2x from "../festival-visuals/profile-kimjihun-128.png";
 import kimJiHunProfile3x from "../festival-visuals/profile-kimjihun-192.png";
 import kimTaeHuiProfile from "../festival-visuals/profile-kimtaehui.png";
+import leeSangMinProfile1x from "../festival-visuals/profile-leesangmin-64.jpg";
+import leeSangMinProfile2x from "../festival-visuals/profile-leesangmin-128.jpg";
+import leeSangMinProfile3x from "../festival-visuals/profile-leesangmin-192.jpg";
 import seoHyeongCheolProfile from "../festival-visuals/profile-seohyeongcheol.png";
 import yunJiMinProfile1x from "../festival-visuals/profile-yunjimin-64.png";
 import yunJiMinProfile2x from "../festival-visuals/profile-yunjimin-128.png";
@@ -101,6 +104,8 @@ export const creditSections: CreditSection[] = [
       {
         name: "이상민",
         affiliation: "심화컴퓨터공학전공 23학번",
+        profileImage: leeSangMinProfile2x,
+        profileImageSrcSet: `${leeSangMinProfile1x} 1x, ${leeSangMinProfile2x} 2x, ${leeSangMinProfile3x} 3x`,
         instagram: "minn._n__",
         github: "lsmin3388",
       },
