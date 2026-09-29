@@ -21,6 +21,8 @@ interface OrderTableResponseBody {
 export interface OrderTable {
   booth: BoothOrderDetail;
   isOrderable: boolean;
+  // 서버가 옮겨 답한 테이블. 날짜별로 나눠 쓰는 자리의 QR 을 쉬는 학과 쪽으로 찍으면
+  // 오늘 여는 학과의 같은 번호 테이블이 온다. 요청 주소와 다르면 이 값으로 바꾼다.
   tableCode: string;
   tableNumber: number;
 }

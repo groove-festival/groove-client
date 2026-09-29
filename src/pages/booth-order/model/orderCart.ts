@@ -15,47 +15,23 @@ export interface CartLine extends OrderLine {
   optionIds: number[];
 }
 
-// 상차림비가 하나뿐이면 모든 주문에 붙는 항목이라 1 아래로 내릴 수 없다.
-// 여러 개(1인·테이블당, 학과별 등)면 손님이 해당하는 것을 고르므로 0부터 시작한다.
-//
-// 추가 주문(isAdditionalOrder)은 예외다. 상차림비는 자리에 앉을 때 한 번 내는
-// 돈이라 첫 주문에서 이미 냈다. 추가 주문에는 0개로 시작하고 고르지 않아도
-// 주문할 수 있다. 일행이 늘었으면 손님이 직접 담는다.
-const hasSingleSeparateCharge = (booth: BoothOrderDetail) =>
-  booth.separateChargeItems.length === 1;
-
-export const getMinimumQuantity = (
-  booth: BoothOrderDetail,
-  item: BoothMenuItem,
-  isAdditionalOrder = false,
-) =>
-  !isAdditionalOrder && item.separateCharge && hasSingleSeparateCharge(booth) ? 1 : 0;
-
-export const createInitialCart = (
-  booth: BoothOrderDetail,
-  isAdditionalOrder = false,
-): OrderCart =>
-  !isAdditionalOrder && hasSingleSeparateCharge(booth)
-    ? { [booth.separateChargeItems[0].id]: 1 }
-    : {};
+// 상차림비는 늘 0개로 시작하고, 손님이 직접 담는다. 안 담아도 주문할 수 있다.
+// 첫 주문인지 추가 주문인지는 폰마다 따로 기억할 수밖에 없어, 같은 테이블 일행이
+// 다른 폰으로 QR 을 찍으면 어긋난다. 그래서 판단은 서빙하는 직원이 테이블을 보고 한다.
+export const createInitialCart = (): OrderCart => ({});
 
 export const getQuantity = (cart: OrderCart, item: BoothMenuItem) => cart[item.id] ?? 0;
 
 export const changeQuantity = (
-  booth: BoothOrderDetail,
   cart: OrderCart,
   item: BoothMenuItem,
   delta: number,
-  isAdditionalOrder = false,
 ): OrderCart => {
   if (item.isSoldOut || item.price === null) {
     return cart;
   }
 
-  const nextQuantity = Math.max(
-    getMinimumQuantity(booth, item, isAdditionalOrder),
-    getQuantity(cart, item) + delta,
-  );
+  const nextQuantity = Math.max(0, getQuantity(cart, item) + delta);
   return { ...cart, [item.id]: nextQuantity };
 };
 
@@ -104,24 +80,14 @@ export const hasSelectedMenu = (booth: BoothOrderDetail, cart: OrderCart) =>
     section.items.some((item) => getQuantity(cart, item) > 0),
   );
 
-// 상차림비가 있는 주막은 첫 주문에서 그중 하나 이상을 담아야 한다. 하나뿐이면
-// 1 아래로 내려가지 않아 늘 만족한다. 추가 주문은 이미 냈으므로 묻지 않는다.
-export const hasSelectedSeparateCharge = (
-  booth: BoothOrderDetail,
-  cart: OrderCart,
-  isAdditionalOrder = false,
-) =>
-  isAdditionalOrder ||
+// 상차림비를 하나라도 담았는지. 주문 조건이 아니라 안내 문구를 고르는 데만 쓴다.
+export const hasSelectedSeparateCharge = (booth: BoothOrderDetail, cart: OrderCart) =>
   booth.separateChargeItems.length === 0 ||
   booth.separateChargeItems.some((item) => getQuantity(cart, item) > 0);
 
-export const canPlaceOrder = (
-  booth: BoothOrderDetail,
-  cart: OrderCart,
-  isAdditionalOrder = false,
-) =>
-  hasSelectedMenu(booth, cart) &&
-  hasSelectedSeparateCharge(booth, cart, isAdditionalOrder);
+// 상차림비는 조건이 아니다 (createInitialCart 참고). 메뉴를 하나라도 담으면 주문한다.
+export const canPlaceOrder = (booth: BoothOrderDetail, cart: OrderCart) =>
+  hasSelectedMenu(booth, cart);
 
 export const buildOrderLines = (
   booth: BoothOrderDetail,

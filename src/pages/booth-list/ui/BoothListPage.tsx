@@ -129,7 +129,7 @@ const BoothListPage = () => {
   const selectedBoothResultRef = useRef<HTMLLIElement>(null);
   const boothsQuery = useBooths();
   const booths = useMemo(() => boothsQuery.data ?? [], [boothsQuery.data]);
-  // 구역과 단대를 모두 통과한 기본 목록. 주막 한 곳을 고르기 전과 선택을
+  // 구역과 단대를 모두 통과한 기본 목록. 자리 하나를 고르기 전과 선택을
   // 해제한 뒤에는 이 목록을 그대로 보여준다.
   const baseFilteredBooths = useMemo(
     () => getBoothsByArea(getBoothsByFilter(booths, selectedFilter), selectedArea),
@@ -293,6 +293,7 @@ const BoothListPage = () => {
                 : ""
             }
             key={booth.boothCode}
+            // 여러 장이면 마지막 카드까지 보이도록 끝 카드를 기준으로 내린다.
             ref={booth === selectedBooths.at(-1) ? selectedBoothResultRef : null}
           >
             <BoothCard

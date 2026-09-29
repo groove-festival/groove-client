@@ -41,7 +41,7 @@ describe("BracketMatchRow", () => {
     expect(screen.getByText("아직 참가팀이 정해지지 않았어요")).toBeInTheDocument();
   });
 
-  it("stacks three participants for the final round instead of a VS layout", () => {
+  it("stacks three participants for the final round with vs between each pair", () => {
     render(
       <BracketMatchRow
         vote={{
@@ -56,7 +56,7 @@ describe("BracketMatchRow", () => {
       />,
     );
 
-    expect(screen.queryByText("vs")).not.toBeInTheDocument();
+    expect(screen.getAllByText("vs")).toHaveLength(2);
     expect(screen.getByText("IT대학")).toBeInTheDocument();
     expect(screen.getByText("간호대학")).toBeInTheDocument();
     expect(screen.getByText("예술대학")).toBeInTheDocument();
@@ -65,7 +65,6 @@ describe("BracketMatchRow", () => {
   it("shows the winner badge only on the participant with resultRank 1 when requested", () => {
     render(
       <BracketMatchRow
-        showWinnerBadge
         vote={{
           ...twoWayVote,
           participants: [
@@ -73,9 +72,29 @@ describe("BracketMatchRow", () => {
             { voteParticipantId: 2, name: "간호대학", resultRank: 2 },
           ],
         }}
+        winnerDisplay="badge"
       />,
     );
 
     expect(screen.getAllByText("우승")).toHaveLength(1);
+  });
+
+  it("marks the winning chip by color instead of a badge when requested", () => {
+    render(
+      <BracketMatchRow
+        vote={{
+          ...twoWayVote,
+          participants: [
+            { voteParticipantId: 1, name: "IT대학", resultRank: 1 },
+            { voteParticipantId: 2, name: "간호대학", resultRank: 2 },
+          ],
+        }}
+        winnerDisplay="color"
+      />,
+    );
+
+    expect(screen.queryByText("우승")).not.toBeInTheDocument();
+    expect(screen.getByText("IT대학").closest("div")).toHaveClass("bg-[#d2066c]");
+    expect(screen.getByText("간호대학").closest("div")).not.toHaveClass("bg-[#d2066c]");
   });
 });

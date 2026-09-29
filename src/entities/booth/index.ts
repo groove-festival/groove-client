@@ -10,6 +10,7 @@ export type {
   BoothMenuResponseBody,
 } from "./api/getBoothDetail";
 export { getBooths, useBooths } from "./api/getBooths";
+export { boothQueryKeys } from "./api/queryKeys";
 export {
   createBoothMenuSections,
   createBoothOrderMenus,

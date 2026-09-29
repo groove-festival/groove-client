@@ -91,7 +91,39 @@ describe("SongContestPage", () => {
     expect(screen.queryByRole("button", { name: "신청하기" })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "경연 목록" }));
-    expect(screen.getByText("아직 경연이 시작되지 않았어요")).toBeInTheDocument();
+    expect(screen.getByText("아직 대진표가 공개되지 않았어요")).toBeInTheDocument();
+  });
+
+  it("shows the bracket before the contest starts, while voting stays closed", () => {
+    useVotesMock.mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: [
+        {
+          singingVoteId: 1,
+          title: "1라운드 1경기",
+          round: "ROUND_1",
+          roundLabel: "1라운드",
+          roundKeyword: "자유로움",
+          matchOrder: 1,
+          status: "SCHEDULED",
+          endsAt: null,
+          createdAt: "2026-09-21T19:51:06+09:00",
+          participants: [
+            { voteParticipantId: 1, name: "오채원샷", resultRank: null },
+            { voteParticipantId: 2, name: "어리고싶다", resultRank: null },
+          ],
+        },
+      ],
+    } as unknown as ReturnType<typeof useVotes>);
+    renderPage();
+
+    fireEvent.click(screen.getByRole("tab", { name: "경연 목록" }));
+    expect(screen.getByText("오채원샷")).toBeInTheDocument();
+    expect(screen.getByText("어리고싶다")).toBeInTheDocument();
+    // 투표 영역은 아직 열리지 않는다.
+    expect(screen.getByText("가요제 투표는 경연 당일에 열려요")).toBeInTheDocument();
+    expect(screen.queryByText("진행 중인 투표")).not.toBeInTheDocument();
   });
 
   it("hides the native scrollbar and moves the custom indicator with the list", () => {
@@ -218,6 +250,8 @@ describe("SongContestPage", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "경연 결과" }));
     expect(screen.getByText("가요제 결선")).toBeInTheDocument();
-    expect(screen.getByText("우승")).toBeInTheDocument();
+    // 위쪽 카드는 폭이 좁아 배지 대신 칩 색으로만 우승을 나타낸다.
+    expect(screen.queryByText("우승")).not.toBeInTheDocument();
+    expect(screen.getByText("IT대학").closest("div")).toHaveClass("bg-[#d2066c]");
   });
 });

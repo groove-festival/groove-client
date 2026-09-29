@@ -62,19 +62,20 @@ describe("day-shift booths", () => {
     yRatio: null,
   };
 
-  it("marks the department operating the shared spot", () => {
+  it("keeps both departments of the spot and marks only its own", () => {
     expect(getBoothDepartmentParts(korean)).toEqual([
       { department: "국어교육과", isOwn: true },
       { department: "가정교육과", isOwn: false },
     ]);
+    // 혼자 쓰는 자리는 강조하지 않는다.
     expect(getBoothDepartmentParts(booths[0]).some(({ isOwn }) => isOwn)).toBe(false);
   });
 
-  it("includes day-shift booths in the union filter", () => {
+  it("counts a day-shift booth as a union booth", () => {
     expect(getBoothsByFilter([korean, booths[1]], "union")).toEqual([korean]);
   });
 
-  it("formats operating dates independently of the device time zone", () => {
+  it("formats the operating date without depending on the device time zone", () => {
     expect(formatOperatingDate("2026-10-01")).toBe("10월 1일 (목)");
     expect(formatOperatingDate("2026-10-02", "short")).toBe("10/2 금");
   });

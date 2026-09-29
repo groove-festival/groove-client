@@ -49,7 +49,7 @@ const HIDDEN_PUB_MAP_GROUPS: ReadonlySet<PlaceGroup> = new Set([
 
 interface PubBoothMapProps {
   booths: readonly Booth[];
-  // 지금 색을 남길 자리(spotCode)들.
+  // 지금 색을 남길 자리(spotCode)들. 한 자리를 고르면 그 한 곳만 들어온다.
   highlightedCodes: ReadonlySet<string>;
   // 회색이어도 새로 선택할 수 있는 자리들. 현재 구역·단대 필터 결과다.
   selectableCodes: ReadonlySet<string>;
@@ -57,6 +57,8 @@ interface PubBoothMapProps {
   selectedArea: PubMapArea;
   selectedSpotCode: string | null;
   onSelectArea: (area: PubMapArea) => void;
+  // 색이 들어온 자리를 눌렀을 때. 목록과 지도에 그 자리 주막만 남긴다. 축제 전의
+  // 사범대 자리는 날짜별 두 학과가 함께 남는다.
   onSelectSpot: (spotCode: string) => void;
 }
 

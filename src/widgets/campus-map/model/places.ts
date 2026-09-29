@@ -76,6 +76,8 @@ export const getShapeCenter = (shape: MapShape) => {
 };
 
 // 주막 도형 (festival-visuals/campus-pubs.svg). 도형과 주막을 잇는 유일한 연결 고리다.
+// 키는 주막 코드가 아니라 자리(천막) 코드다 — 사범대는 한 자리를 날짜별로 두 학과가
+// 나눠 쓰므로 두 주막(edu-kor · edu-home)이 한 도형(edu-kor-home)을 함께 쓴다.
 // 도형 ↔ 주막 짝은 실제 배치 사진(학생주차장 16 · 복지관 6)과 대조해 정했고,
 // 도형 중심은 PUB-1 좌표와 0.1px 안쪽으로 일치한다.
 // ⚠️ 디자인이 배치를 바꿔 SVG 를 다시 내보내면 이 표도 함께 갱신한다.
@@ -142,6 +144,7 @@ interface PlaceBase {
 }
 
 export type CampusPlace = PlaceBase &
+  // spotCode 는 도형이 묶인 자리, boothCodes 는 그 자리를 쓰는 주막들(운영일 순).
   (
     | { group: "pub"; spotCode: string; boothCodes: string[] }
     | { group: "zone"; zoneType: ZoneType }
@@ -292,6 +295,8 @@ export const buildCampusPlaces = (
   booths: readonly Booth[],
   zones: readonly ExperienceZone[],
 ): CampusPlace[] => {
+  // 같은 자리를 쓰는 주막을 한 장소로 묶는다. 축제 전에는 사범대 자리에 두 학과가 함께
+  // 들어오고, 축제 날에는 그날 여는 학과 하나만 들어온다 (PUB-1 이 거른다).
   const spots = new Map<string, Booth[]>();
   for (const booth of booths) {
     const spotCode = getBoothSpotCode(booth);

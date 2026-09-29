@@ -20,7 +20,7 @@ export const getBoothsByArea = <T extends Pick<Booth, "area">>(
   area === "all" ? [...booths] : booths.filter((booth) => booth.area === area);
 
 // 지도에서 이 주막을 가리킬 자리. API 좌표(PUB-A13)가 들어오면 그 값을 쓰고,
-// 아직 비어 있으면 같은 도형에서 계산해 둔 중심으로 대신한다. 두 값은 같은
+// 아직 비어 있으면 같은 자리 도형에서 계산해 둔 중심으로 대신한다. 두 값은 같은
 // 디자인 도형에서 나온 것이라 좌표가 채워져도 자리가 튀지 않는다.
 // 도형이 없는 주막(디자인에 없는 코드)은 가리킬 자리가 없다.
 export const getPubPoint = (

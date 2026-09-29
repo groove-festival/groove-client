@@ -15,7 +15,7 @@ export const PubAdminTabBar = ({
   onSelect,
 }: PubAdminTabBarProps) => (
   <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[600px] border-t border-[#3a3a3a] bg-[rgba(28,28,28,0.96)] pb-[env(safe-area-inset-bottom)] backdrop-blur-[12px]">
-    <div aria-label="주막 관리 화면" className="grid h-16 grid-cols-4" role="tablist">
+    <div aria-label="주막 관리 화면" className="grid h-16 grid-cols-5" role="tablist">
       {pubAdminViews.map(({ icon: Icon, id, label }) => {
         const count = badgeCounts[id] ?? 0;
         const isActive = activeView === id;
