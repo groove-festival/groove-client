@@ -767,11 +767,11 @@ describe("BoothOrderPage", () => {
     renderOrderPage();
 
     const dialog = await screen.findByRole("dialog", { name: "주문 취소 안내" });
-    expect(within(dialog).getByText("내 주문이 취소되었어요.")).toBeInTheDocument();
+    expect(
+      within(dialog).getByText("품절 등의 이유로 주문이 취소되었어요."),
+    ).toBeInTheDocument();
 
-    fireEvent.click(
-      within(dialog).getByRole("button", { name: "주문 취소 안내 닫기" }),
-    );
+    fireEvent.click(within(dialog).getByRole("button", { name: "확인했습니다" }));
 
     // 토큰을 남기면 재진입할 때마다 같은 안내가 다시 뜬다.
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
