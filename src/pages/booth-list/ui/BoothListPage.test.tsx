@@ -14,6 +14,7 @@ vi.mock("@/shared/api", async () => {
 
 const httpGet = vi.mocked(httpClient.get);
 let scrollBy: ReturnType<typeof vi.fn>;
+let scrollIntoView: ReturnType<typeof vi.fn>;
 
 const booths = [
   {
@@ -76,7 +77,7 @@ const boothButton = (boothCode: string) =>
 const boothCard = (name: string) =>
   within(screen.getByRole("list", { name: /주막 목록$/ }))
     .getByText(name)
-    .closest("a");
+    .closest("[data-testid='booth-card']");
 
 const createQueryClient = () =>
   new QueryClient({
@@ -97,6 +98,7 @@ const renderPage = () => {
 beforeEach(() => {
   vi.clearAllMocks();
   scrollBy = vi.fn();
+  scrollIntoView = vi.fn();
   Object.defineProperty(window, "innerHeight", {
     configurable: true,
     value: 720,
@@ -104,6 +106,10 @@ beforeEach(() => {
   Object.defineProperty(window, "scrollBy", {
     configurable: true,
     value: scrollBy,
+  });
+  Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+    configurable: true,
+    value: scrollIntoView,
   });
   window.localStorage.clear();
   window.sessionStorage.clear();
@@ -125,11 +131,62 @@ describe("BoothListPage", () => {
     expect(await screen.findAllByTestId("booth-card")).toHaveLength(3);
     expect(screen.getByText("일렉트로닉 나이트")).toBeInTheDocument();
     expect(screen.getByText("전자공학부B • 디자인학과")).toBeInTheDocument();
-    expect(screen.getAllByTestId("booth-card")[0]).toHaveAttribute(
-      "href",
-      "/pub/elec-eh",
-    );
+    expect(
+      screen.getByRole("link", { name: "일렉트로닉 나이트 메뉴 보기" }),
+    ).toHaveAttribute("href", "/pub/elec-eh");
     expect(httpGet).toHaveBeenCalledWith("/pubs");
+  });
+
+  it("shows both day-specific pubs as regular cards when the API returns both", async () => {
+    const sharedBooths = [
+      {
+        ...booths[0],
+        boothCode: "edu-home",
+        colleges: ["EDU"],
+        departments: ["가정교육과"],
+        name: "가리고",
+        operatingDate: "2026-10-02",
+        operatingDay: "DAY2",
+        spotCode: "edu-kor-home",
+        spotDepartments: ["국어교육과", "가정교육과"],
+        xRatio: null,
+        yRatio: null,
+      },
+      {
+        ...booths[0],
+        boothCode: "edu-kor",
+        colleges: ["EDU"],
+        departments: ["국어교육과"],
+        name: "취향",
+        operatingDate: "2026-10-01",
+        operatingDay: "DAY1",
+        spotCode: "edu-kor-home",
+        spotDepartments: ["국어교육과", "가정교육과"],
+        xRatio: null,
+        yRatio: null,
+      },
+    ];
+    httpGet.mockImplementation((url: string) =>
+      Promise.resolve(
+        url === "/zones"
+          ? envelope({ totalCount: 0, zones: [] })
+          : envelope(sharedBooths),
+      ),
+    );
+
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "확인했습니다" }));
+    fireEvent.click(screen.getByRole("button", { name: "취향 · 가리고 주막만 보기" }));
+
+    const cards = screen.getAllByTestId("booth-card");
+    expect(cards).toHaveLength(2);
+    expect(cards[0]).toHaveTextContent("취향");
+    expect(cards[0]).toHaveTextContent("국어교육과");
+    expect(cards[0]).not.toHaveTextContent("가정교육과");
+    expect(cards[1]).toHaveTextContent("가리고");
+    expect(cards[1]).toHaveTextContent("가정교육과");
+    expect(cards[1]).not.toHaveTextContent("국어교육과");
+    expect(screen.queryByTestId("operating-date-badge")).not.toBeInTheDocument();
   });
 
   it("opens the selected booth detail route", async () => {
@@ -145,7 +202,9 @@ describe("BoothListPage", () => {
     );
 
     fireEvent.click(await screen.findByRole("button", { name: "확인했습니다" }));
-    fireEvent.click((await screen.findAllByTestId("booth-card"))[0]);
+    fireEvent.click(
+      await screen.findByRole("link", { name: "일렉트로닉 나이트 메뉴 보기" }),
+    );
 
     expect(screen.getByText("주막 상세")).toBeInTheDocument();
   });
@@ -252,9 +311,7 @@ describe("BoothListPage", () => {
     );
 
     expect(screen.getAllByTestId("booth-card")).toHaveLength(1);
-    expect(screen.getByRole("link", { name: /일렉트로닉 나이트/ })).toHaveClass(
-      "border-[#cfff04]",
-    );
+    expect(boothCard("일렉트로닉 나이트")).toHaveClass("border-[#fcfcfc]");
     expect(screen.getAllByText("일렉트로닉 나이트")).toHaveLength(3);
     await waitFor(() =>
       expect(scrollBy).toHaveBeenCalledWith({
@@ -272,15 +329,26 @@ describe("BoothListPage", () => {
     expect(boothButton("elec-b-design")).toBeInTheDocument();
 
     fireEvent.click(
+      screen.getByRole("button", { name: "일렉트로닉 나이트 주막 위치 보기" }),
+    );
+
+    expect(screen.getAllByTestId("booth-card")).toHaveLength(1);
+    await waitFor(() =>
+      expect(scrollIntoView).toHaveBeenCalledWith({
+        behavior: "smooth",
+        block: "start",
+      }),
+    );
+    expect(isBoothLit("elec-eh")).toBe(true);
+
+    fireEvent.click(
       screen.getByRole("button", {
         name: "전자공학부B • 디자인학과 주막만 보기",
       }),
     );
 
     expect(screen.getAllByTestId("booth-card")).toHaveLength(1);
-    expect(screen.getByRole("link", { name: /전자공학부B • 디자인학과/ })).toHaveClass(
-      "border-[#cfff04]",
-    );
+    expect(boothCard("전자공학부B • 디자인학과")).toHaveClass("border-[#fcfcfc]");
     expect(screen.getAllByText("전자공학부B • 디자인학과")).toHaveLength(3);
     expect(
       screen.getByRole("button", {
@@ -295,7 +363,9 @@ describe("BoothListPage", () => {
         .closest("div"),
     ).toHaveClass("animate-booth-filter-chip-in");
     expect(
-      screen.getByRole("link", { name: /전자공학부B • 디자인학과/ }).closest("li"),
+      screen
+        .getByRole("button", { name: "전자공학부B • 디자인학과 주막 위치 보기" })
+        .closest("li"),
     ).toHaveClass("animate-booth-filter-result-in");
     expect(isBoothLit("elec-eh")).toBe(false);
     expect(boothButton("elec-eh")).toBeInTheDocument();
@@ -309,9 +379,7 @@ describe("BoothListPage", () => {
 
     // 주막 한 곳 선택만 풀리고, 학생주차장 구역 조건은 그대로 남는다.
     expect(screen.getAllByTestId("booth-card")).toHaveLength(2);
-    expect(screen.getByRole("link", { name: /일렉트로닉 나이트/ })).toHaveClass(
-      "border-[#fcfcfc]",
-    );
+    expect(boothCard("일렉트로닉 나이트")).toHaveClass("border-[#fcfcfc]");
     expect(isBoothLit("elec-b-design")).toBe(true);
     expect(
       screen.getByRole("button", { name: "지도에서 학생주차장 보기" }),
@@ -333,9 +401,7 @@ describe("BoothListPage", () => {
     expect(
       screen.getByRole("button", { name: "일렉트로닉 나이트 주막 필터 해제" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /일렉트로닉 나이트/ })).toHaveClass(
-      "border-[#cfff04]",
-    );
+    expect(boothCard("일렉트로닉 나이트")).toHaveClass("border-[#fcfcfc]");
 
     fireEvent.click(screen.getByRole("button", { name: "지도에서 전체 보기" }));
     expect(screen.getAllByTestId("booth-card")).toHaveLength(3);
@@ -347,13 +413,29 @@ describe("BoothListPage", () => {
     expect(card).not.toHaveClass("border-[#cfff04]");
   });
 
-  it("keeps the other places lit and pins the one that was tapped", async () => {
+  it("hides event and operation booths while keeping zones and landmarks", async () => {
     renderPage();
 
     fireEvent.click(await screen.findByRole("button", { name: "확인했습니다" }));
     fireEvent.click(screen.getByRole("button", { name: "지도에서 복지관 보기" }));
 
-    // 주막 필터와 상관없이 체험존·랜드마크는 늘 켜져 있어 누를 수 있다.
+    // 주막 옆의 이벤트·운영 부스는 회색으로 덮고 선택 대상에서도 뺀다.
+    expect(
+      screen.queryByRole("button", { name: "GROOVE RIVALS 위치 보기" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "운영 부스 위치 보기" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("campus-map-hidden-groove-rivals")).toHaveAttribute(
+      "fill",
+      "#CFCFCF",
+    );
+    expect(screen.getByTestId("campus-map-hidden-operation-booth")).toHaveAttribute(
+      "fill",
+      "#CFCFCF",
+    );
+
+    // 체험존과 일청담·건물 같은 랜드마크 색·선택은 유지한다.
     const recover = await screen.findByRole("button", {
       name: "RECOVER ZONE 위치 보기",
     });
@@ -418,7 +500,9 @@ describe("BoothListPage", () => {
     );
 
     fireEvent.click(await screen.findByRole("button", { name: "확인했습니다" }));
-    fireEvent.click((await screen.findAllByTestId("booth-card"))[0]);
+    fireEvent.click(
+      await screen.findByRole("link", { name: "일렉트로닉 나이트 메뉴 보기" }),
+    );
     fireEvent.click(screen.getByRole("link", { name: "주막 목록으로" }));
 
     expect(await screen.findAllByTestId("booth-card")).toHaveLength(3);

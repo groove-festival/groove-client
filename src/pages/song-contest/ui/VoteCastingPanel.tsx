@@ -12,6 +12,7 @@ import { submitBallotErrorMessage } from "../model/submitBallotErrorMessage";
 import { useContestLocationGate } from "../model/useContestLocationGate";
 import { GoogleSignInGuide } from "./GoogleSignInGuide";
 import { VenueOutOfRangeNotice } from "./VenueOutOfRangeNotice";
+import { VoteCompleteDialog } from "./VoteCompleteDialog";
 import { VoteConfirmDialog } from "./VoteConfirmDialog";
 import { VoteMatchPanel } from "./VoteMatchPanel";
 
@@ -24,6 +25,10 @@ export function VoteCastingPanel() {
   const [now, setNow] = useState(() => new Date());
   const [selected, setSelected] = useState<Record<number, number>>({});
   const [confirmVote, setConfirmVote] = useState<Vote | undefined>();
+  // 투표가 들어간 참가자 이름. 있으면 완료 팝업을 띄운다.
+  const [completedParticipantName, setCompletedParticipantName] = useState<
+    string | undefined
+  >();
   const [showGoogleGuide, setShowGoogleGuide] = useState(false);
   const [pendingSelection, setPendingSelection] = useState<
     { vote: Vote; voteParticipantId: number } | undefined
@@ -86,6 +91,9 @@ export function VoteCastingPanel() {
     if (!confirmVote) return;
     const voteParticipantId = selected[confirmVote.singingVoteId];
     if (voteParticipantId === undefined) return;
+    const participantName =
+      confirmVote.participants.find((p) => p.voteParticipantId === voteParticipantId)
+        ?.name ?? "";
 
     submitBallot.mutate(
       {
@@ -96,6 +104,7 @@ export function VoteCastingPanel() {
       {
         onSuccess: () => {
           setConfirmVote(undefined);
+          setCompletedParticipantName(participantName);
           setSelected((prev) => {
             const next = { ...prev };
             delete next[confirmVote.singingVoteId];
@@ -150,7 +159,7 @@ export function VoteCastingPanel() {
           <div className="flex w-full flex-col gap-3">
             <p className="text-2xl font-bold text-[#fcfcfc]">진행 중인 투표</p>
             <p className="text-xs leading-[15px] text-[#cfcfcf]">
-              *투표 확정 후에는 해당 경기를 중복 투표하거나 재투표할 수 없습니다
+              *투표 확정 후에는 해당 경연을 중복 투표하거나 재투표할 수 없습니다
             </p>
           </div>
           {location.status === "checking" ? (
@@ -222,6 +231,13 @@ export function VoteCastingPanel() {
             )?.name ?? ""
           }
           pending={submitBallot.isPending}
+        />
+      )}
+
+      {completedParticipantName !== undefined && (
+        <VoteCompleteDialog
+          onClose={() => setCompletedParticipantName(undefined)}
+          participantName={completedParticipantName}
         />
       )}
 

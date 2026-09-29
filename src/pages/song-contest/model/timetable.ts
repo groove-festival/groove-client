@@ -16,6 +16,7 @@ const timetableStarts = timetable.map(({ time }) =>
 );
 const timetableDayEnd = Date.parse("2026-10-03T00:00:00+09:00");
 
+// 진행 중인 순서. 첫 순서 시작 전과 행사 날이 끝난 뒤에는 아무것도 표시하지 않는다.
 export function currentTimetableIndex(nowMs: number): number | null {
   if (nowMs >= timetableDayEnd) return null;
 
@@ -23,7 +24,7 @@ export function currentTimetableIndex(nowMs: number): number | null {
     if (nowMs >= timetableStarts[index]!) return index;
   }
 
-  return 0;
+  return null;
 }
 
 export function nextTimetableBoundary(nowMs: number): number | undefined {

@@ -25,7 +25,7 @@ export const QrOrderNoticeDialog = ({
       <section
         aria-labelledby="qr-order-notice-title"
         aria-modal="true"
-        className="flex max-h-[calc(100dvh-32px)] w-full max-w-[320px] flex-col items-center gap-2.5 overflow-y-auto rounded-[36px] bg-[rgba(252,252,252,0.5)] px-5 py-8 backdrop-blur-[4px]"
+        className="flex max-h-[calc(100dvh-32px)] w-full max-w-[320px] flex-col items-center gap-4 overflow-y-auto rounded-[36px] bg-[rgba(252,252,252,0.5)] px-6 py-8 backdrop-blur-[4px]"
         role="dialog"
       >
         <div className="flex w-full flex-col gap-9">
@@ -41,13 +41,23 @@ export const QrOrderNoticeDialog = ({
             </div>
 
             <ul className="w-full list-disc space-y-[15px] pl-[18px] text-xs leading-[15px] text-[#fcfcfc]">
-              <li>주문은 주막 내 각 테이블에 비치된 QR을 통해서만 가능합니다.</li>
-              <li>계좌이체 후 직원이 입금자명을 확인하면 결제가 완료 됩니다.</li>
+              <li>
+                주문은 주막 내 각 테이블에 비치된{" "}
+                <strong className="font-bold">QR을 통해서만</strong>
+                <br />
+                가능합니다.
+              </li>
+              <li>
+                계좌이체는{" "}
+                <strong className="font-bold">직원의 입금자명 확인 후</strong>, 현금은{" "}
+                <strong className="font-bold">결제 후</strong> <br />
+                조리가 시작됩니다.
+              </li>
             </ul>
           </div>
 
           <button
-            className="h-14 w-full rounded-2xl bg-[#cfff04] text-center text-base font-semibold text-[#1c1c1c]"
+            className="h-14 w-full rounded-[12px] bg-[#cfff04] text-center text-base font-semibold text-[#1c1c1c] transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
             onClick={onClose}
             type="button"
           >
@@ -56,7 +66,7 @@ export const QrOrderNoticeDialog = ({
         </div>
 
         <button
-          className="text-xs leading-[14px] text-[#494949] underline underline-offset-2"
+          className="text-xs leading-[14px] text-[#fcfcfc] underline underline-offset-2"
           onClick={onDismissPermanently}
           type="button"
         >

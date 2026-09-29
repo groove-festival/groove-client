@@ -3,21 +3,45 @@ import { useEffect, useRef, useState } from "react";
 import { loadGoogleIdentityScript } from "@/entities/auth";
 import { appConfig } from "@/shared/config";
 
+import googleLogo from "../festival-visuals/google-logo.png";
+
 interface GoogleSignInButtonProps {
   disabled?: boolean;
   onCredential: (credential: string) => void;
 }
 
-// 사연 신청 로그인 안내는 Figma 디자인이 구글 기본 파란 버튼을 그대로 쓰므로,
-// (투표 흐름의 커스텀 오버레이 버튼과 달리) 여기서는 렌더링된 버튼을 그대로
-// 노출한다.
+// 구글 기본 버튼은 색을 바꿀 수 없어, 투표 흐름처럼 핑크 커스텀 버튼 위에
+// 실제 구글 버튼을 투명하게 겹쳐 클릭을 위임한다.
 export const GoogleSignInButton = ({
   disabled = false,
   onCredential,
 }: GoogleSignInButtonProps) => {
   const buttonRef = useRef<HTMLDivElement>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isPressed, setIsPressed] = useState(false);
+  const pressTimerRef = useRef<number | undefined>(undefined);
   const clientId = appConfig.googleClientId;
+
+  const showPress = () => {
+    window.clearTimeout(pressTimerRef.current);
+    setIsPressed(true);
+    pressTimerRef.current = window.setTimeout(() => setIsPressed(false), 150);
+  };
+
+  // 실제 구글 버튼은 교차 출처 iframe이라 :active가 이 문서에 오지 않는다.
+  // iframe이 포커스를 가져가며 창이 blur되는 순간을 눌림으로 본다.
+  useEffect(() => {
+    const handleBlur = () => {
+      window.setTimeout(() => {
+        if (buttonRef.current?.contains(document.activeElement)) showPress();
+      });
+    };
+    window.addEventListener("blur", handleBlur);
+    return () => {
+      window.removeEventListener("blur", handleBlur);
+      window.clearTimeout(pressTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const element = buttonRef.current;
@@ -75,10 +99,25 @@ export const GoogleSignInButton = ({
   return (
     <div className="flex w-full flex-col gap-2">
       <div
-        aria-label="Google 계정으로 로그인"
-        className={`w-full ${disabled ? "pointer-events-none opacity-60" : ""}`}
-        ref={buttonRef}
-      />
+        className={`relative h-14 w-full ${disabled ? "pointer-events-none opacity-60" : ""}`}
+        onPointerDown={showPress}
+      >
+        <div
+          className={`flex h-14 w-full items-center justify-center gap-2.5 rounded-[12px] bg-[#ff0080] transition-transform duration-150 ease-out motion-reduce:transition-none ${isPressed ? "scale-[0.97]" : ""}`}
+        >
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#fcfcfc] p-1">
+            <img alt="" className="size-full" src={googleLogo} />
+          </span>
+          <span className="text-base font-semibold text-[#fcfcfc]">
+            Google로 계속하기
+          </span>
+        </div>
+        <div
+          aria-label="Google 계정으로 로그인"
+          className="absolute inset-0 flex items-center justify-center overflow-hidden opacity-0 [&>div]:scale-x-110 [&>div]:scale-y-150"
+          ref={buttonRef}
+        />
+      </div>
       {errorMessage && (
         <p className="text-xs leading-[15px] text-[#ff5b5b]" role="alert">
           {errorMessage}

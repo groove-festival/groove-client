@@ -3,8 +3,8 @@ import { currentTimetableIndex, nextTimetableBoundary } from "./timetable";
 const at = (time: string) => Date.parse(`2026-10-02T${time}:00+09:00`);
 
 describe("contest timetable time", () => {
-  it("keeps the initial highlight before the first event", () => {
-    expect(currentTimetableIndex(at("17:59"))).toBe(0);
+  it("highlights nothing before the first event", () => {
+    expect(currentTimetableIndex(at("17:59"))).toBeNull();
     expect(nextTimetableBoundary(at("17:59"))).toBe(at("18:00"));
   });
 

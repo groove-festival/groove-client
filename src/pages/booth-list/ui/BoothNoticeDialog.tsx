@@ -7,14 +7,6 @@ interface BoothNoticeDialogProps {
   onDismissPermanently: () => void;
 }
 
-const noticeItems = [
-  "주막 내 주류 판매는 하지 않고 있습니다. 따라서 외부에서 직접 지참 후 이용해 주시기 바랍니다.",
-  "타인에게 피해를 주는 행위나 과음으로 인한 소란 시 퇴장 조치될 수 있습니다.",
-  "지나친 음주로 인한 사고 책임은 당사자에게 있으니 안전에 유의 바랍니다.",
-  "결제는 계좌이체로 이루어집니다.",
-  "주문은 [메뉴 담기 → 계좌이체 → 입금자명 확인 → 결제 완료 → 조리 시작] 순으로 진행됩니다.",
-];
-
 export const BoothNoticeDialog = ({
   onClose,
   onDismissPermanently,
@@ -33,10 +25,10 @@ export const BoothNoticeDialog = ({
       <section
         aria-labelledby="booth-notice-title"
         aria-modal="true"
-        className="flex max-h-[calc(100dvh-32px)] w-full max-w-[320px] flex-col items-center gap-2.5 overflow-y-auto rounded-[36px] bg-[rgba(252,252,252,0.5)] px-5 py-8 backdrop-blur-[24px]"
+        className="flex max-h-[calc(100dvh-32px)] w-full max-w-[320px] flex-col items-center gap-4 overflow-y-auto rounded-[36px] bg-[rgba(252,252,252,0.5)] px-6 py-8 backdrop-blur-[24px]"
         role="dialog"
       >
-        <div className="flex w-full flex-col gap-10">
+        <div className="flex w-full flex-col gap-8">
           <div className="flex flex-col items-center gap-7 text-[#fcfcfc]">
             <div className="flex flex-col items-center gap-3">
               <img alt="" className="size-20" src={cheersIcon} />
@@ -49,14 +41,41 @@ export const BoothNoticeDialog = ({
             </div>
 
             <ul className="w-full list-disc space-y-[15px] pl-[18px] text-xs leading-[15px]">
-              {noticeItems.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
+              {/* 줄바꿈은 <br />, 강조는 <strong className="font-bold">…</strong> */}
+              <li>
+                주막에서는{" "}
+                <strong className="font-bold">주류를 판매하지 않습니다.</strong>
+                <br />
+                주류는 <strong className="font-bold">외부에서 직접 지참</strong>해
+                이용해 주시기 바랍니다.
+              </li>
+              <li>
+                타인에게 피해를 주는 행위 또는 과음으로 인한 소란 시<br />
+                <strong className="font-bold">퇴장 조치</strong>될 수 있습니다.
+              </li>
+              <li>
+                지나친 음주로 인한 사고의 책임은{" "}
+                <strong className="font-bold">당사자</strong>에게 있으니
+                <br />
+                안전에 유의 바랍니다.
+              </li>
+              <li>
+                결제는 <strong className="font-bold">계좌이체 또는 현금 결제</strong>로
+                이루어집니다.
+              </li>
+              <li>
+                주문은{" "}
+                <strong className="font-bold">
+                  [메뉴 담기 → 계좌이체/현금 결제 → 결제 완료
+                  <br />→ 조리 시작]
+                </strong>{" "}
+                순으로 진행됩니다.
+              </li>
             </ul>
           </div>
 
           <button
-            className="h-14 w-full rounded-2xl bg-[#cfff04] text-center text-base font-semibold text-[#1c1c1c]"
+            className="h-14 w-full rounded-[12px] bg-[#cfff04] text-center text-base font-semibold text-[#1c1c1c] transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
             onClick={onClose}
             type="button"
           >
@@ -65,7 +84,7 @@ export const BoothNoticeDialog = ({
         </div>
 
         <button
-          className="text-xs leading-[14px] text-[#494949] underline underline-offset-2"
+          className="text-xs leading-[14px] text-[#fcfcfc] underline underline-offset-2"
           onClick={onDismissPermanently}
           type="button"
         >

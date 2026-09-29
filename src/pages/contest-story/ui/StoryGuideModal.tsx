@@ -68,7 +68,7 @@ export const StoryGuideModal = ({
         aria-describedby={descriptionId}
         aria-labelledby={titleId}
         aria-modal="true"
-        className="relative flex max-h-[calc(100dvh-32px)] w-full max-w-[320px] flex-col items-center overflow-y-auto rounded-[36px] bg-[rgba(252,252,252,0.5)] px-8 pt-[52px] pb-8 text-[#fcfcfc] shadow-xl backdrop-blur-[24px] outline-none"
+        className="relative flex max-h-[calc(100dvh-32px)] w-full max-w-[320px] flex-col items-center overflow-y-auto rounded-[36px] bg-[rgba(252,252,252,0.5)] px-6 pt-[52px] pb-8 text-[#fcfcfc] shadow-xl backdrop-blur-[24px] outline-none"
         onMouseDown={(event) => event.stopPropagation()}
         ref={dialogRef}
         role="dialog"
@@ -76,7 +76,7 @@ export const StoryGuideModal = ({
       >
         <button
           aria-label="안내 닫기"
-          className="absolute top-6 right-6 size-5"
+          className="absolute top-7 right-7 size-5"
           onClick={onClose}
           type="button"
         >
@@ -101,30 +101,46 @@ export const StoryGuideModal = ({
           사연 신청 안내 사항
         </h2>
 
-        <div className="mt-7 flex w-full flex-col gap-5" id={descriptionId}>
-          <ul className="w-full list-disc space-y-4 pl-6 text-xs leading-[15px]">
-            <li>신청한 사연은 무대 진행 중 MC가 낭독하는 이벤트입니다.</li>
-            <li>별명을 입력하지 않을 경우, 본명으로 사연을 소개합니다.</li>
-            <li>한 계정당 하나의 사연만 등록할 수 있습니다.</li>
-            <li>실제 신청에는 Google 로그인이 필요합니다.</li>
-          </ul>
-
+        <ul
+          className="mt-7 w-full list-disc space-y-4 pl-6 text-xs leading-[15px]"
+          id={descriptionId}
+        >
+          <li>
+            신청받은 사연을{" "}
+            <strong className="font-bold">무대 진행 중 MC가 낭독</strong>
+            하는
+            <br />
+            이벤트입니다.
+          </li>
+          <li>
+            별명을 입력하지 않을 경우, 본명으로 사연을 소개
+            <br />
+            합니다.
+          </li>
+          <li>
+            <strong className="font-bold">한 사람당 하나의 사연만 등록</strong>할 수
+            있도록 하기 위해 Google 로그인 인증이 필요합니다.
+          </li>
           {!isLoggedIn && (
-            <ul className="w-full list-disc space-y-1 pl-6 text-xs leading-5">
-              <li className="text-[#dbeafe] marker:text-[#fcfcfc]">
-                Google 비밀번호는 GROOVE에 전달되지 않아요.
+            <>
+              <li className="font-bold">
+                Google 비밀번호는 GROOVE에 전달되지 않습
+                <br />
+                니다.
               </li>
-              <li className="text-[#dbeafe] marker:text-[#fcfcfc]">
-                Google에서 발급한 인증 정보로 로그인 상태만 확인해요.
+              <li className="font-bold">
+                Google에서 발급한 인증 정보로 로그인 상태만
+                <br />
+                확인합니다.
               </li>
-            </ul>
+            </>
           )}
-        </div>
+        </ul>
 
         <div className="mt-7 flex w-full flex-col gap-3">
           {isLoggedIn ? (
             <button
-              className="h-14 w-full rounded-2xl bg-[#ff0080] text-base font-semibold"
+              className="h-14 w-full rounded-[12px] bg-[#ff0080] text-base font-semibold transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
               onClick={onContinue}
               type="button"
             >

@@ -4,6 +4,8 @@ import { formatWon } from "../lib/formatWon";
 
 interface OrderMenuItemRowProps {
   className?: string;
+  // 좌우 여백. 둥근 카드 안(상차림비)에서는 모서리에 붙지 않게 왼쪽을 넓힌다.
+  insetClassName?: string;
   isOptionSelected?: (optionId: number) => boolean;
   item: BoothMenuItem;
   onChangeQuantity: (item: BoothMenuItem, delta: number) => void;
@@ -25,6 +27,7 @@ const formatItemPrice = (item: BoothMenuItem) => {
 // 수량을 안 올린 채 지나치기 쉽다.
 export const OrderMenuItemRow = ({
   className = "",
+  insetClassName = "px-3",
   isOptionSelected = () => false,
   item,
   onChangeQuantity,
@@ -36,8 +39,10 @@ export const OrderMenuItemRow = ({
   const showsOptions = item.options.length > 0 && quantity > 0 && onToggleOption;
 
   return (
-    <li className={`flex flex-col gap-3 px-6 py-4 text-[#fcfcfc] ${className}`}>
-      <div className="flex items-center justify-between">
+    <li
+      className={`flex flex-col gap-3 py-4 text-[#fcfcfc] ${insetClassName} ${className}`}
+    >
+      <div className="flex items-center justify-between gap-6">
         <div className="flex min-w-0 flex-col gap-2 font-semibold">
           <p className="text-xl leading-6">{item.name}</p>
           {showDescription && item.description && (

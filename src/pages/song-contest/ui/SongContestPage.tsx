@@ -153,9 +153,10 @@ function ContestOverview({
           ref={scrollAreaRef}
           role="tabpanel"
         >
-          <div ref={scrollContentRef}>
+          {/* 오른쪽 스크롤바(4px)와 카드가 겹치지 않게 비워 둔다. */}
+          <div className="pr-3" ref={scrollContentRef}>
             {tab === "timetable" ? (
-              <ol className="relative ml-3 space-y-3 pb-[146px] pl-[22px]">
+              <ol className="relative ml-3 space-y-3 pl-[22px]">
                 {timetable.map((item, index) => (
                   <li
                     className="relative"
@@ -260,7 +261,7 @@ export default function SongContestPage() {
     );
 
   return (
-    <main className="relative min-h-[calc(100dvh-64px)] w-full bg-[#1c1c1c] px-4 pb-24 text-[#fcfcfc]">
+    <main className="relative min-h-[calc(100dvh-64px)] w-full bg-[#1c1c1c] px-4 pb-20 text-[#fcfcfc]">
       <ContestOverview
         onTabChange={setTab}
         tab={tab}

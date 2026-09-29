@@ -1,22 +1,15 @@
 import { Link } from "react-router";
 
-import { cardChevronIcon } from "@/shared/ui";
-
 import {
   formatBoothDepartments,
-  getBoothDepartmentParts,
   getBoothDisplayName,
   type Booth,
 } from "../model/booths";
-import { BoothDepartments } from "./BoothDepartments";
 import { CollegeBadge } from "./CollegeBadge";
-import { OperatingDateBadge } from "./OperatingDateBadge";
 
 interface BoothCardProps {
   booth: Booth;
-  // 고른 카드는 흰 테두리 대신 네온 테두리로 바꾼다. 흰 선을 두고 그 바깥에
-  // 네온을 덧그리면 선이 두 겹으로 보인다.
-  isSelected?: boolean;
+  onSelectLocation: () => void;
   to: string;
 }
 
@@ -37,54 +30,36 @@ const BoothCollegeBadge = ({ colleges }: Pick<Booth, "colleges">) => {
   );
 };
 
-export const BoothCard = ({ booth, isSelected = false, to }: BoothCardProps) => {
+export const BoothCard = ({ booth, onSelectLocation, to }: BoothCardProps) => {
   const departments = formatBoothDepartments(booth.departments);
   const displayName = getBoothDisplayName(booth);
-  // 날짜별로 나눠 쓰는 자리는 이름이 학과명과 같아도 두 학과를 적어 연합주막임을 보여 준다.
-  const isShared = getBoothDepartmentParts(booth).some(({ isOwn }) => isOwn);
 
   return (
-    <Link
-      className={`flex h-[90px] w-full items-center justify-between rounded-3xl bg-[#767676] px-6 py-5 text-[#fcfcfc] transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none ${
-        isSelected ? "border-2 border-[#cfff04]" : "border border-[#fcfcfc]"
-      }`}
+    <div
+      className="flex h-[90px] w-full items-center justify-between rounded-3xl border border-[#fcfcfc] bg-[#767676] px-6 py-5 text-[#fcfcfc] transition-transform duration-150 ease-out has-[>button:active]:scale-[0.97] motion-reduce:transition-none"
       data-testid="booth-card"
-      to={to}
     >
-      <div className="flex min-w-0 items-center gap-4">
+      <button
+        aria-label={`${displayName} 주막 위치 보기`}
+        className="flex min-w-0 flex-1 items-center gap-4 text-left"
+        onClick={onSelectLocation}
+        type="button"
+      >
         <BoothCollegeBadge colleges={booth.colleges} />
         <div className="min-w-0 leading-none font-semibold">
-          <div className="flex min-w-0 items-center gap-2">
-            <p className="truncate text-xl">{displayName}</p>
-            <OperatingDateBadge booth={booth} />
-          </div>
-          {(isShared || displayName !== departments) && (
-            <BoothDepartments
-              booth={booth}
-              className="mt-1 truncate text-sm font-medium"
-            />
+          <p className="truncate text-xl">{displayName}</p>
+          {displayName !== departments && (
+            <p className="mt-[3px] truncate text-sm font-medium">{departments}</p>
           )}
         </div>
-      </div>
-      {/* 화살표도 선택 색을 따라가야 해서 이미지를 그대로 쓰지 않고 모양만 떠서 칠한다. */}
-      <span
-        aria-hidden="true"
-        className={`ml-3 h-4 w-2 shrink-0 ${
-          isSelected
-            ? "animate-arrow-nudge bg-[#cfff04] motion-reduce:animate-none"
-            : "bg-[#fcfcfc]"
-        }`}
-        style={{
-          maskImage: `url("${cardChevronIcon}")`,
-          maskPosition: "center",
-          maskRepeat: "no-repeat",
-          maskSize: "contain",
-          WebkitMaskImage: `url("${cardChevronIcon}")`,
-          WebkitMaskPosition: "center",
-          WebkitMaskRepeat: "no-repeat",
-          WebkitMaskSize: "contain",
-        }}
-      />
-    </Link>
+      </button>
+      <Link
+        aria-label={`${displayName} 메뉴 보기`}
+        className="ml-3 flex h-8 shrink-0 items-center justify-center rounded-2xl bg-[#cfff04] px-3 text-xs font-semibold text-[#1c1c1c] transition-transform duration-150 active:scale-95 motion-reduce:transition-none"
+        to={to}
+      >
+        메뉴 보기
+      </Link>
+    </div>
   );
 };

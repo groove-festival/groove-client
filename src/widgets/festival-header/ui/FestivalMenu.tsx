@@ -72,12 +72,12 @@ export const FestivalMenu = ({ isOpen, onClose }: FestivalMenuProps) => {
                   {item.label}
                   {item.to === "/story" && storyBadge && (
                     <span className="rounded-full bg-[#ff0080] px-3 py-1 text-xs font-semibold whitespace-nowrap">
-                      사연 모집중
+                      사연 모집 중
                     </span>
                   )}
                   {item.to === "/contest" && contestBadge && (
                     <span className="rounded-full bg-[#5d00ff] px-3 py-1 text-xs font-semibold whitespace-nowrap">
-                      투표진행중
+                      투표 진행 중
                     </span>
                   )}
                 </Link>

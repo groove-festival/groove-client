@@ -26,12 +26,12 @@ export const OrderMenuSection = ({
   return (
     <section aria-labelledby={`order-menu-section-${section.id}`}>
       <h2
-        className="text-xl leading-6 font-bold text-[#fcfcfc]"
+        className="text-lg leading-[22px] font-semibold text-[#fcfcfc]"
         id={`order-menu-section-${section.id}`}
       >
         {section.title}
       </h2>
-      <ul className="mt-6">
+      <ul className="mt-3">
         {section.items.map((item) => (
           <OrderMenuItemRow
             className="border-b border-[#767676] last:border-b-0"

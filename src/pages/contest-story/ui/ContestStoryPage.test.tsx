@@ -1,5 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 
 import { useAuthMe, useLoginWithGoogle } from "@/entities/auth";
@@ -165,7 +172,8 @@ describe("ContestStoryPage", () => {
     expect(screen.queryByRole("button", { name: "신청하기" })).not.toBeInTheDocument();
   });
 
-  it("renders public story titles in the open phase", () => {
+  // 사연 제목 클라우드 임시 숨김(SHOW_STORY_TITLE_CLOUD) 동안 건너뛴다.
+  it.skip("renders public story titles in the open phase", () => {
     renderPage("/story?phase=open");
 
     expect(
@@ -192,7 +200,8 @@ describe("ContestStoryPage", () => {
     expect(screen.queryByRole("tab", { name: "타임테이블" })).not.toBeInTheDocument();
   });
 
-  it("shows the story list error and retries", () => {
+  // 사연 제목 클라우드 임시 숨김(SHOW_STORY_TITLE_CLOUD) 동안 건너뛴다.
+  it.skip("shows the story list error and retries", () => {
     const refetch = vi.fn();
     usePublicContestStoriesMock.mockReturnValue({
       data: undefined,
@@ -207,7 +216,8 @@ describe("ContestStoryPage", () => {
     expect(refetch).toHaveBeenCalledOnce();
   });
 
-  it("shows clearly labeled sample titles without fetching stories in development preview", () => {
+  // 사연 제목 클라우드 임시 숨김(SHOW_STORY_TITLE_CLOUD) 동안 건너뛴다.
+  it.skip("shows clearly labeled sample titles without fetching stories in development preview", () => {
     usePublicContestStoriesMock.mockReturnValue({
       data: undefined,
       isError: true,
@@ -245,14 +255,12 @@ describe("ContestStoryPage", () => {
 
     const dialog = screen.getByRole("dialog", { name: "사연 신청 안내 사항" });
     expect(dialog).toHaveClass("bg-[rgba(252,252,252,0.5)]", "backdrop-blur-[24px]");
-    const googleSecurityNotice = screen
-      .getByText("Google 비밀번호는 GROOVE에 전달되지 않아요.")
-      .closest("li");
-    expect(googleSecurityNotice).toHaveClass("text-[#dbeafe]", "marker:text-[#fcfcfc]");
-    const googleSessionNotice = screen
-      .getByText("Google에서 발급한 인증 정보로 로그인 상태만 확인해요.")
-      .closest("li");
-    expect(googleSessionNotice).toHaveClass("text-[#dbeafe]", "marker:text-[#fcfcfc]");
+    expect(
+      within(dialog).getByText("Google 비밀번호는 GROOVE에 전달되지 않습니다."),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(/Google에서 발급한 인증 정보로 로그인 상태만/),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("heading", { name: "Google 로그인" }),
     ).not.toBeInTheDocument();
