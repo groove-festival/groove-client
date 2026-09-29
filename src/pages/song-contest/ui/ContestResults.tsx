@@ -26,9 +26,9 @@ export function ContestResults({ votes }: ContestResultsProps) {
           아직 완료된 경연이 없어요.
         </p>
       ) : (
-        <div className="flex w-full flex-col gap-4">
+        <div className="flex w-full flex-col gap-5">
           {finishedVotes.map((vote) => (
-            <BracketMatchRow key={vote.singingVoteId} showWinnerBadge vote={vote} />
+            <BracketMatchRow key={vote.singingVoteId} vote={vote} winnerDisplay="badge" />
           ))}
         </div>
       )}
