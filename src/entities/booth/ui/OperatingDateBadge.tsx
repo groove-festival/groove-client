@@ -1,7 +1,7 @@
 import { type Booth, formatOperatingDate } from "../model/booths";
 
-// 날짜별로 여는 주막의 운영일. 축제 전에는 같은 자리의 두 학과가 나란히 보이므로
-// 어느 날 여는지를 카드마다 붙인다. 이틀 다 여는 주막에는 그리지 않는다.
+// 날짜별로 여는 주막의 운영일. 목록 카드는 다른 주막과 같게 두고 상세 헤더에서만
+// 운영일을 보인다. 이틀 다 여는 주막에는 그리지 않는다.
 export const OperatingDateBadge = ({
   booth,
   length = "short",
