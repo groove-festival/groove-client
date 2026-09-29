@@ -346,7 +346,7 @@ describe("BoothOrderPage", () => {
     expect(screen.getByRole("heading", { name: "음료" })).toBeInTheDocument();
   });
 
-  it("starts the separate charge at one and keeps it from going below one", async () => {
+  it("starts the separate charge at one but lets the customer take it out", async () => {
     await showMenuScreen();
 
     const separateCharge = screen.getByRole("list", { name: "상차림비" });
@@ -354,9 +354,26 @@ describe("BoothOrderPage", () => {
     expect(within(separateCharge).getByLabelText("상차림비 수량")).toHaveTextContent(
       "1",
     );
-    expect(
+    expect(screen.getByTestId("separate-charge-notice")).toHaveTextContent(
+      "같은 테이블에서 이미 상차림비를 냈다면 빼 주세요.",
+    );
+
+    // 같은 테이블 일행이 다른 폰으로 이미 냈으면 빼고 메뉴만 주문한다.
+    fireEvent.click(
       within(separateCharge).getByRole("button", { name: "상차림비 수량 줄이기" }),
-    ).toBeDisabled();
+    );
+    expect(within(separateCharge).getByLabelText("상차림비 수량")).toHaveTextContent(
+      "0",
+    );
+    addFirstMenu();
+    fireEvent.click(screen.getByRole("button", { name: "25,000원 주문하기" }));
+    await waitFor(() =>
+      expect(httpPost).toHaveBeenCalledWith(
+        `/pubs/${BOOTH_ID}/tables/${TABLE_CODE}/orders`,
+        { items: [{ menuId: 1, quantity: 1 }] },
+        { headers: { "Idempotency-Key": expect.any(String) } },
+      ),
+    );
   });
 
   it("keeps the separate charge out of the menu sections", async () => {
@@ -438,21 +455,23 @@ describe("BoothOrderPage", () => {
         name: "상차림비 (1인) 수량 줄이기",
       }),
     ).toBeDisabled();
-    expect(screen.getByText("해당하는 상차림비를 선택해 주세요")).toBeInTheDocument();
+    const notice = screen.getByTestId("separate-charge-notice");
+    expect(notice).toHaveTextContent(
+      "처음 주문이라면 해당하는 상차림비를 담아 주세요.",
+    );
 
-    // 메뉴만 담으면 주문 대신 상차림비를 고르라고 안내한다.
+    // 상차림비를 안 골라도 주문 버튼은 막지 않는다 — 안내만 한다.
     fireEvent.click(screen.getByRole("button", { name: "닭발 수량 늘리기" }));
-    fireEvent.click(screen.getByRole("button", { name: "상차림비를 선택해 주세요" }));
-    expect(httpPost).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "15,000원 주문하기" })).toBeEnabled();
 
     fireEvent.click(
       within(separateCharges).getByRole("button", {
         name: "상차림비 (테이블) 수량 늘리기",
       }),
     );
-    expect(
-      screen.queryByText("해당하는 상차림비를 선택해 주세요"),
-    ).not.toBeInTheDocument();
+    expect(notice).toHaveTextContent(
+      "같은 테이블에서 이미 상차림비를 냈다면 빼 주세요.",
+    );
     fireEvent.click(screen.getByRole("button", { name: "20,000원 주문하기" }));
 
     await waitFor(() =>
