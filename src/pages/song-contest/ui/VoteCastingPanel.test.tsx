@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 
 import { useAuthMe, useGoogleSignIn, useLoginWithGoogle } from "@/entities/auth";
@@ -134,7 +134,7 @@ describe("VoteCastingPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "IT대학" }));
 
     expect(screen.getByText("Google로 계속하기")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "확인" })).not.toBeInTheDocument();
+    expect(screen.queryByText("투표하시겠어요?")).not.toBeInTheDocument();
   });
 
   it("applies the tapped participant automatically once Google login succeeds", () => {
@@ -184,15 +184,41 @@ describe("VoteCastingPanel", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "투표하기" }));
 
-    expect(screen.getByText("투표 완료!")).toBeInTheDocument();
+    const confirmDialog = screen.getByRole("dialog", { name: "투표하시겠어요?" });
     expect(screen.getAllByText("IT대학").length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByRole("button", { name: "확인" }));
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "투표하기" }));
 
     expect(submitMutate).toHaveBeenCalledWith(
       expect.objectContaining({ singingVoteId: 1, voteParticipantId: 1 }),
       expect.anything(),
     );
+  });
+
+  it("replaces the confirm dialog with a completion dialog once the ballot is accepted", () => {
+    useAuthMeMock.mockReturnValue({
+      data: { loggedIn: true, role: "USER" },
+    } as unknown as ReturnType<typeof useAuthMe>);
+    submitMutate.mockImplementationOnce(
+      (_body: unknown, options?: { onSuccess?: () => void }) => options?.onSuccess?.(),
+    );
+
+    renderPanel();
+    fireEvent.click(screen.getByRole("button", { name: "IT대학" }));
+    fireEvent.click(screen.getByRole("button", { name: "투표하기" }));
+    const confirmDialog = screen.getByRole("dialog", { name: "투표하시겠어요?" });
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "투표하기" }));
+
+    expect(
+      screen.queryByRole("dialog", { name: "투표하시겠어요?" }),
+    ).not.toBeInTheDocument();
+    const completeDialog = screen.getByRole("dialog", { name: "투표 완료!" });
+    expect(within(completeDialog).getByText("IT대학")).toBeInTheDocument();
+
+    fireEvent.click(within(completeDialog).getByRole("button", { name: "닫기" }));
+    expect(
+      screen.queryByRole("dialog", { name: "투표 완료!" }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows an error and keeps the dialog open when the match closed underneath the user", () => {
@@ -214,10 +240,10 @@ describe("VoteCastingPanel", () => {
     expect(resetMock).toHaveBeenCalled();
 
     expect(
-      screen.getByText("이미 마감된 경기예요. 목록을 새로고침해 주세요."),
+      screen.getByText("이미 마감된 경연이에요. 목록을 새로고침해 주세요."),
     ).toBeInTheDocument();
-    // 실패해도 팝업은 닫히지 않는다 — 사용자가 상황을 보고 "변경"을 고를 수 있다.
-    expect(screen.getByText("투표 완료!")).toBeInTheDocument();
+    // 실패해도 팝업은 닫히지 않는다 — 사용자가 상황을 보고 "닫기"를 고를 수 있다.
+    expect(screen.getByText("투표하시겠어요?")).toBeInTheDocument();
   });
 
   it("shows the empty state when there is nothing to vote on", () => {
