@@ -22,11 +22,12 @@ const view = (x: number, y: number, width: number): CampusMapView => ({
 // 이벤트 부스 56:3679)의 지도 위치에서 잰 값이다. 시안은 세 화면의 확대 정도가 같지만
 // 필터를 고르면 당겨 보이도록 주막·이벤트 부스는 폭을 140 으로 좁혔다. 랜드마크
 // 지명 뱃지가 선명하게 보이는 폭이고, 주막은 22개가 위아래로 다 들어오도록 중심을
-// 주막 묶음 한가운데(y 695.5)로 내렸다.
+// 주막 묶음 한가운데(y 695.5)로 내렸다. 이벤트 부스도 시안 중심에서는 묶음이 왼쪽에
+// 쏠려 보여, 이 필터에서 켜지는 체험존·기획 부스를 둘러싼 범위의 한가운데로 옮겼다.
 const filterViews: Record<MapFilter, CampusMapView> = {
   all: view(658.54, 686.24, 216.02),
   pub: view(706.41, 695.5, 140),
-  event: view(612.47, 668.31, 140),
+  event: view(602.11, 678.66, 140),
 };
 
 export const getFilterView = (filter: MapFilter) => filterViews[filter];
