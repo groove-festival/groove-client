@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { Navigate, useParams } from "react-router";
 
 import { BoothDetailHeader, type BoothOrderDetail } from "@/entities/booth";
@@ -8,7 +8,7 @@ import { FestivalHeader } from "@/widgets/festival-header";
 import { isOrderTableNotFound, useOrderTable } from "../api/getOrderTable";
 import { INCOMPLETE_ORDER_BANNER_HEIGHT } from "../config/layout";
 import { formatWon } from "../lib/formatWon";
-import { getMinimumQuantity, getQuantity, isOptionSelected } from "../model/orderCart";
+import { getQuantity, isOptionSelected } from "../model/orderCart";
 import { useBoothOrder } from "../model/useBoothOrder";
 import { BankTransferDialog } from "./BankTransferDialog";
 import { DepositorNameEditDialog } from "./DepositorNameEditDialog";
@@ -59,34 +59,17 @@ const BoothOrderContent = ({
     updateDepositorName,
   } = useBoothOrder(booth, tableCode);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const separateChargeRef = useRef<HTMLDivElement>(null);
   const bannerOffset = hasIncompleteOrder ? INCOMPLETE_ORDER_BANNER_HEIGHT : 0;
-  const hasMultipleSeparateCharges = booth.separateChargeItems.length > 1;
-  // 메뉴를 담았는데 상차림비를 안 골랐으면 주문 버튼을 띄운 채 상차림비로
-  // 안내한다. 버튼을 숨기면 손님은 왜 주문이 안 되는지 알 수 없다.
   const isBottomBarVisible = hasSelectedMenu;
 
   const handleBottomBarClick = () => {
     if (canPlaceOrder) {
       placeOrder();
-      return;
     }
-
-    separateChargeRef.current?.scrollIntoView?.({
-      behavior: "smooth",
-      block: "center",
-    });
   };
 
-  const getBottomBarLabel = () => {
-    if (isPlacingOrder) {
-      return "주문하는 중…";
-    }
-
-    return hasSelectedSeparateCharge
-      ? `${formatWon(cartTotal)} 주문하기`
-      : "상차림비를 선택해 주세요";
-  };
+  const getBottomBarLabel = () =>
+    isPlacingOrder ? "주문하는 중…" : `${formatWon(cartTotal)} 주문하기`;
 
   // 주문 경로는 RootLayout 밖에 있어 경로 변경 시 스크롤 초기화를 받지 못한다.
   // 같은 경로 안에서 주문 단계가 바뀌면 새 화면을 맨 위부터 보여준다.
@@ -116,21 +99,23 @@ const BoothOrderContent = ({
 
           <div className="mt-12 flex flex-col gap-10">
             {booth.separateChargeItems.length > 0 && (
-              <div className="flex flex-col gap-3" ref={separateChargeRef}>
-                {isAdditionalOrder && (
-                  <p className="px-2 text-sm leading-[17px] font-semibold text-[#cfcfcf]">
-                    추가 주문이라 상차림비는 빼 두었어요. 일행이 늘었다면 담아 주세요.
-                  </p>
-                )}
-                {hasMultipleSeparateCharges && !hasSelectedSeparateCharge && (
-                  <p
-                    className={`px-2 text-sm leading-[17px] font-semibold ${
-                      hasSelectedMenu ? "text-[#cfff04]" : "text-[#cfcfcf]"
-                    }`}
-                  >
-                    해당하는 상차림비를 선택해 주세요
-                  </p>
-                )}
+              <div className="flex flex-col gap-3">
+                {/* 상차림비는 빼거나 안 담아도 주문된다. 첫 주문인지는 이 폰만 알므로
+                    같은 테이블 일행이 이미 냈으면 손님이 직접 빼게 안내한다. */}
+                <p
+                  className={`px-2 text-sm leading-[17px] font-semibold ${
+                    !isAdditionalOrder && !hasSelectedSeparateCharge && hasSelectedMenu
+                      ? "text-[#cfff04]"
+                      : "text-[#cfcfcf]"
+                  }`}
+                  data-testid="separate-charge-notice"
+                >
+                  {isAdditionalOrder
+                    ? "추가 주문이라 상차림비는 빼 두었어요. 일행이 늘었다면 담아 주세요."
+                    : hasSelectedSeparateCharge
+                      ? "같은 테이블에서 이미 상차림비를 냈다면 빼 주세요."
+                      : "처음 주문이라면 해당하는 상차림비를 담아 주세요. 같은 테이블에서 이미 냈다면 담지 않아도 돼요."}
+                </p>
                 <ul
                   aria-label="상차림비"
                   className="rounded-3xl border border-[#fcfcfc]"
@@ -143,11 +128,6 @@ const BoothOrderContent = ({
                       }
                       item={item}
                       key={item.id}
-                      minimumQuantity={getMinimumQuantity(
-                        booth,
-                        item,
-                        isAdditionalOrder,
-                      )}
                       onChangeQuantity={changeItemQuantity}
                       onToggleOption={toggleItemOption}
                       quantity={getQuantity(cart, item)}

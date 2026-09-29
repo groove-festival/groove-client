@@ -146,15 +146,11 @@ export const useBoothOrder = (booth: BoothOrderDetail, tableCode: string) => {
   });
 
   return {
-    canPlaceOrder: canPlaceOrder(booth, cart, isAdditionalOrder),
+    canPlaceOrder: canPlaceOrder(booth, cart),
     cart,
     cartTotal: getOrderTotal(cartLines),
     hasSelectedMenu: hasSelectedMenu(booth, cart),
-    hasSelectedSeparateCharge: hasSelectedSeparateCharge(
-      booth,
-      cart,
-      isAdditionalOrder,
-    ),
+    hasSelectedSeparateCharge: hasSelectedSeparateCharge(booth, cart),
     isAdditionalOrder,
     selectedOptions,
     errorToast,
@@ -165,7 +161,7 @@ export const useBoothOrder = (booth: BoothOrderDetail, tableCode: string) => {
     order,
     screen: getOrderScreen(order),
     changeItemQuantity: (item: BoothMenuItem, delta: number) => {
-      const nextCart = changeQuantity(booth, cart, item, delta, isAdditionalOrder);
+      const nextCart = changeQuantity(cart, item, delta);
 
       setCart(nextCart);
       if (getQuantity(nextCart, item) === 0) {

@@ -17,6 +17,7 @@ import { PubOrderHistory } from "./PubOrderHistory";
 import { PubPaymentBoard } from "./PubPaymentBoard";
 import { PubProfileForm } from "./PubProfileForm";
 import { PubStatusToggle } from "./PubStatusToggle";
+import { PubTableOrders } from "./PubTableOrders";
 import { PubTableManager } from "./PubTableManager";
 import { TableFilterSheet } from "./TableFilterSheet";
 
@@ -93,6 +94,12 @@ const PubAdminWorkspace = ({ pub }: PubAdminWorkspaceProps) => {
         )}
         {activeView === "kitchen" && (
           <PubKitchenBoard visibleTables={tableFilter.tables} />
+        )}
+        {activeView === "tables" && (
+          <PubTableOrders
+            tableNumbers={tables.data?.map((table) => table.tableNumber) ?? []}
+            visibleTables={tableFilter.tables}
+          />
         )}
         {activeView === "history" && (
           <PubOrderHistory
