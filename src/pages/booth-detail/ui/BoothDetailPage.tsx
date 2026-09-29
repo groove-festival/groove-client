@@ -88,7 +88,9 @@ export default function BoothDetailPage() {
     >
       <BoothDetailHeader booth={booth} />
 
-      <div className="mt-12 flex flex-col gap-12">
+      <hr className="mt-6 border-t border-[#565656]" />
+
+      <div className="mt-8 flex flex-col gap-8">
         {booth.menuSections.length === 0 && (
           <p className="py-10 text-center text-sm text-[#a2a2a2]">
             등록된 메뉴가 아직 없어요.
