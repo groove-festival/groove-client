@@ -227,6 +227,10 @@ export default function SongContestPage() {
     return <NetworkErrorFallback />;
   }
 
+  // 경연 단계는 셋이다. 경연 시작 전(BEFORE)에도 대진표는 참가팀이 정해져 있어
+  // 미리 보여주고, 투표 영역만 "경연 당일에 열려요" 안내로 막는다. 경연 기간(OPEN)에
+  // 투표 영역이 열리고, 끝나면(CLOSED) 우승 표시와 함께 결과로 남는다. 실제 투표는
+  // 무대팀이 경기마다 여는 것이라 OPEN 이어도 열린 경기가 없으면 투표할 수 없다.
   const votesTabLabel = contestPhase === "CLOSED" ? "경연 결과" : "경연 목록";
   const votesTabContent: ReactNode =
     status.isPending || votesQuery.isPending ? (
@@ -235,8 +239,8 @@ export default function SongContestPage() {
       <p className="pt-32 text-center text-base text-[#a2a2a2]">
         경연 목록을 불러오지 못했어요.
       </p>
-    ) : contestPhase === "BEFORE" ? (
-      <p className="pt-32 text-center text-base">아직 경연이 시작되지 않았어요</p>
+    ) : votes.length === 0 ? (
+      <p className="pt-32 text-center text-base">아직 대진표가 공개되지 않았어요</p>
     ) : (
       <ol className="space-y-5">
         {votes.map((vote) => (
