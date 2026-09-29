@@ -165,7 +165,7 @@ describe("FestivalHeader", () => {
     } as unknown as ReturnType<typeof useFestivalStatus>);
     const open = renderHeader("/story");
     fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
-    expect(screen.getByText("사연 모집 중")).toBeInTheDocument();
+    expect(screen.getByText("사연 모집중")).toBeInTheDocument();
     open.unmount();
 
     useFestivalStatusMock.mockReturnValue({
@@ -176,12 +176,12 @@ describe("FestivalHeader", () => {
     } as unknown as ReturnType<typeof useFestivalStatus>);
     const closed = renderHeader("/story");
     fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
-    expect(screen.queryByText("사연 모집 중")).not.toBeInTheDocument();
+    expect(screen.queryByText("사연 모집중")).not.toBeInTheDocument();
     closed.unmount();
 
     renderHeader("/story?phase=open");
     fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
-    expect(screen.getByText("사연 모집 중")).toBeInTheDocument();
+    expect(screen.getByText("사연 모집중")).toBeInTheDocument();
   });
 
   it("shows the contest voting badge from the server phase", () => {
@@ -195,6 +195,6 @@ describe("FestivalHeader", () => {
     renderHeader();
     fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
 
-    expect(screen.getByText("투표 진행 중")).toBeInTheDocument();
+    expect(screen.getByText("투표진행중")).toBeInTheDocument();
   });
 });

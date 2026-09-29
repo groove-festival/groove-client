@@ -32,7 +32,7 @@ const shortcuts: Shortcut[] = [
   },
   {
     id: "story",
-    title: "사연신청",
+    title: "사연 모집",
     description: "무대에서 소개될 사연 신청",
     to: "/story",
     icon: shortcutStory,
@@ -72,13 +72,15 @@ const ShortcutIcon = ({ shortcut }: { shortcut: Shortcut }) => {
     return (
       <span
         aria-hidden="true"
-        className="relative h-[59px] w-16 shrink-0 overflow-hidden min-[393px]:h-[67px] min-[393px]:w-[73px]"
+        className="flex h-14 w-16 shrink-0 items-center justify-center min-[393px]:h-[63px] min-[393px]:w-[73px]"
       >
-        <img
-          alt=""
-          className="absolute top-[-5.35%] left-[-28.65%] h-[114.47%] w-[156.45%] max-w-none"
-          src={shortcut.icon}
-        />
+        <span className="relative aspect-[1.1] h-full overflow-hidden">
+          <img
+            alt=""
+            className="absolute top-[-10.65%] left-[-105.15%] h-[221.54%] w-[302.47%] max-w-none"
+            src={shortcut.icon}
+          />
+        </span>
       </span>
     );
   }

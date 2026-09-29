@@ -27,24 +27,22 @@ export const BoothDetailHeader = ({
         />
       )}
 
-      <div className="flex min-w-0 flex-col gap-2">
+      <div className="flex items-start justify-between gap-6">
         <div className="flex min-w-0 flex-col gap-2">
-          <div className="flex min-w-0 flex-col gap-0">
-            <BoothDepartments
-              booth={booth}
-              className="w-full text-xl leading-6 font-medium text-[#fcfcfc]"
-            />
-            <h1 className="text-2xl leading-[29px] font-bold break-keep text-[#fcfcfc]">
-              {getBoothDisplayName(booth)}
-            </h1>
-          </div>
+          <h1 className="text-2xl leading-[29px] font-bold break-keep text-[#fcfcfc]">
+            {getBoothDisplayName(booth)}
+          </h1>
+          <OperatingDateBadge booth={booth} length="long" />
           {booth.description && (
             <p className="text-base leading-[19px] font-medium text-[#cfcfcf]">
               {booth.description}
             </p>
           )}
         </div>
-        <OperatingDateBadge booth={booth} length="long" />
+        <BoothDepartments
+          booth={booth}
+          className="shrink-0 text-right text-xl leading-6 text-[#cfcfcf]"
+        />
       </div>
 
       {booth.operatingToday === false && booth.operatingDate && (

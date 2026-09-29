@@ -6,11 +6,11 @@ export type ContestShortcutBadgeStatus =
 export type ShortcutBadgeStatus = StoryShortcutBadgeStatus | ContestShortcutBadgeStatus;
 
 export const shortcutBadgeLabels: Record<ShortcutBadgeStatus, string> = {
-  "story-upcoming": "사연 모집 예정",
-  "story-open": "사연 모집 중",
-  "contest-upcoming": "투표 예정",
-  "contest-open": "투표 진행 중",
-  "contest-closed": "투표 종료",
+  "story-upcoming": "사연 모집예정",
+  "story-open": "사연 모집중",
+  "contest-upcoming": "투표예정",
+  "contest-open": "투표진행중",
+  "contest-closed": "투표종료",
 };
 
 export interface StageShortcutBadges {
