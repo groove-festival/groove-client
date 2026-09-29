@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 
 import { useAuthMe, useLoginWithGoogle } from "@/entities/auth";
@@ -46,6 +46,7 @@ const useSubmitContestStoryMock = vi.mocked(useSubmitContestStory);
 
 const submitStoryMutateAsync = vi.fn();
 const submitStoryReset = vi.fn();
+const googleLoginReset = vi.fn();
 
 function statusBody(
   storyPhase: FestivalStatusResponseBody["stage"]["storyPhase"],
@@ -95,6 +96,7 @@ beforeEach(() => {
     updatedAt: "2026-09-22T10:00:00+09:00",
   });
   submitStoryReset.mockReset();
+  googleLoginReset.mockReset();
 
   useFestivalStatusMock.mockReturnValue({
     data: statusBody("BEFORE"),
@@ -133,6 +135,7 @@ beforeEach(() => {
     error: null,
     isPending: false,
     mutate: vi.fn(),
+    reset: googleLoginReset,
   } as unknown as ReturnType<typeof useLoginWithGoogle>);
   useSubmitContestStoryMock.mockReturnValue({
     isPending: false,
@@ -168,12 +171,13 @@ describe("ContestStoryPage", () => {
     expect(
       screen.getByRole("heading", { name: "GROOVE 사연 모집 이벤트" }),
     ).toBeInTheDocument();
+    expect(screen.queryByText("사연 신청 목록")).not.toBeInTheDocument();
     expect(
-      screen.getByText("신청한 사연은 축제 무대에서 MC가 소개합니다."),
-    ).toBeInTheDocument();
+      screen.queryByText("신청한 사연은 축제 무대에서 MC가 소개합니다."),
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByText("함께 나누고 싶은 이야기를 남겨 주세요."),
-    ).toBeInTheDocument();
+      screen.queryByText("함께 나누고 싶은 이야기를 남겨 주세요."),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("함께 부르는 밤")).toBeInTheDocument();
     expect(screen.getByText("첫 무대의 떨림")).toBeInTheDocument();
     const [firstStoryTitle] = screen.getAllByTestId("contest-story-title");
@@ -182,6 +186,9 @@ describe("ContestStoryPage", () => {
     expect(firstStoryTitle?.style.getPropertyValue("--story-float-duration")).toMatch(
       /s$/,
     );
+    expect(
+      screen.getAllByTestId("contest-story-title").map((title) => title.style.fontSize),
+    ).toEqual(expect.arrayContaining(["0.75rem", "2.5rem"]));
     expect(screen.queryByRole("tab", { name: "타임테이블" })).not.toBeInTheDocument();
   });
 
@@ -231,18 +238,58 @@ describe("ContestStoryPage", () => {
       error: null,
       isPending: false,
       mutate: login,
+      reset: googleLoginReset,
     } as unknown as ReturnType<typeof useLoginWithGoogle>);
     renderPage("/story?phase=open");
     fireEvent.click(screen.getByRole("button", { name: "신청하기" }));
-    fireEvent.click(screen.getByRole("button", { name: "사연 작성하기" }));
 
-    expect(screen.getByRole("heading", { name: "Google 로그인" })).toBeInTheDocument();
+    const dialog = screen.getByRole("dialog", { name: "사연 신청 안내 사항" });
+    expect(dialog).toHaveClass("bg-[rgba(252,252,252,0.5)]", "backdrop-blur-[24px]");
+    const googleSecurityNotice = screen
+      .getByText("Google 비밀번호는 GROOVE에 전달되지 않아요.")
+      .closest("li");
+    expect(googleSecurityNotice).toHaveClass("text-[#dbeafe]", "marker:text-[#fcfcfc]");
+    const googleSessionNotice = screen
+      .getByText("Google에서 발급한 인증 정보로 로그인 상태만 확인해요.")
+      .closest("li");
+    expect(googleSessionNotice).toHaveClass("text-[#dbeafe]", "marker:text-[#fcfcfc]");
+    expect(
+      screen.queryByRole("heading", { name: "Google 로그인" }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("heading", { name: "사연 신청하기" }),
     ).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Google 계정으로 로그인" }));
-    expect(login).toHaveBeenCalledWith("test-id-token");
+    expect(login).toHaveBeenCalledWith("test-id-token", expect.any(Object));
+
+    const loginOptions = login.mock.calls[0]?.[1] as { onSuccess?: () => void };
+    act(() => loginOptions.onSuccess?.());
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "사연 신청하기" })).toBeInTheDocument();
+  });
+
+  it("shows a Google login error inside the guide modal", () => {
+    useAuthMeMock.mockReturnValue({
+      data: { loggedIn: false, role: null, displayName: null, pubId: null },
+      isError: false,
+      isPending: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useAuthMe>);
+    useLoginWithGoogleMock.mockReturnValue({
+      error: new Error("login failed"),
+      isPending: false,
+      mutate: vi.fn(),
+      reset: googleLoginReset,
+    } as unknown as ReturnType<typeof useLoginWithGoogle>);
+
+    renderPage("/story?phase=open");
+    fireEvent.click(screen.getByRole("button", { name: "신청하기" }));
+
+    expect(
+      screen.getByText("Google 로그인에 실패했어요. 잠시 후 다시 시도해 주세요."),
+    ).toBeInTheDocument();
   });
 
   it("validates the form and submits the story API body", async () => {
