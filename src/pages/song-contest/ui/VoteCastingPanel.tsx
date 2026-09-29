@@ -159,7 +159,7 @@ export function VoteCastingPanel() {
           <div className="flex w-full flex-col gap-3">
             <p className="text-2xl font-bold text-[#fcfcfc]">진행 중인 투표</p>
             <p className="text-xs leading-[15px] text-[#cfcfcf]">
-              *투표 확정 후에는 해당 경기를 중복 투표하거나 재투표할 수 없습니다
+              *투표 확정 후에는 해당 경연을 중복 투표하거나 재투표할 수 없습니다
             </p>
           </div>
           {location.status === "checking" ? (
