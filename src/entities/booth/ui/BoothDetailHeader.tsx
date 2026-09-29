@@ -28,15 +28,15 @@ export const BoothDetailHeader = ({
       )}
 
       <div className="flex min-w-0 flex-col gap-2">
-        <div className="flex min-w-0 flex-col gap-3">
-          <div className="flex min-w-0 flex-col gap-1">
+        <div className="flex min-w-0 flex-col gap-2">
+          <div className="flex min-w-0 flex-col gap-0">
+            <BoothDepartments
+              booth={booth}
+              className="w-full text-xl leading-6 font-medium text-[#fcfcfc]"
+            />
             <h1 className="text-2xl leading-[29px] font-bold break-keep text-[#fcfcfc]">
               {getBoothDisplayName(booth)}
             </h1>
-            <BoothDepartments
-              booth={booth}
-              className="w-full text-xl leading-6 font-medium text-[#cfcfcf]"
-            />
           </div>
           {booth.description && (
             <p className="text-base leading-[19px] font-medium text-[#cfcfcf]">

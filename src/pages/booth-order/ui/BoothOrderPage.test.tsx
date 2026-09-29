@@ -323,18 +323,18 @@ describe("BoothOrderPage", () => {
     expect(screen.getByRole("img", { name: "GROOVE" })).toBeInTheDocument();
   });
 
-  it("shows the departments and description below the booth name", async () => {
+  it("shows the department above the booth name and leaves 8px before the description", async () => {
     await showMenuScreen();
 
     const boothName = screen.getByRole("heading", { name: "주막 이름" });
-    expect(boothName.parentElement).toHaveClass("gap-1");
-    expect(boothName.nextElementSibling).toHaveTextContent("단대 • 학과");
-    expect(screen.getByText("부스 설명")).toHaveClass(
-      "text-base",
-      "leading-[19px]",
-      "font-medium",
-    );
-    expect(screen.getByText("부스 설명").parentElement).toHaveClass("gap-3");
+    const departments = boothName.previousElementSibling;
+    const description = screen.getByText("부스 설명");
+    expect(boothName.parentElement).toHaveClass("gap-0");
+    expect(departments).toHaveTextContent("단대 • 학과");
+    expect(departments).toHaveClass("font-medium", "text-[#fcfcfc]");
+    expect(boothName).toHaveClass("font-bold", "text-[#fcfcfc]");
+    expect(description).toHaveClass("text-base", "leading-[19px]", "font-medium");
+    expect(description.parentElement).toHaveClass("gap-2");
   });
 
   it("moves a shared-spot QR to the table PUB-3 resolved for today", async () => {

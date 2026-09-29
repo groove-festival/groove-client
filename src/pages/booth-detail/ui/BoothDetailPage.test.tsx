@@ -86,14 +86,14 @@ describe("BoothDetailPage", () => {
 
     expect(await screen.findByAltText("일렉트로닉 나이트 메뉴판")).toBeInTheDocument();
     const boothName = screen.getByRole("heading", { name: "일렉트로닉 나이트" });
-    expect(boothName.parentElement).toHaveClass("gap-1");
-    expect(boothName.nextElementSibling).toHaveTextContent("전자공학부E • 전자공학부H");
-    expect(screen.getByText("전자공학부 주막")).toHaveClass(
-      "text-base",
-      "leading-[19px]",
-      "font-medium",
-    );
-    expect(screen.getByText("전자공학부 주막").parentElement).toHaveClass("gap-3");
+    const departments = boothName.previousElementSibling;
+    const description = screen.getByText("전자공학부 주막");
+    expect(boothName.parentElement).toHaveClass("gap-0");
+    expect(departments).toHaveTextContent("전자공학부E • 전자공학부H");
+    expect(departments).toHaveClass("font-medium", "text-[#fcfcfc]");
+    expect(boothName).toHaveClass("font-bold", "text-[#fcfcfc]");
+    expect(description).toHaveClass("text-base", "leading-[19px]", "font-medium");
+    expect(description.parentElement).toHaveClass("gap-2");
     expect(screen.getByRole("heading", { name: "상차림비" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "메인 메뉴" })).toBeInTheDocument();
     expect(screen.getByText("1,000원")).toBeInTheDocument();
