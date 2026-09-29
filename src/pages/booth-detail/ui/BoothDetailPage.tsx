@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { Navigate, useParams } from "react-router";
 
-import { BoothDetailHeader, isBoothNotFound, useBoothDetail } from "@/entities/booth";
+import {
+  BoothDetailHeader,
+  compareByOperatingDay,
+  getBoothSpotCode,
+  isBoothNotFound,
+  useBoothDetail,
+  useBooths,
+} from "@/entities/booth";
 import { LoadingFallback, NetworkErrorFallback } from "@/shared/ui";
 
 import { BoothMenuSection } from "./BoothMenuSection";
@@ -17,13 +24,36 @@ const hasDismissedQrNotice = () => {
   }
 };
 
+const SpotRedirect = ({ spotCode }: { spotCode: string }) => {
+  const boothsQuery = useBooths();
+
+  if (boothsQuery.isPending) {
+    return <LoadingFallback />;
+  }
+
+  const target = (boothsQuery.data ?? [])
+    .filter((booth) => getBoothSpotCode(booth) === spotCode)
+    .sort(compareByOperatingDay)[0];
+
+  return (
+    <Navigate
+      replace
+      to={target ? `/pub/${encodeURIComponent(target.boothCode)}` : "/pub"}
+    />
+  );
+};
+
 export default function BoothDetailPage() {
   const { boothId } = useParams<{ boothId: string }>();
   const boothQuery = useBoothDetail(boothId);
   const [isQrNoticeOpen, setIsQrNoticeOpen] = useState(() => !hasDismissedQrNotice());
 
-  if (!boothId || (boothQuery.isError && isBoothNotFound(boothQuery.error))) {
+  if (!boothId) {
     return <Navigate replace to="/pub" />;
+  }
+
+  if (boothQuery.isError && isBoothNotFound(boothQuery.error)) {
+    return <SpotRedirect key={boothId} spotCode={boothId} />;
   }
 
   if (boothQuery.isPending) {

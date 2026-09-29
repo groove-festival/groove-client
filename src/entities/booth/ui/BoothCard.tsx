@@ -50,7 +50,7 @@ export const BoothCard = ({ booth, onSelectLocation, to }: BoothCardProps) => {
         <div className="min-w-0 leading-none font-semibold">
           <p className="truncate text-xl">{displayName}</p>
           {displayName !== departments && (
-            <p className="mt-1 truncate text-sm font-medium">{departments}</p>
+            <p className="mt-[3px] truncate text-sm font-medium">{departments}</p>
           )}
         </div>
       </button>

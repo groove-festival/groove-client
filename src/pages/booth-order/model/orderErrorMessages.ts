@@ -10,6 +10,7 @@ const orderErrorMessages: Record<string, string> = {
   PUB006: "지금은 주문을 받지 않는 주막이에요",
   PUB007: "품절된 메뉴가 있어요. 담은 메뉴를 확인해주세요",
   PUB008: "주문 정보를 확인할 수 없어요",
+  PUB013: "오늘은 운영하지 않는 주막이에요",
 };
 
 const DEFAULT_ORDER_ERROR_MESSAGE = "잠시 후 다시 시도해주세요";

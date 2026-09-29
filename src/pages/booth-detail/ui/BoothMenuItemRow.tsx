@@ -6,7 +6,7 @@ const formatPrice = (price: number) => `${priceFormatter.format(price)}원`;
 
 export const BoothMenuItemRow = ({ item }: { item: BoothMenuItem }) => {
   return (
-    <li className="flex min-h-[100px] items-start justify-between gap-4 border-b border-[#767676] px-5 py-6 text-[#fcfcfc] last:min-h-[99px] last:border-b-0">
+    <li className="flex min-h-[100px] items-start justify-between gap-4 border-b border-[#767676] px-3 py-6 text-[#fcfcfc] last:min-h-[99px] last:border-b-0">
       <div className="flex min-w-0 flex-col gap-2">
         <p className="text-xl leading-6 font-semibold">{item.name}</p>
         {item.description && (

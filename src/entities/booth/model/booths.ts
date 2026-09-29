@@ -10,6 +10,7 @@ export const collegeCodes = [
 export type College = (typeof collegeCodes)[number];
 export type BoothArea = "PARKING" | "WELFARE_CENTER";
 export type BoothStatus = "OPEN" | "PREPARING";
+export type FestivalDay = "DAY1" | "DAY2";
 
 export const boothFilterOptions = [
   { id: "all", label: "전체" },
@@ -34,6 +35,13 @@ export interface Booth {
   status: BoothStatus;
   xRatio: number | null;
   yRatio: number | null;
+  // API v0.9 이전 응답과 테스트 fixture도 안전하게 읽도록 선택 필드로 두고,
+  // 비어 있으면 기존 boothCode/일반 주막 동작으로 되돌린다.
+  spotCode?: string;
+  operatingDay?: FestivalDay | null;
+  operatingDate?: string | null;
+  operatingToday?: boolean;
+  spotDepartments?: string[];
 }
 
 export const formatBoothDepartments = (departments: string[]) =>
@@ -42,13 +50,54 @@ export const formatBoothDepartments = (departments: string[]) =>
 export const getBoothDisplayName = (booth: Pick<Booth, "departments" | "name">) =>
   booth.name.trim() || formatBoothDepartments(booth.departments);
 
+export const getBoothSpotCode = (booth: Pick<Booth, "boothCode" | "spotCode">) =>
+  booth.spotCode || booth.boothCode;
+
+export const getBoothDepartmentParts = (
+  booth: Pick<Booth, "departments" | "spotDepartments">,
+): { department: string; isOwn: boolean }[] => {
+  const spotDepartments = booth.spotDepartments?.length
+    ? booth.spotDepartments
+    : booth.departments;
+  const isShared = spotDepartments.length > booth.departments.length;
+
+  return spotDepartments.map((department) => ({
+    department,
+    isOwn: isShared && booth.departments.includes(department),
+  }));
+};
+
+export const isDayShiftBooth = (booth: Pick<Booth, "operatingDay">) =>
+  Boolean(booth.operatingDay);
+
+export const formatOperatingDate = (
+  date: string,
+  length: "long" | "short" = "long",
+) => {
+  const [year, month, day] = date.split("-").map(Number);
+  const weekday = ["일", "월", "화", "수", "목", "금", "토"][
+    new Date(Date.UTC(year, month - 1, day)).getUTCDay()
+  ];
+
+  return length === "short"
+    ? `${month}/${day} ${weekday}`
+    : `${month}월 ${day}일 (${weekday})`;
+};
+
+export const compareByOperatingDay = (
+  a: Pick<Booth, "operatingDay">,
+  b: Pick<Booth, "operatingDay">,
+) => (a.operatingDay ?? "").localeCompare(b.operatingDay ?? "");
+
 export const getBoothsByFilter = (booths: Booth[], filter: BoothFilter) => {
   if (filter === "all") {
     return booths;
   }
 
   if (filter === "union") {
-    return booths.filter((booth) => booth.colleges.length > 1);
+    return booths.filter(
+      (booth) => booth.colleges.length > 1 || isDayShiftBooth(booth),
+    );
   }
 
   return booths.filter((booth) => booth.colleges.includes(filter));

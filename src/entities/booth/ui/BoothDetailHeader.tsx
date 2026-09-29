@@ -1,13 +1,21 @@
 import { type BoothDetail } from "../model/boothDetail";
-import { formatBoothDepartments, getBoothDisplayName } from "../model/booths";
+import { formatOperatingDate, getBoothDisplayName } from "../model/booths";
+import { BoothDepartments } from "./BoothDepartments";
 import { MenuBoardImage } from "./MenuBoardImage";
+import { OperatingDateBadge } from "./OperatingDateBadge";
 
 export const BoothDetailHeader = ({
   booth,
 }: {
   booth: Pick<
     BoothDetail,
-    "departments" | "description" | "menuBoardImageUrl" | "name"
+    | "departments"
+    | "description"
+    | "menuBoardImageUrl"
+    | "name"
+    | "operatingDate"
+    | "operatingToday"
+    | "spotDepartments"
   >;
 }) => {
   return (
@@ -19,21 +27,35 @@ export const BoothDetailHeader = ({
         />
       )}
 
-      <div className="flex items-start justify-between gap-6">
-        <div className="flex min-w-0 flex-col gap-2">
-          <h1 className="text-2xl leading-[29px] font-bold break-keep text-[#fcfcfc]">
-            {getBoothDisplayName(booth)}
-          </h1>
+      <div className="flex min-w-0 flex-col gap-2">
+        <div className="flex min-w-0 flex-col gap-3">
+          <div className="flex min-w-0 flex-col gap-1">
+            <h1 className="text-2xl leading-[29px] font-bold break-keep text-[#fcfcfc]">
+              {getBoothDisplayName(booth)}
+            </h1>
+            <BoothDepartments
+              booth={booth}
+              className="w-full text-xl leading-6 font-medium text-[#cfcfcf]"
+            />
+          </div>
           {booth.description && (
             <p className="text-base leading-[19px] font-medium text-[#cfcfcf]">
               {booth.description}
             </p>
           )}
         </div>
-        <p className="shrink-0 text-xl leading-6 text-[#cfcfcf]">
-          {formatBoothDepartments(booth.departments)}
-        </p>
+        <OperatingDateBadge booth={booth} length="long" />
       </div>
+
+      {booth.operatingToday === false && booth.operatingDate && (
+        <p
+          className="rounded-2xl border border-[#cfff04] bg-[rgba(207,255,4,0.08)] px-4 py-3 text-sm leading-5 font-medium text-[#cfff04]"
+          role="status"
+        >
+          오늘은 쉬는 날이에요. 이 주막은 {formatOperatingDate(booth.operatingDate)}에
+          열어요.
+        </p>
+      )}
     </header>
   );
 };

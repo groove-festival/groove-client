@@ -21,6 +21,7 @@ interface OrderTableResponseBody {
 export interface OrderTable {
   booth: BoothOrderDetail;
   isOrderable: boolean;
+  tableCode: string;
   tableNumber: number;
 }
 
@@ -51,6 +52,7 @@ export async function getOrderTable(
       ...createBoothOrderMenus(menus.map(toBoothMenuItem)),
     },
     isOrderable: response.orderable,
+    tableCode: response.tableCode,
     tableNumber: response.tableNumber,
   };
 }

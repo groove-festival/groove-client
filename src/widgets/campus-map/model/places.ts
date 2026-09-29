@@ -1,4 +1,9 @@
-import { type Booth, getBoothDisplayName } from "@/entities/booth";
+import {
+  type Booth,
+  compareByOperatingDay,
+  getBoothDisplayName,
+  getBoothSpotCode,
+} from "@/entities/booth";
 import type { ExperienceZone, ZoneType } from "@/entities/zone";
 import type { MapRatioPoint } from "@/shared/ui";
 
@@ -138,7 +143,7 @@ interface PlaceBase {
 
 export type CampusPlace = PlaceBase &
   (
-    | { group: "pub"; boothCode: string }
+    | { group: "pub"; spotCode: string; boothCodes: string[] }
     | { group: "zone"; zoneType: ZoneType }
     | { group: Exclude<PlaceGroup, "pub" | "zone"> }
   );
@@ -249,9 +254,9 @@ const getPlacePoint = (
     ? { xRatio: coordinates.xRatio, yRatio: coordinates.yRatio }
     : getShapePoint(shape);
 
-// 디자인에 그려진 주막이면 그 도형의 중심. API 좌표가 비었을 때 대신 쓴다.
-export const getPubDesignPoint = (boothCode: string): MapRatioPoint | null => {
-  const shape = pubShapes[boothCode];
+// 디자인에 그려진 자리면 그 도형의 중심. API 좌표가 비었을 때 대신 쓴다.
+export const getPubDesignPoint = (spotCode: string): MapRatioPoint | null => {
+  const shape = pubShapes[spotCode];
   return shape ? getShapePoint(shape) : null;
 };
 
@@ -262,14 +267,14 @@ const LANDMARK_FOCUS_SPREAD = 1.5;
 export const getPlaceFocusWidth = (place: CampusPlace, width: number) =>
   place.group === "landmark" ? width * LANDMARK_FOCUS_SPREAD : width;
 
-export const pubPlaceId = (boothCode: string) => `pub:${boothCode}`;
+export const pubPlaceId = (spotCode: string) => `pub:${spotCode}`;
 export const zonePlaceId = (zoneType: ZoneType) => `zone:${zoneType}`;
 
 // 색 레이어(campus-pubs.svg · campus-zones.svg)에 칠해진 도형 전부. 켜지 않은 도형은
 // 이 모양대로 회색을 덮어 끈다. 장소 id 와 같은 값이라 켜진 장소와 바로 맞춰 본다.
 export const campusCoverShapes: readonly { id: string; shape: MapShape }[] = [
-  ...Object.entries(pubShapes).map(([boothCode, shape]) => ({
-    id: pubPlaceId(boothCode),
+  ...Object.entries(pubShapes).map(([spotCode, shape]) => ({
+    id: pubPlaceId(spotCode),
     shape,
   })),
   ...(Object.entries(zoneShapes) as [ZoneType, MapShape][]).map(
@@ -287,18 +292,26 @@ export const buildCampusPlaces = (
   booths: readonly Booth[],
   zones: readonly ExperienceZone[],
 ): CampusPlace[] => {
-  const pubs = booths.flatMap((booth): CampusPlace[] => {
-    const shape = pubShapes[booth.boothCode];
+  const spots = new Map<string, Booth[]>();
+  for (const booth of booths) {
+    const spotCode = getBoothSpotCode(booth);
+    spots.set(spotCode, [...(spots.get(spotCode) ?? []), booth]);
+  }
+
+  const pubs = [...spots].flatMap(([spotCode, spotBooths]): CampusPlace[] => {
+    const shape = pubShapes[spotCode];
     if (!shape) return [];
 
+    const ordered = [...spotBooths].sort(compareByOperatingDay);
     return [
       {
-        id: pubPlaceId(booth.boothCode),
-        label: getBoothDisplayName(booth),
+        id: pubPlaceId(spotCode),
+        label: ordered.map(getBoothDisplayName).join(" · "),
         group: "pub",
-        boothCode: booth.boothCode,
+        spotCode,
+        boothCodes: ordered.map(({ boothCode }) => boothCode),
         shape,
-        point: getPlacePoint(booth, shape),
+        point: getPlacePoint(ordered[0], shape),
       },
     ];
   });

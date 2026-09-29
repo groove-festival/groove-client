@@ -38,7 +38,7 @@ export const OrderMenuItemRow = ({
   const showsOptions = item.options.length > 0 && quantity > 0 && onToggleOption;
 
   return (
-    <li className={`flex flex-col gap-3 px-6 py-4 text-[#fcfcfc] ${className}`}>
+    <li className={`flex flex-col gap-3 px-3 py-4 text-[#fcfcfc] ${className}`}>
       <div className="flex items-center justify-between">
         <div className="flex min-w-0 flex-col gap-2 font-semibold">
           <p className="text-xl leading-6">{item.name}</p>

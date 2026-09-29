@@ -85,6 +85,15 @@ describe("BoothDetailPage", () => {
     renderDetailPage("/pub/electronics-eh");
 
     expect(await screen.findByAltText("일렉트로닉 나이트 메뉴판")).toBeInTheDocument();
+    const boothName = screen.getByRole("heading", { name: "일렉트로닉 나이트" });
+    expect(boothName.parentElement).toHaveClass("gap-1");
+    expect(boothName.nextElementSibling).toHaveTextContent("전자공학부E • 전자공학부H");
+    expect(screen.getByText("전자공학부 주막")).toHaveClass(
+      "text-base",
+      "leading-[19px]",
+      "font-medium",
+    );
+    expect(screen.getByText("전자공학부 주막").parentElement).toHaveClass("gap-3");
     expect(screen.getByRole("heading", { name: "상차림비" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "메인 메뉴" })).toBeInTheDocument();
     expect(screen.getByText("1,000원")).toBeInTheDocument();
@@ -132,11 +141,35 @@ describe("BoothDetailPage", () => {
       headers: {},
       config: { headers: new AxiosHeaders() },
     };
-    httpGet.mockRejectedValueOnce(axiosError);
+    httpGet.mockImplementation((url: string) =>
+      url === "/pubs" ? Promise.resolve(envelope([])) : Promise.reject(axiosError),
+    );
 
     renderDetailPage("/pub/not-a-booth");
 
     expect(await screen.findByText("주막 목록")).toBeInTheDocument();
+  });
+
+  it("uses 12px horizontal padding for menu rows", () => {
+    render(
+      <ul>
+        <BoothMenuItemRow
+          item={{
+            category: "MAIN",
+            description: null,
+            id: 3,
+            imageUrl: null,
+            isSoldOut: false,
+            name: "파전",
+            options: [],
+            price: 10_000,
+            separateCharge: false,
+          }}
+        />
+      </ul>,
+    );
+
+    expect(screen.getByText("파전").closest("li")).toHaveClass("px-3");
   });
 
   it("shows a retry action when PUB-2 fails", async () => {

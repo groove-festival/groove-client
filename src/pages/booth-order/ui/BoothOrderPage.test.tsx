@@ -288,7 +288,9 @@ beforeEach(() => {
     // 같은 주막의 다른 테이블도 유효하다. 배너가 테이블별로 갈리는지 보려면
     // 테이블 코드가 달라도 PUB-3이 성공해야 한다.
     return url.startsWith(`/pubs/${BOOTH_ID}/tables/`)
-      ? Promise.resolve(envelope(tableResponse()))
+      ? Promise.resolve(
+          envelope({ ...tableResponse(), tableCode: url.split("/").at(-1) }),
+        )
       : Promise.reject(apiError("PUB002", 404));
   });
 
@@ -318,12 +320,50 @@ describe("BoothOrderPage", () => {
     expect(screen.getByRole("img", { name: "GROOVE" })).toBeInTheDocument();
   });
 
+  it("shows the departments and description below the booth name", async () => {
+    await showMenuScreen();
+
+    const boothName = screen.getByRole("heading", { name: "주막 이름" });
+    expect(boothName.parentElement).toHaveClass("gap-1");
+    expect(boothName.nextElementSibling).toHaveTextContent("단대 • 학과");
+    expect(screen.getByText("부스 설명")).toHaveClass(
+      "text-base",
+      "leading-[19px]",
+      "font-medium",
+    );
+    expect(screen.getByText("부스 설명").parentElement).toHaveClass("gap-3");
+  });
+
   it("sends the PUB-3 table code and groups the menus it returns", async () => {
     await showMenuScreen();
 
     expect(httpGet).toHaveBeenCalledWith(`/pubs/${BOOTH_ID}/tables/${TABLE_CODE}`);
     expect(screen.getByRole("heading", { name: "세트 메뉴" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "음료" })).toBeInTheDocument();
+  });
+
+  it("moves a shared-spot QR to the booth and table resolved for today", async () => {
+    httpGet.mockImplementation((url: string) => {
+      if (url.includes("/orders/")) return Promise.reject(apiError("PUB005", 404));
+      if (url === "/pubs/edu-kor-home/tables/day1-table") {
+        return Promise.resolve(envelope(tableResponse()));
+      }
+      return url === `/pubs/${BOOTH_ID}/tables/${TABLE_CODE}`
+        ? Promise.resolve(envelope(tableResponse()))
+        : Promise.reject(apiError("PUB002", 404));
+    });
+
+    await showMenuScreen("/pub/edu-kor-home/day1-table");
+
+    expect(httpGet).toHaveBeenCalledWith(`/pubs/${BOOTH_ID}/tables/${TABLE_CODE}`);
+  });
+
+  it("uses 12px horizontal padding for order menu rows", async () => {
+    await showMenuScreen();
+
+    expect(
+      screen.getAllByRole("button", { name: "메뉴명 수량 늘리기" })[0].closest("li"),
+    ).toHaveClass("px-3");
   });
 
   it("starts the separate charge at one and keeps it from going below one", async () => {

@@ -307,7 +307,18 @@ export default function BoothOrderPage() {
     return <NetworkErrorFallback onReload={() => void tableQuery.refetch()} />;
   }
 
-  const { booth, isOrderable } = tableQuery.data;
+  const { booth, isOrderable, tableCode: resolvedTableCode } = tableQuery.data;
+
+  // 공유 자리의 이전 QR로 들어오면 PUB-3이 오늘 운영하는 주막/테이블을 돌려준다.
+  // URL도 정규 주소로 바꿔 장바구니와 주문 상태가 올바른 주막에 묶이게 한다.
+  if (booth.boothCode !== boothId || resolvedTableCode !== tableCode) {
+    return (
+      <Navigate
+        replace
+        to={`/pub/${encodeURIComponent(booth.boothCode)}/${encodeURIComponent(resolvedTableCode)}`}
+      />
+    );
+  }
 
   // 준비중이면 주문 UI 대신 같은 내용을 읽기 전용으로 보여주는 주막 정보
   // 페이지로 보낸다 (PUB-3 orderable=false).

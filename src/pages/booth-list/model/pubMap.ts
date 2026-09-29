@@ -1,4 +1,4 @@
-import type { Booth, BoothArea } from "@/entities/booth";
+import { type Booth, type BoothArea, getBoothSpotCode } from "@/entities/booth";
 import type { MapRatioPoint } from "@/shared/ui";
 import { getPubDesignPoint } from "@/widgets/campus-map";
 
@@ -24,20 +24,20 @@ export const getBoothsByArea = <T extends Pick<Booth, "area">>(
 // 디자인 도형에서 나온 것이라 좌표가 채워져도 자리가 튀지 않는다.
 // 도형이 없는 주막(디자인에 없는 코드)은 가리킬 자리가 없다.
 export const getPubPoint = (
-  booth: Pick<Booth, "boothCode" | "xRatio" | "yRatio">,
+  booth: Pick<Booth, "boothCode" | "spotCode" | "xRatio" | "yRatio">,
 ): MapRatioPoint | null => {
   if (booth.xRatio !== null && booth.yRatio !== null) {
     return { xRatio: booth.xRatio, yRatio: booth.yRatio };
   }
 
-  return getPubDesignPoint(booth.boothCode);
+  return getPubDesignPoint(getBoothSpotCode(booth));
 };
 
 const BOOTH_LIST_CENTER: MapRatioPoint = { xRatio: 0.5, yRatio: 0.5 };
 
 // 주막 묶음을 감싸는 범위의 한가운데. 상수로 박지 않아 좌표가 바뀌어도 따라간다.
 export const getPubsCenter = (
-  booths: readonly Pick<Booth, "boothCode" | "xRatio" | "yRatio">[],
+  booths: readonly Pick<Booth, "boothCode" | "spotCode" | "xRatio" | "yRatio">[],
 ): MapRatioPoint => {
   const points = booths
     .map(getPubPoint)
@@ -57,7 +57,10 @@ export const getPubsCenter = (
 // 구역 버튼을 눌렀을 때 지도가 갈 자리. "전체"는 주막 전부를 감싸는 한가운데다.
 // 구역에 주막이 하나도 없으면 전체 기준으로 물러난다 (API 명세 §5 PUB-1).
 export const getPubAreaCenter = (
-  booths: readonly Pick<Booth, "area" | "boothCode" | "xRatio" | "yRatio">[],
+  booths: readonly Pick<
+    Booth,
+    "area" | "boothCode" | "spotCode" | "xRatio" | "yRatio"
+  >[],
   area: PubMapArea,
 ): MapRatioPoint => {
   if (area === "all") return getPubsCenter(booths);

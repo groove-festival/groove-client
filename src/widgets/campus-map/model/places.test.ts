@@ -37,6 +37,62 @@ const zone = (xRatio: number | null, yRatio: number | null): ExperienceZone => (
 });
 
 describe("buildCampusPlaces", () => {
+  it("groups day-shift pubs into one selectable spot", () => {
+    const shared = (
+      boothCode: string,
+      name: string,
+      operatingDay: "DAY1" | "DAY2",
+    ): Booth => ({
+      ...booth(boothCode, null, null),
+      name,
+      operatingDay,
+      spotCode: "edu-kor-home",
+    });
+    const pubs = buildCampusPlaces(
+      [shared("edu-home", "가리고", "DAY2"), shared("edu-kor", "취향", "DAY1")],
+      [],
+    ).filter((place) => place.group === "pub");
+
+    expect(pubs).toHaveLength(1);
+    expect(pubs[0]).toMatchObject({
+      boothCodes: ["edu-kor", "edu-home"],
+      id: pubPlaceId("edu-kor-home"),
+      label: "취향 · 가리고",
+      spotCode: "edu-kor-home",
+    });
+    expect(pubs[0].point).toEqual(getPubDesignPoint("edu-kor-home"));
+  });
+
+  it("creates shapes for all five numbered day-shift spots", () => {
+    const sharedSpotCodes = [
+      "edu-kor-home",
+      "edu-math-bio",
+      "edu-pe-eng",
+      "edu-geo-ger",
+      "edu-chem-edu",
+    ];
+    const sharedBooths = sharedSpotCodes.flatMap((spotCode, index) => [
+      {
+        ...booth(`${spotCode}-day1`, null, null),
+        name: `${index + 1}일차`,
+        operatingDay: "DAY1" as const,
+        spotCode,
+      },
+      {
+        ...booth(`${spotCode}-day2`, null, null),
+        name: `${index + 1}일차 다음`,
+        operatingDay: "DAY2" as const,
+        spotCode,
+      },
+    ]);
+
+    const ids = buildCampusPlaces(sharedBooths, [])
+      .filter((place) => place.group === "pub")
+      .map(({ id }) => id);
+
+    expect(ids).toEqual(sharedSpotCodes.map(pubPlaceId));
+  });
+
   it("uses the API coordinates and falls back to the design shape center", () => {
     const places = buildCampusPlaces(
       [booth("nursing", 0.7221, 0.6786), booth("cse", null, null)],

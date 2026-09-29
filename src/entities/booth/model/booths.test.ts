@@ -1,4 +1,10 @@
-import { getBoothDisplayName, getBoothsByFilter, type Booth } from "./booths";
+import {
+  formatOperatingDate,
+  getBoothDepartmentParts,
+  getBoothDisplayName,
+  getBoothsByFilter,
+  type Booth,
+} from "./booths";
 
 const booths: Booth[] = [
   {
@@ -35,5 +41,41 @@ describe("booth list model", () => {
     expect(getBoothsByFilter(booths, "union")).toEqual([booths[0]]);
     expect(getBoothsByFilter(booths, "ART")).toEqual([booths[0]]);
     expect(getBoothsByFilter(booths, "NURSING")).toEqual([booths[1]]);
+  });
+});
+
+describe("day-shift booths", () => {
+  const korean: Booth = {
+    area: "PARKING",
+    boothCode: "edu-kor",
+    colleges: ["EDU"],
+    departments: ["국어교육과"],
+    description: null,
+    name: "취향",
+    operatingDate: "2026-10-01",
+    operatingDay: "DAY1",
+    operatingToday: true,
+    spotCode: "edu-kor-home",
+    spotDepartments: ["국어교육과", "가정교육과"],
+    status: "OPEN",
+    xRatio: null,
+    yRatio: null,
+  };
+
+  it("marks the department operating the shared spot", () => {
+    expect(getBoothDepartmentParts(korean)).toEqual([
+      { department: "국어교육과", isOwn: true },
+      { department: "가정교육과", isOwn: false },
+    ]);
+    expect(getBoothDepartmentParts(booths[0]).some(({ isOwn }) => isOwn)).toBe(false);
+  });
+
+  it("includes day-shift booths in the union filter", () => {
+    expect(getBoothsByFilter([korean, booths[1]], "union")).toEqual([korean]);
+  });
+
+  it("formats operating dates independently of the device time zone", () => {
+    expect(formatOperatingDate("2026-10-01")).toBe("10월 1일 (목)");
+    expect(formatOperatingDate("2026-10-02", "short")).toBe("10/2 금");
   });
 });
