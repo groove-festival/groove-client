@@ -13,6 +13,8 @@ export interface AdminStory {
   studentNumber: string;
   name: string;
   nickname: string | null;
+  // 사연과 관련된 노래("가수 - 노래 제목"). 9/29 이전에 받은 사연은 null.
+  song: string | null;
   title: string;
   content: string;
   submittedAt: string;

@@ -59,6 +59,9 @@ export function StageStoryModerationList() {
                 {story.name}
                 {story.nickname && ` (${story.nickname})`}
               </p>
+              {story.song && (
+                <p className="text-xs font-semibold text-[#00ffff]">♪ {story.song}</p>
+              )}
               <p className="text-xs whitespace-pre-wrap text-[#fcfcfc]">
                 {story.content}
               </p>
