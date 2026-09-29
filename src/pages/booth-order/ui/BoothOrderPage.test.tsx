@@ -595,7 +595,7 @@ describe("BoothOrderPage", () => {
     expect(screen.getByText("입금자명")).toBeInTheDocument();
     expect(screen.getByText("김입금")).toBeInTheDocument();
     expect(screen.getByText("계좌 번호")).toBeInTheDocument();
-    expect(screen.getByText("홍길동")).toBeInTheDocument();
+    expect(screen.getByText(/홍길동$/)).toBeInTheDocument();
     expect(screen.getByText("27,000원")).toBeInTheDocument();
     expect(scrollTo).toHaveBeenCalledWith({ top: 0, left: 0, behavior: "auto" });
   });

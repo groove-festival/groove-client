@@ -56,7 +56,7 @@ export const OrderReceipt = ({
         }`}
       >
         <h2
-          className="text-xl leading-6 font-bold text-[#1c1c1c]"
+          className="pb-2 text-center text-xl leading-6 font-bold text-[#1c1c1c]"
           id="order-receipt-title"
         >
           주문 내역
@@ -94,12 +94,14 @@ export const OrderReceipt = ({
           {isTransfer && (
             <ReceiptRow label="계좌 번호">
               <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                {account.bank} {account.accountNumber}
+                {account.accountNumber}
                 {canCopyAccountNumber && (
                   <CopyAccountNumberButton accountNumber={account.accountNumber} />
                 )}
               </span>
-              <span className="block">{account.holder}</span>
+              <span className="block">
+                {account.bank} {account.holder}
+              </span>
             </ReceiptRow>
           )}
         </dl>
