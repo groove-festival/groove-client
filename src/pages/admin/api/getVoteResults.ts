@@ -26,9 +26,12 @@ export async function getVoteResults(
   );
 }
 
-export function useVoteResults(singingVoteId: number) {
+// 투표가 열려 있는 동안(live)은 5초마다 다시 받는다. 결과를 고르는 화면에서
+// 득표가 멈춘 숫자로 보이면 판단이 어긋난다.
+export function useVoteResults(singingVoteId: number, { live = false } = {}) {
   return useQuery({
     queryKey: stageAdminQueryKeys.voteResults(singingVoteId),
     queryFn: () => getVoteResults(singingVoteId),
+    refetchInterval: live ? 5_000 : false,
   });
 }
