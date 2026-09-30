@@ -8,7 +8,12 @@ import { ConfirmDialog } from "./ConfirmDialog";
 import { StageVoteResultForm } from "./StageVoteResultForm";
 import { StageVoteResultsView } from "./StageVoteResultsView";
 
-const statusLabels = { SCHEDULED: "예정", OPEN: "오픈", CLOSED: "마감" } as const;
+// 경연 상태는 곧 관객 투표 상태다 — "열기"는 공연이 아니라 투표를 여는 것이다.
+const statusLabels = {
+  SCHEDULED: "투표 전",
+  OPEN: "투표 중",
+  CLOSED: "투표 마감",
+} as const;
 
 interface StageVoteRowProps {
   vote: Vote;
@@ -16,7 +21,7 @@ interface StageVoteRowProps {
 
 export function StageVoteRow({ vote }: StageVoteRowProps) {
   const toggleStatus = useToggleVoteStatus();
-  const [extendMinutesInput, setExtendMinutesInput] = useState("10");
+  const [extendMinutesInput, setExtendMinutesInput] = useState("5");
   // 마감됐는데 결과가 아직 없는 경기는 결과 입력을 펼쳐 둔다 — 다음으로 할 일이 그것뿐이다.
   const hasResult = vote.participants.some(
     (participant) => participant.resultRank !== null,
@@ -89,6 +94,13 @@ export function StageVoteRow({ vote }: StageVoteRowProps) {
         </p>
       )}
 
+      {isFullyFormed && vote.status === "SCHEDULED" && (
+        <p className="text-xs text-[#a2a2a2]">
+          참가팀 공연이 모두 끝나면 투표를 시작해 주세요. 누르는 순간부터 관객 투표를
+          받고, 적은 시간이 지나면 자동으로 마감돼요.
+        </p>
+      )}
+
       {isFullyFormed && vote.status !== "OPEN" && (
         <div className="flex items-center gap-2">
           <input
@@ -97,27 +109,27 @@ export function StageVoteRow({ vote }: StageVoteRowProps) {
             onChange={(event) => setExtendMinutesInput(event.target.value)}
             value={extendMinutesInput}
           />
-          <span className="text-xs text-[#a2a2a2]">분 뒤 마감</span>
+          <span className="text-xs text-[#a2a2a2]">분 동안</span>
           <button
             className="h-8 flex-1 rounded-lg bg-[#5d00ff] text-xs font-semibold text-[#fcfcfc] disabled:opacity-50"
             disabled={toggleStatus.isPending}
             onClick={onOpen}
             type="button"
           >
-            {vote.status === "CLOSED" ? "경기 재오픈" : "경기 열기"}
+            {vote.status === "CLOSED" ? "투표 다시 열기" : "투표 시작"}
           </button>
         </div>
       )}
 
       <ConfirmDialog
-        description="이미 마감된 경기예요. 다시 열면 종료 시각이 새로 설정돼요."
+        description="이미 마감된 투표예요. 다시 열면 지금부터 적은 시간 동안 다시 표를 받아요."
         onCancel={() => setConfirmReopen(false)}
         onConfirm={() => {
           setConfirmReopen(false);
           openMatch();
         }}
         open={confirmReopen}
-        title="경기를 다시 열까요?"
+        title="투표를 다시 열까요?"
       />
 
       {vote.status === "OPEN" && (
@@ -127,7 +139,7 @@ export function StageVoteRow({ vote }: StageVoteRowProps) {
           onClick={onClose}
           type="button"
         >
-          경기 마감
+          투표 마감
         </button>
       )}
 
