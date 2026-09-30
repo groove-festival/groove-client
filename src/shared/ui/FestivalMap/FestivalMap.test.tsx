@@ -9,6 +9,15 @@ const mapControls = vi.hoisted(() => ({
   zoomOut: vi.fn(),
 }));
 
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+
 vi.mock("react-zoom-pan-pinch", async () => {
   const { forwardRef, useImperativeHandle } = await import("react");
 
@@ -91,5 +100,41 @@ describe("FestivalMap", () => {
         "easeOut",
       ),
     );
+  });
+
+  it("re-applies an explicit focus request at the same coordinates", async () => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+      () =>
+        ({
+          bottom: 448,
+          height: 448,
+          left: 0,
+          right: 360,
+          top: 0,
+          width: 360,
+          x: 0,
+          y: 0,
+          toJSON: () => ({}),
+        }) as DOMRect,
+    );
+
+    const source = { alt: "축제 지도", height: 100, width: 100 };
+    const { rerender } = render(
+      <FestivalMap
+        focusRequest={{ requestId: 1, scale: 2, xRatio: 0.5, yRatio: 0.5 }}
+        source={source}
+      />,
+    );
+
+    await waitFor(() => expect(mapControls.setTransform).toHaveBeenCalledTimes(2));
+
+    rerender(
+      <FestivalMap
+        focusRequest={{ requestId: 2, scale: 2, xRatio: 0.5, yRatio: 0.5 }}
+        source={source}
+      />,
+    );
+
+    await waitFor(() => expect(mapControls.setTransform).toHaveBeenCalledTimes(3));
   });
 });
