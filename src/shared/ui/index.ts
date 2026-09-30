@@ -7,10 +7,12 @@ export {
 } from "./FallbackScreen";
 export {
   FestivalMap,
+  MAP_SCALE_VARIABLE,
   MapLabel,
   MapPin,
   MapZoomControls,
   type FestivalMapFocus,
+  type FestivalMapFocusRequest,
   type FestivalMapSource,
   type MapRatioPoint,
 } from "./FestivalMap";
