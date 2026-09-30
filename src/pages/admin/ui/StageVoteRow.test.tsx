@@ -53,8 +53,13 @@ describe("StageVoteRow", () => {
     });
     renderRow(scheduledVote);
 
-    fireEvent.change(screen.getByDisplayValue("10"), { target: { value: "15" } });
-    fireEvent.click(screen.getByRole("button", { name: "경기 열기" }));
+    // 공연이 끝난 뒤 누르는 버튼이라 그 의미를 먼저 알려준다. 기본 투표 시간은 5분이다.
+    expect(
+      screen.getByText(/참가팀 공연이 모두 끝나면 투표를 시작해 주세요/),
+    ).toBeInTheDocument();
+    expect(screen.getByText("가요제 예선 1라운드")).toBeInTheDocument();
+    fireEvent.change(screen.getByDisplayValue("5"), { target: { value: "15" } });
+    fireEvent.click(screen.getByRole("button", { name: "투표 시작" }));
 
     await waitFor(() =>
       expect(httpPatch).toHaveBeenCalledWith("/admin/stage/votes/1/status", {
@@ -73,7 +78,7 @@ describe("StageVoteRow", () => {
     expect(
       screen.getByText("앞 라운드 결과가 입력되면 참가팀이 자동으로 채워져요."),
     ).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "경기 열기" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "투표 시작" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "결과 입력" })).not.toBeInTheDocument();
   });
 
@@ -87,7 +92,7 @@ describe("StageVoteRow", () => {
       ],
     });
 
-    expect(screen.queryByRole("button", { name: "경기 열기" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "투표 시작" })).not.toBeInTheDocument();
   });
 
   it("confirms before reopening an already-closed match", async () => {
@@ -101,18 +106,18 @@ describe("StageVoteRow", () => {
       endsAt: "2026-10-02T19:10:00+09:00",
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "경기 재오픈" }));
+    fireEvent.click(screen.getByRole("button", { name: "투표 다시 열기" }));
     expect(httpPatch).not.toHaveBeenCalled();
 
     expect(
-      screen.getByRole("dialog", { name: "경기를 다시 열까요?" }),
+      screen.getByRole("dialog", { name: "투표를 다시 열까요?" }),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "확인" }));
 
     await waitFor(() =>
       expect(httpPatch).toHaveBeenCalledWith("/admin/stage/votes/1/status", {
         status: "OPEN",
-        extendMinutes: 10,
+        extendMinutes: 5,
       }),
     );
   });
@@ -132,7 +137,7 @@ describe("StageVoteRow", () => {
       endsAt: "2026-10-02T19:10:00+09:00",
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "경기 마감" }));
+    fireEvent.click(screen.getByRole("button", { name: "투표 마감" }));
 
     await waitFor(() =>
       expect(httpPatch).toHaveBeenCalledWith("/admin/stage/votes/1/status", {
@@ -191,7 +196,7 @@ describe("StageVoteRow", () => {
     );
     expect(httpPatch).not.toHaveBeenCalled();
     expect(
-      await screen.findByText("결과를 저장했어요. 이긴 팀이 다음 경기로 올라갔어요."),
+      await screen.findByText("결과를 저장했어요. 이긴 팀이 다음 경연으로 올라갔어요."),
     ).toBeInTheDocument();
   });
 

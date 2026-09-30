@@ -156,7 +156,7 @@ export function StageVoteResultForm({ vote }: StageVoteResultFormProps) {
       )}
       {submitResult.isSuccess && (
         <p className="text-xs text-[#7bffb0]">
-          결과를 저장했어요{isFinal ? "." : ". 이긴 팀이 다음 경기로 올라갔어요."}
+          결과를 저장했어요{isFinal ? "." : ". 이긴 팀이 다음 경연으로 올라갔어요."}
         </p>
       )}
 
@@ -172,7 +172,7 @@ export function StageVoteResultForm({ vote }: StageVoteResultFormProps) {
       <ConfirmDialog
         confirmLabel={isOpen ? "확정하고 마감" : "확정"}
         description={`${describeRanking(vote, selection)}${
-          isFinal ? "" : " — 1위 팀이 다음 경기로 올라가요."
+          isFinal ? "" : " — 1위 팀이 다음 경연으로 올라가요."
         }${isOpen ? " 투표도 함께 마감돼요." : ""}`}
         onCancel={() => setIsConfirmOpen(false)}
         onConfirm={() => void confirm()}

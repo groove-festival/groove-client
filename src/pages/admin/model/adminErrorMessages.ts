@@ -49,17 +49,17 @@ export function stageScheduleErrorMessage(error: unknown): string {
 
 export function toggleVoteStatusErrorMessage(error: unknown): string {
   if (error instanceof ApiError && error.code === "SING010") {
-    return "오픈하려면 종료까지 남은 시간(분)을 입력해야 해요.";
+    return "투표를 시작하려면 투표 시간(분)을 입력해야 해요.";
   }
   if (error instanceof ApiError && error.code === "SING013") {
-    return "아직 참가팀이 정해지지 않은 경기예요.";
+    return "아직 참가팀이 정해지지 않은 경연이에요.";
   }
   if (error instanceof ApiError && error.code === "SING004") {
-    return "존재하지 않는 경기예요. 목록을 새로고침해 주세요.";
+    return "존재하지 않는 경연이에요. 목록을 새로고침해 주세요.";
   }
   return (
     adminAccessErrorMessage(error) ??
-    "경기 상태 변경에 실패했어요. 잠시 후 다시 시도해 주세요."
+    "투표 상태 변경에 실패했어요. 잠시 후 다시 시도해 주세요."
   );
 }
 
@@ -68,7 +68,7 @@ export function submitVoteResultErrorMessage(error: unknown): string {
     return "참가팀 전원에게 1위부터 순위를 빠짐없이, 중복 없이 매겨야 해요.";
   }
   if (error instanceof ApiError && error.code === "SING013") {
-    return "아직 참가팀이 정해지지 않은 경기예요.";
+    return "아직 참가팀이 정해지지 않은 경연이에요.";
   }
   return (
     adminAccessErrorMessage(error) ??
