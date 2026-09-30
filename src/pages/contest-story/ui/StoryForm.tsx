@@ -81,7 +81,7 @@ export function StoryForm({
   );
 
   return (
-    <section aria-labelledby="story-form-heading" className="mx-auto mt-20 w-full px-0">
+    <section aria-labelledby="story-form-heading" className="mx-auto mt-8 w-full px-0">
       <h1 className="text-2xl font-bold" id="story-form-heading">
         사연 신청하기
       </h1>

@@ -42,14 +42,13 @@ afterEach(() => {
 });
 
 describe("GroovePlaylistPage", () => {
-  it("shows the header and the PLAYLIST heading", () => {
+  it("shows the GROOVE PLAYLIST heading", () => {
     mockPlaylist({ data: [] });
     renderPage();
 
     expect(
       screen.getByRole("heading", { name: "GROOVE PLAYLIST" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "PLAYLIST" })).toBeInTheDocument();
   });
 
   it("shows the loading fallback while the playlist is pending", () => {

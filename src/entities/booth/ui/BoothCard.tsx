@@ -5,6 +5,7 @@ import {
   getBoothDisplayName,
   type Booth,
 } from "../model/booths";
+import menuNotepadIcon from "../festival-visuals/menu-notepad-icon.svg";
 import { CollegeBadge } from "./CollegeBadge";
 
 interface BoothCardProps {
@@ -46,18 +47,21 @@ export const BoothCard = ({ booth, onSelectLocation, to }: BoothCardProps) => {
         type="button"
       >
         <BoothCollegeBadge colleges={booth.colleges} />
-        <div className="min-w-0 leading-none font-semibold">
-          <p className="truncate text-xl">{displayName}</p>
+        <div className="flex min-w-0 flex-col gap-1 font-semibold">
+          <p className="truncate text-xl leading-[normal]">{displayName}</p>
           {displayName !== departments && (
-            <p className="mt-[3px] truncate text-sm font-medium">{departments}</p>
+            <p className="truncate text-sm leading-[normal] font-medium">
+              {departments}
+            </p>
           )}
         </div>
       </button>
       <Link
         aria-label={`${displayName} 메뉴 보기`}
-        className="ml-3 flex h-8 shrink-0 items-center justify-center rounded-2xl bg-[#cfff04] px-3 text-xs font-semibold text-[#1c1c1c] transition-transform duration-150 active:scale-95 motion-reduce:transition-none"
+        className="ml-3 flex shrink-0 items-center justify-center gap-1 rounded-xl border border-[#fcfcfc] bg-[#a2a2a2] px-2 py-3 text-xs leading-4 font-medium text-[#fcfcfc] transition-transform duration-150 active:scale-95 motion-reduce:transition-none"
         to={to}
       >
+        <img alt="" className="size-4" src={menuNotepadIcon} />
         메뉴 보기
       </Link>
     </div>
