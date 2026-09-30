@@ -17,7 +17,13 @@ interface StageVoteRowProps {
 export function StageVoteRow({ vote }: StageVoteRowProps) {
   const toggleStatus = useToggleVoteStatus();
   const [extendMinutesInput, setExtendMinutesInput] = useState("10");
-  const [showResultForm, setShowResultForm] = useState(false);
+  // 마감됐는데 결과가 아직 없는 경기는 결과 입력을 펼쳐 둔다 — 다음으로 할 일이 그것뿐이다.
+  const hasResult = vote.participants.some(
+    (participant) => participant.resultRank !== null,
+  );
+  const [showResultForm, setShowResultForm] = useState(
+    vote.status === "CLOSED" && !hasResult,
+  );
   const [showResults, setShowResults] = useState(false);
   const [confirmReopen, setConfirmReopen] = useState(false);
 
@@ -65,6 +71,17 @@ export function StageVoteRow({ vote }: StageVoteRowProps) {
             "참가팀 미정"}
         </p>
       </div>
+
+      {hasResult && (
+        <p className="text-xs font-semibold text-[#00ffff]">
+          결과:{" "}
+          {[...vote.participants]
+            .filter((participant) => participant.resultRank !== null)
+            .sort((left, right) => (left.resultRank ?? 0) - (right.resultRank ?? 0))
+            .map((participant) => `${participant.resultRank}위 ${participant.name}`)
+            .join(" · ")}
+        </p>
+      )}
 
       {!isFullyFormed && (
         <p className="text-xs text-[#a2a2a2]">
@@ -127,7 +144,7 @@ export function StageVoteRow({ vote }: StageVoteRowProps) {
             onClick={() => setShowResultForm((prev) => !prev)}
             type="button"
           >
-            {showResultForm ? "결과 입력 닫기" : "결과 입력"}
+            {showResultForm ? "결과 입력 닫기" : hasResult ? "결과 수정" : "결과 입력"}
           </button>
           <button
             className="h-8 flex-1 rounded-lg border border-[#5d5d5d] text-xs font-semibold text-[#fcfcfc]"
