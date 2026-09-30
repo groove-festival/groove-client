@@ -101,7 +101,7 @@ describe("SongContestPage", () => {
       data: [
         {
           singingVoteId: 1,
-          title: "1라운드 1경기",
+          title: "1라운드 1경연",
           round: "ROUND_1",
           roundLabel: "1라운드",
           roundKeyword: "자유로움",
