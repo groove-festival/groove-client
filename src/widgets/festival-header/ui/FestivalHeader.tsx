@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 
-import headerHome from "../festival-visuals/header-home.png";
+import headerHome from "../festival-visuals/header-home.webp";
 import menuIcon from "../festival-visuals/menu.svg";
 import { useHeaderVisibility } from "../model/useHeaderVisibility";
 import { FestivalMenu } from "./FestivalMenu";

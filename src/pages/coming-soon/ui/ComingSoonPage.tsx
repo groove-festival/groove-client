@@ -1,4 +1,4 @@
-import hourglass from "../festival-visuals/hourglass.png";
+import hourglass from "../festival-visuals/hourglass.webp";
 
 export default function ComingSoonPage() {
   return (

@@ -1,8 +1,8 @@
 import chevronDown from "../festival-visuals/chevron-down.svg";
 import contourBottom from "../festival-visuals/contour-bottom.svg";
 import contourTop from "../festival-visuals/contour-top.svg";
-import grooveLogo from "../festival-visuals/groove-logo.png";
-import heroIllustration from "../festival-visuals/hero-illustration.png";
+import grooveLogo from "../festival-visuals/groove-logo.webp";
+import heroIllustration from "../festival-visuals/hero-illustration.webp";
 import sparkle from "../festival-visuals/sparkle.svg";
 
 // 세 상태(신청 전/중/후) 화면이 공유하는 상단 히어로와 중간 다크 섹션.

@@ -1,4 +1,4 @@
-import locationIcon from "../festival-visuals/location-icon.png";
+import locationIcon from "../festival-visuals/location-icon.webp";
 
 interface VenueOutOfRangeNoticeProps {
   onRetry: () => void;

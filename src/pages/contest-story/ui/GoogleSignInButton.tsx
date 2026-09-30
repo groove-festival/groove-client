@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { loadGoogleIdentityScript } from "@/entities/auth";
 import { appConfig } from "@/shared/config";
-
-import googleLogo from "../festival-visuals/google-logo.png";
+import { googleLogoIcon } from "@/shared/ui";
 
 interface GoogleSignInButtonProps {
   disabled?: boolean;
@@ -106,7 +105,7 @@ export const GoogleSignInButton = ({
           className={`flex h-14 w-full items-center justify-center gap-2.5 rounded-[12px] bg-[#ff0080] transition-transform duration-150 ease-out motion-reduce:transition-none ${isPressed ? "scale-[0.97]" : ""}`}
         >
           <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#fcfcfc] p-1">
-            <img alt="" className="size-full" src={googleLogo} />
+            <img alt="" className="size-full" src={googleLogoIcon} />
           </span>
           <span className="text-base font-semibold text-[#fcfcfc]">
             Google로 계속하기

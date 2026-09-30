@@ -1,8 +1,8 @@
-import zoneGroove from "../festival-visuals/zone-groove.png";
-import zoneLove from "../festival-visuals/zone-love.png";
-import zoneMove from "../festival-visuals/zone-move.png";
-import zoneProve from "../festival-visuals/zone-prove.png";
-import zoneRecover from "../festival-visuals/zone-recover.png";
+import zoneGroove from "../festival-visuals/zone-groove.webp";
+import zoneLove from "../festival-visuals/zone-love.webp";
+import zoneMove from "../festival-visuals/zone-move.webp";
+import zoneProve from "../festival-visuals/zone-prove.webp";
+import zoneRecover from "../festival-visuals/zone-recover.webp";
 import { useZoneCarousel } from "../model/useZoneCarousel";
 import { type ExperienceZone, type ZoneType } from "../model/zones";
 
