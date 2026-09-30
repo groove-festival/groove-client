@@ -435,10 +435,16 @@ export default function ContestStoryPage() {
 
       {storyPhase === "OPEN" && effectiveView === "list" && (
         <section className="mx-auto w-full pt-10">
+          {/* 헤더(80px) 아래로 120px 떨어뜨린다 (section pt-10 + mt-20). */}
+          <section aria-labelledby="story-event-heading" className="mt-20 text-center">
+            <h1 className="text-xl font-semibold" id="story-event-heading">
+              GROOVE 사연 모집 이벤트
+            </h1>
+          </section>
           {SHOW_STORY_TITLE_CLOUD ? (
             <>
               {isStoryPreview && (
-                <p className="text-xs text-[#cfff04]">예시 미리보기</p>
+                <p className="mt-8 text-xs text-[#cfff04]">예시 미리보기</p>
               )}
               <PublicStoryTitleCloud
                 isError={!isStoryPreview && stories.isError}
@@ -449,8 +455,7 @@ export default function ContestStoryPage() {
             </>
           ) : (
             // 메인 사연신청 바로가기와 같은 스프라이트 크롭을 크게 키운다.
-            // 헤더(80px) 아래로 120px 떨어뜨린다 (section pt-10 + mt-20).
-            <div className="mt-20 flex justify-center">
+            <div className="mt-10 flex justify-center">
               <span
                 aria-hidden="true"
                 className="relative h-[221px] w-60 shrink-0 overflow-hidden"
@@ -463,14 +468,7 @@ export default function ContestStoryPage() {
               </span>
             </div>
           )}
-          <div
-            className={`${SHOW_STORY_TITLE_CLOUD ? "mt-8" : "mt-[120px]"} flex flex-col gap-6`}
-          >
-            <section aria-labelledby="story-event-heading" className="text-center">
-              <h1 className="text-xl font-semibold" id="story-event-heading">
-                GROOVE 사연 모집 이벤트
-              </h1>
-            </section>
+          <div className="mt-10">
             <button
               className="h-14 w-full rounded-2xl bg-[#ff0080] text-base font-semibold"
               onClick={() => {
@@ -482,7 +480,7 @@ export default function ContestStoryPage() {
               }}
               type="button"
             >
-              신청하기
+              GROOVE 사연 신청하기
             </button>
           </div>
         </section>
@@ -503,13 +501,15 @@ export default function ContestStoryPage() {
         >
           <img
             alt=""
-            className="h-[261px] w-[248px] object-contain"
+            className="h-[235px] w-[223px] object-contain"
             src={letterIllustration}
           />
-          <h1 className="text-2xl font-semibold">사연이 접수되었어요</h1>
-          <p className="text-base font-medium">
-            다시 제출하면 기존 사연이 새 내용으로 갱신돼요
-          </p>
+          <div className="flex flex-col items-center gap-3">
+            <h1 className="text-2xl font-semibold">사연이 접수되었어요</h1>
+            <p className="text-base font-medium">
+              다시 제출하면 기존 사연이 새 내용으로 갱신돼요
+            </p>
+          </div>
           <button
             className="text-sm underline"
             onClick={() => setView("list")}

@@ -169,7 +169,9 @@ describe("ContestStoryPage", () => {
     renderPage("/story?phase=closed");
 
     expect(screen.getByText("사연 모집이 끝났어요")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "신청하기" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "GROOVE 사연 신청하기" }),
+    ).not.toBeInTheDocument();
   });
 
   // 사연 제목 클라우드 임시 숨김(SHOW_STORY_TITLE_CLOUD) 동안 건너뛴다.
@@ -251,7 +253,7 @@ describe("ContestStoryPage", () => {
       reset: googleLoginReset,
     } as unknown as ReturnType<typeof useLoginWithGoogle>);
     renderPage("/story?phase=open");
-    fireEvent.click(screen.getByRole("button", { name: "신청하기" }));
+    fireEvent.click(screen.getByRole("button", { name: "GROOVE 사연 신청하기" }));
 
     const dialog = screen.getByRole("dialog", { name: "사연 신청 안내 사항" });
     expect(dialog).toHaveClass("bg-[rgba(252,252,252,0.5)]", "backdrop-blur-[24px]");
@@ -293,7 +295,7 @@ describe("ContestStoryPage", () => {
     } as unknown as ReturnType<typeof useLoginWithGoogle>);
 
     renderPage("/story?phase=open");
-    fireEvent.click(screen.getByRole("button", { name: "신청하기" }));
+    fireEvent.click(screen.getByRole("button", { name: "GROOVE 사연 신청하기" }));
 
     expect(
       screen.getByText("Google 로그인에 실패했어요. 잠시 후 다시 시도해 주세요."),
@@ -303,7 +305,7 @@ describe("ContestStoryPage", () => {
   it("validates the form and submits the story API body", async () => {
     vi.spyOn(window, "scrollTo").mockImplementation(() => {});
     renderPage("/story?phase=open");
-    fireEvent.click(screen.getByRole("button", { name: "신청하기" }));
+    fireEvent.click(screen.getByRole("button", { name: "GROOVE 사연 신청하기" }));
     fireEvent.click(screen.getByRole("button", { name: "사연 작성하기" }));
     const submitButton = screen.getByRole("button", { name: "사연 접수하기" });
     const termsCheckbox = screen.getByRole("checkbox", {
