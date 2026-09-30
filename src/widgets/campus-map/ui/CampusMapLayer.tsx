@@ -15,6 +15,8 @@ import {
   type MapShape,
   type PlaceGroup,
 } from "../model/places";
+import type { CampusLocationProjection } from "../model/georeference";
+import { CampusLocationLayer } from "./CampusLocationLayer";
 
 // 켤 때 배경 회색 도형 위에 얹는 색. 가요제 무대는 Figma 56:3802 실측,
 // 랜드마크는 디자인 토큰 인디고다.
@@ -84,6 +86,8 @@ export interface CampusMapLayerProps {
   // 꺼진 주막에도 번호를 남긴다. 주막 지도는 회색 주막도 번호로 찾아 고르므로 켠다.
   // 끄면 번호는 켜진 주막에만 보인다.
   keepDimmedPubNumbers?: boolean;
+  // GPS 위치는 모든 캠퍼스 지도에서 같은 좌표계 위에 그린다.
+  location?: CampusLocationProjection | null;
 }
 
 const defaultActionLabel = (place: CampusPlace) => `${place.label} 위치 보기`;
@@ -104,6 +108,7 @@ export const CampusMapLayer = ({
   getActionLabel = defaultActionLabel,
   labelVisibleScale,
   keepDimmedPubNumbers = false,
+  location = null,
 }: CampusMapLayerProps) => {
   const pressPoint = useRef<{ x: number; y: number } | null>(null);
   const visiblePlaces = places.filter(isVisible);
@@ -269,6 +274,10 @@ export const CampusMapLayer = ({
       {/* 고른 장소의 핀은 지명보다 위에 그린다. */}
       {selectedPlace && (
         <MapPin label={selectedPlace.label} point={selectedPlace.point} />
+      )}
+
+      {location && location.boundaryStatus !== "outside" && (
+        <CampusLocationLayer location={location} />
       )}
     </div>
   );
