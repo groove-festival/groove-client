@@ -25,15 +25,15 @@ const getAccuracyRadius = (location: CampusLocationProjection) => {
   );
 };
 
-const getRadarSectorPath = (centerX: number, centerY: number, radius: number) => {
+const getRadarSectorPath = (radius: number) => {
   const startAngle = (-70 * Math.PI) / 180;
   const endAngle = (-8 * Math.PI) / 180;
-  const startX = centerX + Math.cos(startAngle) * radius;
-  const startY = centerY + Math.sin(startAngle) * radius;
-  const endX = centerX + Math.cos(endAngle) * radius;
-  const endY = centerY + Math.sin(endAngle) * radius;
+  const startX = Math.cos(startAngle) * radius;
+  const startY = Math.sin(startAngle) * radius;
+  const endX = Math.cos(endAngle) * radius;
+  const endY = Math.sin(endAngle) * radius;
 
-  return `M ${centerX} ${centerY} L ${startX} ${startY} A ${radius} ${radius} 0 0 1 ${endX} ${endY} Z`;
+  return `M 0 0 L ${startX} ${startY} A ${radius} ${radius} 0 0 1 ${endX} ${endY} Z`;
 };
 
 export const CampusLocationLayer = ({ location }: CampusLocationLayerProps) => {
@@ -49,39 +49,42 @@ export const CampusLocationLayer = ({ location }: CampusLocationLayerProps) => {
         className="absolute inset-0 size-full overflow-visible"
         viewBox={CAMPUS_MAP_VIEW_BOX}
       >
-        <circle
-          cx={centerX}
-          cy={centerY}
-          data-testid="campus-location-accuracy"
-          fill="rgba(22, 102, 240, 0.14)"
-          r={accuracyRadius}
-        />
-        {showRadar && (
-          <g data-testid="campus-location-radar">
-            {[0.34, 0.67].map((scale) => (
-              <circle
-                cx={centerX}
-                cy={centerY}
-                fill="none"
-                key={scale}
-                r={accuracyRadius * scale}
-                stroke="rgba(142, 185, 255, 0.22)"
-                strokeWidth={1}
-                vectorEffect="non-scaling-stroke"
+        <g
+          className="transition-transform duration-900 ease-linear motion-reduce:transition-none"
+          style={{ transform: `translate(${centerX}px, ${centerY}px)` }}
+        >
+          <circle
+            className="transition-[r] duration-900 ease-linear motion-reduce:transition-none"
+            data-testid="campus-location-accuracy"
+            fill="rgba(22, 102, 240, 0.14)"
+            r={accuracyRadius}
+          />
+          {showRadar && (
+            <g data-testid="campus-location-radar">
+              {[0.34, 0.67].map((scale) => (
+                <circle
+                  className="transition-[r] duration-900 ease-linear motion-reduce:transition-none"
+                  fill="none"
+                  key={scale}
+                  r={accuracyRadius * scale}
+                  stroke="rgba(142, 185, 255, 0.22)"
+                  strokeWidth={1}
+                  vectorEffect="non-scaling-stroke"
+                />
+              ))}
+              <path
+                className="animate-[spin_5s_linear_infinite] motion-reduce:animate-none"
+                d={getRadarSectorPath(accuracyRadius)}
+                fill="rgba(117, 172, 255, 0.1)"
+                style={{ transformOrigin: "0 0" }}
               />
-            ))}
-            <path
-              className="animate-[spin_5s_linear_infinite] motion-reduce:animate-none"
-              d={getRadarSectorPath(centerX, centerY, accuracyRadius)}
-              fill="rgba(117, 172, 255, 0.1)"
-              style={{ transformOrigin: `${centerX}px ${centerY}px` }}
-            />
-          </g>
-        )}
+            </g>
+          )}
+        </g>
       </svg>
 
       <div
-        className="absolute size-0 origin-center"
+        className="absolute size-0 origin-center transition-[left,top] duration-900 ease-linear motion-reduce:transition-none"
         style={
           {
             left: `${location.point.xRatio * 100}%`,

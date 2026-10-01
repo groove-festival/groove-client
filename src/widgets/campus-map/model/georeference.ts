@@ -3,6 +3,7 @@ import type { MapRatioPoint } from "@/shared/ui";
 import {
   CAMPUS_BOUNDARY_POINTS,
   CAMPUS_GEOREFERENCE,
+  CAMPUS_GEOREFERENCE_CALIBRATION_POINTS,
 } from "../config/campusGeoreference";
 import { CAMPUS_MAP_SIZE } from "./places";
 import type { CampusMapView } from "./view";
@@ -59,7 +60,7 @@ const toLocalPoint = (latitude: number, longitude: number): LocalPoint => {
   };
 };
 
-const localToMapPoint = ({ east, north }: LocalPoint): MapPoint => {
+const affineLocalToMapPoint = ({ east, north }: LocalPoint): MapPoint => {
   const transform = CAMPUS_GEOREFERENCE.transform;
 
   return {
@@ -68,7 +69,46 @@ const localToMapPoint = ({ east, north }: LocalPoint): MapPoint => {
   };
 };
 
-const mapToLocalPoint = ({ x, y }: MapPoint): LocalPoint => {
+const calibrationControls = CAMPUS_GEOREFERENCE_CALIBRATION_POINTS.map(
+  ({ latitude, longitude, mapX, mapY, weight }) => {
+    const localPoint = toLocalPoint(latitude, longitude);
+    const affinePoint = affineLocalToMapPoint(localPoint);
+
+    return {
+      ...localPoint,
+      deltaX: mapX - affinePoint.x,
+      deltaY: mapY - affinePoint.y,
+      weight,
+    };
+  },
+);
+
+const localToMapPoint = (point: LocalPoint): MapPoint => {
+  const affinePoint = affineLocalToMapPoint(point);
+  const { blend, softeningMeters } = CAMPUS_GEOREFERENCE.localCorrection;
+  let weightSum = 0;
+  let correctionX = 0;
+  let correctionY = 0;
+
+  for (const control of calibrationControls) {
+    const distanceMeters = Math.hypot(
+      point.east - control.east,
+      point.north - control.north,
+    );
+    const distanceWeight = control.weight / (distanceMeters + softeningMeters);
+
+    weightSum += distanceWeight;
+    correctionX += distanceWeight * control.deltaX;
+    correctionY += distanceWeight * control.deltaY;
+  }
+
+  return {
+    x: affinePoint.x + (correctionX / weightSum) * blend,
+    y: affinePoint.y + (correctionY / weightSum) * blend,
+  };
+};
+
+const affineMapToLocalPoint = ({ x, y }: MapPoint): LocalPoint => {
   const transform = CAMPUS_GEOREFERENCE.transform;
   const relativeX = x - transform.offsetX;
   const relativeY = y - transform.offsetY;
@@ -81,6 +121,34 @@ const mapToLocalPoint = ({ x, y }: MapPoint): LocalPoint => {
     north:
       (-transform.eastToY * relativeX + transform.eastToX * relativeY) / determinant,
   };
+};
+
+const mapDeltaToLocalPoint = ({ x, y }: MapPoint): LocalPoint => {
+  const transform = CAMPUS_GEOREFERENCE.transform;
+  const determinant =
+    transform.eastToX * transform.northToY - transform.northToX * transform.eastToY;
+
+  return {
+    east: (transform.northToY * x - transform.northToX * y) / determinant,
+    north: (-transform.eastToY * x + transform.eastToX * y) / determinant,
+  };
+};
+
+const mapToLocalPoint = (mapPoint: MapPoint): LocalPoint => {
+  const localPoint = affineMapToLocalPoint(mapPoint);
+
+  for (let iteration = 0; iteration < 6; iteration += 1) {
+    const projectedPoint = localToMapPoint(localPoint);
+    const adjustment = mapDeltaToLocalPoint({
+      x: mapPoint.x - projectedPoint.x,
+      y: mapPoint.y - projectedPoint.y,
+    });
+
+    localPoint.east += adjustment.east;
+    localPoint.north += adjustment.north;
+  }
+
+  return localPoint;
 };
 
 const toRatioPoint = ({ x, y }: MapPoint): MapRatioPoint => ({

@@ -21,7 +21,6 @@ describe("useCampusLocation", () => {
     const { result } = renderHook(() => useCampusLocation());
 
     expect(result.current.status).toBe("idle");
-    expect(result.current.sampleNumber).toBe(0);
     expect(watchPosition).not.toHaveBeenCalled();
 
     act(() => result.current.start());
@@ -47,26 +46,23 @@ describe("useCampusLocation", () => {
     );
 
     expect(result.current.reading?.latitude).toBe(35.8886);
-    expect(result.current.sampleNumber).toBe(1);
-
     act(() =>
       onSuccess({
-        coords: { accuracy: 8, latitude: 35.8887, longitude: 128.6122 },
-        timestamp: 20,
+        coords: { accuracy: 8, latitude: 35.88862, longitude: 128.61212 },
+        timestamp: 1_010,
       } as GeolocationPosition),
     );
 
     expect(result.current.status).toBe("tracking");
-    expect(result.current.reading).toMatchObject({
-      accuracy: 8,
-      latitude: 35.8887,
-      longitude: 128.6122,
-      timestamp: 20,
-    });
-    expect(result.current.sampleNumber).toBe(2);
+    expect(result.current.reading?.accuracy).toBe(8);
+    expect(result.current.reading?.latitude).toBeGreaterThan(35.8886);
+    expect(result.current.reading?.latitude).toBeLessThan(35.88862);
+    expect(result.current.reading?.longitude).toBeGreaterThan(128.6121);
+    expect(result.current.reading?.longitude).toBeLessThan(128.61212);
+    expect(result.current.reading?.timestamp).toBe(1_010);
   });
 
-  it("reports permission denial separately and clears the measurement log", () => {
+  it("reports permission denial separately and clears the current reading", () => {
     let onSuccess: PositionCallback = () => {};
     let onError: PositionErrorCallback = () => {};
     watchPosition.mockImplementation((success, error) => {
@@ -83,13 +79,10 @@ describe("useCampusLocation", () => {
         timestamp: 10,
       } as GeolocationPosition),
     );
-    expect(result.current.sampleNumber).toBe(1);
-
     act(() => onError({ code: 1 } as GeolocationPositionError));
 
     expect(result.current.status).toBe("permission-denied");
     expect(result.current.reading).toBeNull();
-    expect(result.current.sampleNumber).toBe(0);
     expect(clearWatch).toHaveBeenCalledWith(9);
   });
 
