@@ -18,6 +18,7 @@ import { useContestLocationGate } from "../model/useContestLocationGate";
 import { GoogleSignInGuide } from "./GoogleSignInGuide";
 import { VoteCompleteDialog } from "./VoteCompleteDialog";
 import { VoteConfirmDialog } from "./VoteConfirmDialog";
+import { VoteLocationFindingOverlay } from "./VoteLocationFindingOverlay";
 import { VoteLocationNotice } from "./VoteLocationNotice";
 import { VoteMatchPanel } from "./VoteMatchPanel";
 
@@ -182,9 +183,7 @@ export function VoteCastingPanel() {
               }
             />
           ) : location.status === "checking" ? (
-            <p className="py-8 text-center text-sm text-[#a2a2a2]">
-              위치를 확인하는 중…
-            </p>
+            <div aria-hidden="true" className="h-[260px] w-full" />
           ) : location.status !== "in-range" ? (
             <VoteLocationNotice
               onRetry={location.retry}
@@ -263,6 +262,10 @@ export function VoteCastingPanel() {
           participantName={completedParticipantName}
         />
       )}
+
+      {tab === "cast" &&
+        restrictedInAppBrowser === null &&
+        location.status === "checking" && <VoteLocationFindingOverlay />}
 
       {showGoogleGuide && (
         <GoogleSignInGuide

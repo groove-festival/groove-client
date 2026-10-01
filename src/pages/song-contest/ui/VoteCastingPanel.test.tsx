@@ -105,6 +105,32 @@ afterEach(() => {
 });
 
 describe("VoteCastingPanel", () => {
+  it("covers the screen while checking the voting location", () => {
+    useContestLocationGateMock.mockReturnValue({
+      status: "checking",
+      retry: vi.fn(),
+    });
+
+    const view = renderPanel();
+
+    const overlay = screen.getByRole("status", {
+      name: "현재 위치를 찾고 있어요",
+    });
+    expect(overlay).toBeInTheDocument();
+    expect(overlay).toHaveTextContent("투표 가능한 장소인지 확인하고 있어요");
+    expect(overlay).toHaveTextContent("잠시만 기다려주세요");
+
+    useContestLocationGateMock.mockReturnValue({
+      status: "in-range",
+      retry: vi.fn(),
+    });
+    view.rerender(<VoteCastingPanel />);
+
+    expect(
+      screen.queryByRole("status", { name: "현재 위치를 찾고 있어요" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("shows the venue notice and retries when out of range", () => {
     const retry = vi.fn();
     useContestLocationGateMock.mockReturnValue({ status: "out-of-range", retry });
