@@ -7,7 +7,6 @@ interface CampusLocationControlProps {
   status: CampusLocationStatus;
   boundaryStatus: CampusBoundaryStatus | null;
   onClick: () => void;
-  temporaryMessage?: string | null;
 }
 
 const getStatusMessage = (
@@ -25,21 +24,15 @@ export const CampusLocationControl = ({
   boundaryStatus,
   onClick,
   status,
-  temporaryMessage = null,
 }: CampusLocationControlProps) => {
-  const message = temporaryMessage ?? getStatusMessage(status, boundaryStatus);
-  const hasTemporaryMessage = temporaryMessage !== null;
+  const message = getStatusMessage(status, boundaryStatus);
 
   return (
     <div className="absolute bottom-3 left-3 z-30 flex flex-col items-start gap-2">
       {message && (
         <span
           aria-live="polite"
-          className={`festival-glass px-3 py-2 text-sm leading-5 font-semibold whitespace-pre-line text-[#f4f7fb] backdrop-blur-[40px] ${
-            hasTemporaryMessage
-              ? "max-w-[280px] rounded-2xl"
-              : "max-w-[220px] rounded-full"
-          }`}
+          className="festival-glass max-w-[220px] rounded-full px-3 py-2 text-sm leading-5 font-semibold whitespace-pre-line text-[#f4f7fb] backdrop-blur-[40px]"
           role="status"
         >
           {message}
