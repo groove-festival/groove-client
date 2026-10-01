@@ -1,9 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { type BoothMenuItem, type BoothOrderDetail } from "@/entities/booth";
 
-import { createOrder } from "../api/createOrder";
+import { ApiError } from "@/shared/api";
+
+import { createIdempotencyKey, createOrder } from "../api/createOrder";
 import { type OrderRequestTarget, useOrder } from "../api/getOrder";
 import { orderQueryKeys } from "../api/queryKeys";
 import { updateDepositorName } from "../api/updateDepositorName";
@@ -45,6 +47,11 @@ export const useBoothOrder = (booth: BoothOrderDetail, tableCode: string) => {
   );
   const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
   const [errorToast, setErrorToast] = useState<ToastState | null>(null);
+  // 한 번의 주문 시도에 쓰는 Idempotency-Key. 주문하기를 연달아 누르거나 응답이
+  // 오기 전에 다시 눌러도 같은 키로 가므로 서버가 주문을 하나만 만든다(§1.6).
+  // 주문이 접수되거나 서버가 거절하면 비워 다음 주문은 새 키를 쓴다. 응답을 못
+  // 받은 실패(네트워크)는 서버에 주문이 생겼을 수 있어 키를 그대로 두고 재시도한다.
+  const pendingOrderKey = useRef<string | null>(null);
 
   const target: OrderRequestTarget | null = orderRef
     ? { boothCode: booth.boothCode, tableCode, ...orderRef }
@@ -106,19 +113,30 @@ export const useBoothOrder = (booth: BoothOrderDetail, tableCode: string) => {
   const cartLines = buildOrderLines(booth, cart, selectedOptions);
 
   const placeOrderMutation = useMutation({
-    mutationFn: () =>
+    mutationFn: (idempotencyKey: string) =>
       createOrder({
         boothCode: booth.boothCode,
+        idempotencyKey,
         items: toCreateOrderItems(cartLines),
         tableCode,
       }),
     onSuccess: ({ order: createdOrder, orderToken }) => {
+      pendingOrderKey.current = null;
       cacheOrder(createdOrder);
       // 새 주문은 아직 입금자명을 내지 않은 이전 주문을 대신한다.
       saveOrderRef({ orderId: createdOrder.id, orderToken });
       setIsTransferDialogOpen(true);
+      // 담은 메뉴는 이 주문으로 넘어갔다. 장바구니를 남겨 두면 이체 안내를 닫았을
+      // 때 같은 메뉴와 주문하기 버튼이 그대로 보여, 한 번 더 눌러 같은 주문이
+      // 두 건 들어간다(10/1 운영에서 발생).
+      resetCart();
     },
-    onError: handleMutationError,
+    onError: (error) => {
+      if (!(error instanceof ApiError) || error.status !== undefined) {
+        pendingOrderKey.current = null;
+      }
+      handleMutationError(error);
+    },
   });
 
   const depositorNameMutation = useMutation({
@@ -160,8 +178,11 @@ export const useBoothOrder = (booth: BoothOrderDetail, tableCode: string) => {
       setSelectedOptions((current) => toggleOption(current, item, optionId)),
     dismissErrorToast: () => setErrorToast(null),
     placeOrder: () => {
+      // 응답을 기다리는 동안 다시 누른 것은 무시한다.
+      if (placeOrderMutation.isPending) return;
       setErrorToast(null);
-      placeOrderMutation.mutate();
+      pendingOrderKey.current ??= createIdempotencyKey();
+      placeOrderMutation.mutate(pendingOrderKey.current);
     },
     reopenIncompleteOrder: () => setIsTransferDialogOpen(true),
     closeTransferDialog: () => setIsTransferDialogOpen(false),

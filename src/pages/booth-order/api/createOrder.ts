@@ -46,7 +46,7 @@ const randomUuidV4 = () => {
   ].join("-");
 };
 
-const createIdempotencyKey = () =>
+export const createIdempotencyKey = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : randomUuidV4();
