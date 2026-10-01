@@ -3,6 +3,11 @@ import { useEffect, useState } from "react";
 
 import { isGoogleParticipant, useAuthMe, useLoginWithGoogle } from "@/entities/auth";
 import { contestQueryKeys, type Vote, useVotes } from "@/entities/contest";
+import {
+  getIsSafariBrowser,
+  getRestrictedInAppBrowser,
+} from "@/shared/lib/in-app-browser";
+import { InAppBrowserNotice } from "@/shared/ui";
 
 import { useMyBallots } from "../api/getMyBallots";
 import { songContestQueryKeys } from "../api/queryKeys";
@@ -11,9 +16,10 @@ import { formatRemainingMinutes } from "../model/remainingMinutes";
 import { submitBallotErrorMessage } from "../model/submitBallotErrorMessage";
 import { useContestLocationGate } from "../model/useContestLocationGate";
 import { GoogleSignInGuide } from "./GoogleSignInGuide";
-import { VenueOutOfRangeNotice } from "./VenueOutOfRangeNotice";
 import { VoteCompleteDialog } from "./VoteCompleteDialog";
 import { VoteConfirmDialog } from "./VoteConfirmDialog";
+import { VoteLocationFindingOverlay } from "./VoteLocationFindingOverlay";
+import { VoteLocationNotice } from "./VoteLocationNotice";
 import { VoteMatchPanel } from "./VoteMatchPanel";
 
 type CastingTab = "cast" | "mine";
@@ -33,9 +39,11 @@ export function VoteCastingPanel() {
   const [pendingSelection, setPendingSelection] = useState<
     { vote: Vote; voteParticipantId: number } | undefined
   >();
+  const [restrictedInAppBrowser] = useState(() => getRestrictedInAppBrowser());
+  const [safariBrowser] = useState(getIsSafariBrowser);
 
   const queryClient = useQueryClient();
-  const location = useContestLocationGate();
+  const location = useContestLocationGate(restrictedInAppBrowser === null);
   const auth = useAuthMe();
   // loggedIn만 보면 관리자(STAGE_ADMIN 등) 세션도 로그인된 것으로 잘못
   // 인식한다 — 투표에 필요한 건 구글 참여자(role: USER) 세션이다.
@@ -162,12 +170,26 @@ export function VoteCastingPanel() {
               *투표 확정 후에는 해당 경연을 중복 투표하거나 재투표할 수 없습니다
             </p>
           </div>
-          {location.status === "checking" ? (
-            <p className="py-8 text-center text-sm text-[#a2a2a2]">
-              위치를 확인하는 중…
-            </p>
+          {restrictedInAppBrowser ? (
+            <InAppBrowserNotice
+              browserInstruction="크롬, 사파리등 브라우저로 접속해주세요."
+              showIosSafariLocationGuide
+              unavailableMessage={
+                <>
+                  <span className="block">인스타그램, 에브리타임 인앱에서는</span>
+                  <span className="block">GPS와 Google 로그인을 사용할 수 없어</span>
+                  <span className="block">투표할 수 없어요.</span>
+                </>
+              }
+            />
+          ) : location.status === "checking" ? (
+            <div aria-hidden="true" className="h-[260px] w-full" />
           ) : location.status !== "in-range" ? (
-            <VenueOutOfRangeNotice onRetry={location.retry} />
+            <VoteLocationNotice
+              onRetry={location.retry}
+              showSafariPermissionGuide={safariBrowser}
+              status={location.status}
+            />
           ) : castableVotes.length === 0 ? (
             <p className="py-8 text-center text-sm text-[#a2a2a2]">
               지금 진행 중인 투표가 없어요
@@ -240,6 +262,10 @@ export function VoteCastingPanel() {
           participantName={completedParticipantName}
         />
       )}
+
+      {tab === "cast" &&
+        restrictedInAppBrowser === null &&
+        location.status === "checking" && <VoteLocationFindingOverlay />}
 
       {showGoogleGuide && (
         <GoogleSignInGuide

@@ -26,9 +26,16 @@ vi.mock("@/shared/ui", async (importOriginal) => {
 
 const watchPosition = vi.fn();
 const clearWatch = vi.fn();
+const REGULAR_BROWSER_USER_AGENT = "Mozilla/5.0 Chrome/140.0.0.0 Mobile Safari/537.36";
+const SAFARI_USER_AGENT =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 Version/18.6 Mobile/15E148 Safari/604.1";
 
 beforeEach(() => {
   festivalMapSpy.props = null;
+  Object.defineProperty(navigator, "userAgent", {
+    configurable: true,
+    value: REGULAR_BROWSER_USER_AGENT,
+  });
   Object.defineProperty(navigator, "geolocation", {
     configurable: true,
     value: { clearWatch, watchPosition },
@@ -41,6 +48,46 @@ afterEach(() => {
 });
 
 describe("CampusMap location", () => {
+  it("shows the browser notice and does not request GPS inside a restricted app", () => {
+    vi.useFakeTimers();
+    Object.defineProperty(navigator, "userAgent", {
+      configurable: true,
+      value: "Mozilla/5.0 Instagram 352.0.0.0 Mobile",
+    });
+
+    render(
+      <CampusMap
+        box={{ height: 448, width: 361 }}
+        closestWidth={40}
+        initialView={{ width: 300, xRatio: 0.5, yRatio: 0.5 }}
+        isLit={() => true}
+        onSelect={() => {}}
+        places={[]}
+        selectedId={null}
+      />,
+    );
+
+    expect(screen.getByText("인스타그램, 에브리타임 인앱의 경우")).toBeInTheDocument();
+    expect(screen.getByText("GPS 기능을 사용할 수 없어요.")).toBeInTheDocument();
+    expect(
+      screen.getByText("크롬, 사파리등 브라우저로 접속해주세요."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("아이폰 iOS의 경우(사파리) 위치 허용 방법:"),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "주소 복사" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "내 위치 보기" }));
+
+    expect(watchPosition).not.toHaveBeenCalled();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "위치를 확인할 수 없어요. 인스타그램, 에브리타임 인앱의 경우 브라우저로 접속해 주세요.",
+    );
+
+    act(() => vi.advanceTimersByTime(4_000));
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
   it("auto-focuses once, keeps moving the marker, and recenters on another click", async () => {
     let onSuccess: PositionCallback = () => {};
     watchPosition.mockImplementation((success) => {
@@ -96,6 +143,71 @@ describe("CampusMap location", () => {
     fireEvent.click(screen.getByRole("button", { name: "내 위치 보기" }));
 
     await waitFor(() => expect(festivalMapSpy.props?.focusRequest?.requestId).toBe(2));
+  });
+
+  it("shows the settings path below the map when Safari location permission is denied", () => {
+    let onError: PositionErrorCallback = () => {};
+    Object.defineProperty(navigator, "userAgent", {
+      configurable: true,
+      value: SAFARI_USER_AGENT,
+    });
+    watchPosition.mockImplementation((_success, error) => {
+      onError = error ?? (() => {});
+      return 7;
+    });
+
+    render(
+      <CampusMap
+        box={{ height: 448, width: 361 }}
+        closestWidth={40}
+        initialView={{ width: 300, xRatio: 0.5, yRatio: 0.5 }}
+        isLit={() => true}
+        onSelect={() => {}}
+        places={[]}
+        selectedId={null}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("complementary", { name: "Safari 위치 권한 설정 방법" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "내 위치 보기" }));
+    act(() => onError({ code: 1 } as GeolocationPositionError));
+
+    expect(screen.getByRole("status")).toHaveTextContent("위치 권한을 허용해주세요");
+    expect(
+      screen.getByRole("complementary", { name: "Safari 위치 권한 설정 방법" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "주소 복사" })).not.toBeInTheDocument();
+  });
+
+  it("does not show Safari settings after Chrome location permission is denied", () => {
+    let onError: PositionErrorCallback = () => {};
+    watchPosition.mockImplementation((_success, error) => {
+      onError = error ?? (() => {});
+      return 8;
+    });
+
+    render(
+      <CampusMap
+        box={{ height: 448, width: 361 }}
+        closestWidth={40}
+        initialView={{ width: 300, xRatio: 0.5, yRatio: 0.5 }}
+        isLit={() => true}
+        onSelect={() => {}}
+        places={[]}
+        selectedId={null}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "내 위치 보기" }));
+    act(() => onError({ code: 1 } as GeolocationPositionError));
+
+    expect(screen.getByRole("status")).toHaveTextContent("위치 권한을 허용해주세요");
+    expect(
+      screen.queryByRole("complementary", { name: "Safari 위치 권한 설정 방법" }),
+    ).not.toBeInTheDocument();
   });
 
   it("waits briefly for a better initial fix before using a coarse one", () => {

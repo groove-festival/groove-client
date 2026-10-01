@@ -78,7 +78,7 @@ describe("useContestLocationGate", () => {
     expect(clearWatch).toHaveBeenCalledWith(7);
   });
 
-  it("reports unavailable on permission denial and retry re-checks", () => {
+  it("reports permission-denied and retry re-checks", () => {
     watchPosition.mockImplementation((_success, error) => {
       error({ code: 1 });
       return 1;
@@ -86,7 +86,7 @@ describe("useContestLocationGate", () => {
 
     const { result } = renderHook(() => useContestLocationGate());
 
-    expect(result.current.status).toBe("unavailable");
+    expect(result.current.status).toBe("permission-denied");
 
     watchPosition.mockImplementation((success) => {
       success({
@@ -101,6 +101,17 @@ describe("useContestLocationGate", () => {
     expect(result.current.status).toBe("in-range");
   });
 
+  it("reports unavailable when position lookup fails for another reason", () => {
+    watchPosition.mockImplementation((_success, error) => {
+      error({ code: 2 });
+      return 1;
+    });
+
+    const { result } = renderHook(() => useContestLocationGate());
+
+    expect(result.current.status).toBe("unavailable");
+  });
+
   it("reports unavailable when geolocation is not supported", () => {
     Object.defineProperty(navigator, "geolocation", {
       configurable: true,
@@ -110,5 +121,15 @@ describe("useContestLocationGate", () => {
     const { result } = renderHook(() => useContestLocationGate());
 
     expect(result.current.status).toBe("unavailable");
+  });
+
+  it("does not request a position when the gate is disabled", () => {
+    const { result } = renderHook(() => useContestLocationGate(false));
+
+    expect(result.current.status).toBe("unavailable");
+    expect(watchPosition).not.toHaveBeenCalled();
+
+    act(() => result.current.retry());
+    expect(watchPosition).not.toHaveBeenCalled();
   });
 });
