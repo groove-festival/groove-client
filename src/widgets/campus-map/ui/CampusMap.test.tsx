@@ -143,4 +143,58 @@ describe("CampusMap location", () => {
     act(() => vi.advanceTimersByTime(1));
     expect(festivalMapSpy.props?.focusRequest?.requestId).toBe(1);
   });
+
+  it("records the actual SVG point selected on the map", () => {
+    let onSuccess: PositionCallback = () => {};
+    watchPosition.mockImplementation((success) => {
+      onSuccess = success;
+      return 7;
+    });
+
+    render(
+      <CampusMap
+        box={{ height: 448, width: 361 }}
+        closestWidth={40}
+        initialView={{ width: 300, xRatio: 0.5, yRatio: 0.5 }}
+        isLit={() => true}
+        onSelect={() => {}}
+        places={[]}
+        selectedId={null}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "내 위치 보기" }));
+    act(() =>
+      onSuccess({
+        coords: { accuracy: 4, latitude: 35.8886615, longitude: 128.6121297 },
+        timestamp: 1,
+      } as GeolocationPosition),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "실제 위치 찍기" }));
+    const selector = screen.getByRole("button", {
+      name: "지도에서 실제 위치 선택",
+    });
+    vi.spyOn(selector, "getBoundingClientRect").mockReturnValue({
+      bottom: 1128,
+      height: 1128,
+      left: 0,
+      right: 976,
+      top: 0,
+      width: 976,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.click(selector, { clientX: 488, clientY: 564, detail: 1 });
+
+    expect(screen.getByRole("img", { name: "실제 위치" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "GPS 측정 기록" })).toHaveTextContent(
+      "실제 SVGx 488.0 y 564.0",
+    );
+    expect(
+      screen.getByRole("button", { name: "실제 위치 다시 찍기" }),
+    ).toBeInTheDocument();
+  });
 });

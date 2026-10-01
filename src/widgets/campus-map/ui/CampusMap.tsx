@@ -1,4 +1,8 @@
-import { FestivalMap, type FestivalMapFocusRequest } from "@/shared/ui";
+import {
+  FestivalMap,
+  type FestivalMapFocusRequest,
+  type MapRatioPoint,
+} from "@/shared/ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { CAMPUS_MAP_ALT, CAMPUS_MAP_SIZE } from "../model/places";
@@ -13,6 +17,7 @@ import {
   getViewScale,
   toMapFocus,
 } from "../model/view";
+import { CampusCalibrationLayer } from "./CampusCalibrationLayer";
 import { CampusMapLayer, type CampusMapLayerProps } from "./CampusMapLayer";
 import { CampusLocationControl } from "./CampusLocationControl";
 import { CampusLocationLog } from "./CampusLocationLog";
@@ -78,6 +83,8 @@ export const CampusMap = ({
   const [focusRequest, setFocusRequest] = useState<FestivalMapFocusRequest | null>(
     null,
   );
+  const [actualPoint, setActualPoint] = useState<MapRatioPoint | null>(null);
+  const [isSelectingActualPoint, setIsSelectingActualPoint] = useState(false);
   const focusRequestIdRef = useRef(0);
   const hasAutoFocusedRef = useRef(false);
   const bestInitialLocationRef = useRef<CampusLocationProjection | null>(null);
@@ -155,7 +162,14 @@ export const CampusMap = ({
     clearCoarseFixTimer();
     hasAutoFocusedRef.current = false;
     bestInitialLocationRef.current = null;
+    setActualPoint(null);
+    setIsSelectingActualPoint(false);
     start();
+  };
+
+  const handleActualPointSelect = (point: MapRatioPoint) => {
+    setActualPoint(point);
+    setIsSelectingActualPoint(false);
   };
 
   const showLocationAccuracyNotice =
@@ -180,14 +194,21 @@ export const CampusMap = ({
             resetTo={resetTo && toMapFocus(box, resetTo)}
             source={CAMPUS_MAP_SOURCE}
           >
-            <CampusMapLayer
-              labelVisibleScale={[
-                getViewScale(box, labelWidths[0]),
-                getViewScale(box, labelWidths[1]),
-              ]}
-              location={location}
-              {...layerProps}
-            />
+            <>
+              <CampusMapLayer
+                labelVisibleScale={[
+                  getViewScale(box, labelWidths[0]),
+                  getViewScale(box, labelWidths[1]),
+                ]}
+                location={location}
+                {...layerProps}
+              />
+              <CampusCalibrationLayer
+                actualPoint={actualPoint}
+                isSelecting={isSelectingActualPoint}
+                onSelect={handleActualPointSelect}
+              />
+            </>
           </FestivalMap>
         </div>
 
@@ -199,7 +220,10 @@ export const CampusMap = ({
 
         {status === "tracking" && reading && location && (
           <CampusLocationLog
+            actualPoint={actualPoint}
+            isSelectingActualPoint={isSelectingActualPoint}
             location={location}
+            onStartActualPointSelection={() => setIsSelectingActualPoint(true)}
             reading={reading}
             sampleNumber={sampleNumber}
           />
