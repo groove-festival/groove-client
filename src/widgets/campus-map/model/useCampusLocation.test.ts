@@ -21,6 +21,7 @@ describe("useCampusLocation", () => {
     const { result } = renderHook(() => useCampusLocation());
 
     expect(result.current.status).toBe("idle");
+    expect(result.current.sampleNumber).toBe(0);
     expect(watchPosition).not.toHaveBeenCalled();
 
     act(() => result.current.start());
@@ -46,6 +47,7 @@ describe("useCampusLocation", () => {
     );
 
     expect(result.current.reading?.latitude).toBe(35.8886);
+    expect(result.current.sampleNumber).toBe(1);
 
     act(() =>
       onSuccess({
@@ -61,20 +63,33 @@ describe("useCampusLocation", () => {
       longitude: 128.6122,
       timestamp: 20,
     });
+    expect(result.current.sampleNumber).toBe(2);
   });
 
-  it("reports permission denial separately", () => {
+  it("reports permission denial separately and clears the measurement log", () => {
+    let onSuccess: PositionCallback = () => {};
     let onError: PositionErrorCallback = () => {};
-    watchPosition.mockImplementation((_success, error) => {
+    watchPosition.mockImplementation((success, error) => {
+      onSuccess = success;
       onError = error;
       return 9;
     });
     const { result } = renderHook(() => useCampusLocation());
 
     act(() => result.current.start());
+    act(() =>
+      onSuccess({
+        coords: { accuracy: 12, latitude: 35.8886, longitude: 128.6121 },
+        timestamp: 10,
+      } as GeolocationPosition),
+    );
+    expect(result.current.sampleNumber).toBe(1);
+
     act(() => onError({ code: 1 } as GeolocationPositionError));
 
     expect(result.current.status).toBe("permission-denied");
+    expect(result.current.reading).toBeNull();
+    expect(result.current.sampleNumber).toBe(0);
     expect(clearWatch).toHaveBeenCalledWith(9);
   });
 
