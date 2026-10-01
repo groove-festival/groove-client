@@ -96,11 +96,14 @@ describe("CampusMap location", () => {
     expect(
       within(dialog).getByText("아이폰 iOS의 경우(사파리) 위치 허용 방법:"),
     ).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "주소 복사" })).toHaveClass(
+      "!bg-[#cfff04]",
+    );
     expect(
-      within(dialog).getByRole("button", { name: "주소 복사" }),
-    ).toBeInTheDocument();
+      within(dialog).queryByRole("button", { name: "확인했습니다" }),
+    ).not.toBeInTheDocument();
 
-    fireEvent.click(within(dialog).getByRole("button", { name: "확인했습니다" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "안내 닫기" }));
     expect(
       screen.queryByRole("dialog", { name: "GPS 기능 안내" }),
     ).not.toBeInTheDocument();
