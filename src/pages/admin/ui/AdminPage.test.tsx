@@ -23,6 +23,9 @@ vi.mock("./StageAdminDashboard", () => ({
 vi.mock("./PubAdminDashboard", () => ({
   PubAdminDashboard: () => <div>pub-dashboard</div>,
 }));
+vi.mock("./PlanAdminDashboard", () => ({
+  PlanAdminDashboard: () => <div>plan-dashboard</div>,
+}));
 vi.mock("./UnsupportedRoleNotice", () => ({
   UnsupportedRoleNotice: () => <div>unsupported-role</div>,
 }));
@@ -104,11 +107,26 @@ describe("AdminPage", () => {
     expect(await screen.findByText("pub-dashboard")).toBeInTheDocument();
   });
 
-  it("shows an unsupported-role notice for roles without a dashboard", async () => {
+  it("shows the RIVALS dashboard to the planning team", async () => {
     httpGet.mockResolvedValueOnce({
       data: {
         success: true,
         data: { account: account({ loggedIn: true, role: "PLAN_ADMIN" }) },
+        error: null,
+      },
+      status: 200,
+    });
+    renderPage();
+
+    expect(await screen.findByText("plan-dashboard")).toBeInTheDocument();
+    expect(screen.queryByText("unsupported-role")).not.toBeInTheDocument();
+  });
+
+  it("shows an unsupported-role notice for roles without a dashboard", async () => {
+    httpGet.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: { account: account({ loggedIn: true, role: "SUPER_ADMIN" }) },
         error: null,
       },
       status: 200,

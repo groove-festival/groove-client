@@ -4,6 +4,7 @@ import { AdminLoginForm } from "./AdminLoginForm";
 import { PromoAdminDashboard } from "./PromoAdminDashboard";
 import { PubAdminDashboard } from "./PubAdminDashboard";
 import { StageAdminDashboard } from "./StageAdminDashboard";
+import { PlanAdminDashboard } from "./PlanAdminDashboard";
 import { UnsupportedRoleNotice } from "./UnsupportedRoleNotice";
 
 export default function AdminPage() {
@@ -46,10 +47,14 @@ export default function AdminPage() {
       {auth.data?.loggedIn === true && auth.data.role === "PUB_ADMIN" && (
         <PubAdminDashboard />
       )}
+      {auth.data?.loggedIn === true && auth.data.role === "PLAN_ADMIN" && (
+        <PlanAdminDashboard />
+      )}
       {auth.data?.loggedIn === true &&
         auth.data.role !== "PROMO_ADMIN" &&
         auth.data.role !== "STAGE_ADMIN" &&
-        auth.data.role !== "PUB_ADMIN" && <UnsupportedRoleNotice />}
+        auth.data.role !== "PUB_ADMIN" &&
+        auth.data.role !== "PLAN_ADMIN" && <UnsupportedRoleNotice />}
     </main>
   );
 }

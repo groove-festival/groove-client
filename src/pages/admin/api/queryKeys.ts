@@ -23,3 +23,10 @@ export const pubAdminQueryKeys = {
   orders: () => [...pubAdminQueryKeys.all(), "orders"] as const,
   tables: () => [...pubAdminQueryKeys.all(), "tables"] as const,
 };
+
+// 기획팀(PLAN_ADMIN) 대시보드. GROOVE RIVALS 점수판은 참여자 화면(PLAN-2)과 같은
+// 공개 데이터지만 페이지가 달라 키를 따로 둔다.
+export const planAdminQueryKeys = {
+  all: () => ["admin-plan"] as const,
+  rivalScores: () => [...planAdminQueryKeys.all(), "rival-scores"] as const,
+};
