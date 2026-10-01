@@ -1,18 +1,12 @@
 @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@700&display=swap");
 @import "tailwindcss";
+/* 프리텐다드 공식 동적 서브셋. 화면에 나온 글자가 든 조각만 내려받는다. */
+@import "./fonts/pretendard-subset/pretendard-subset.css";
 
 @font-face {
   font-family: "SlowGothic";
   src: url("./fonts/neurimboGothicRegular.woff2") format("woff2");
   font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Pretendard Variable";
-  src: url("./fonts/PretendardVariable.woff2") format("woff2-variations");
-  font-weight: 45 920;
   font-style: normal;
   font-display: swap;
 }

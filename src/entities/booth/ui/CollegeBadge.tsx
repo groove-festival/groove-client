@@ -1,4 +1,4 @@
-import collegeIcons from "../festival-visuals/college-icons.png";
+import collegeIcons from "../festival-visuals/college-icons.webp";
 import { type College } from "../model/booths";
 
 interface CollegeVisual {

@@ -88,6 +88,9 @@ const renderRoute = (path: string) => {
   );
 };
 
+// 관리자·QR 주문 화면은 들어갈 때 코드를 받으므로 기본 1초보다 넉넉히 기다린다.
+const lazyRouteWait = { timeout: 5_000 };
+
 describe("AppRouter", () => {
   it("renders the not-found fallback without the shared header", () => {
     renderRoute("/missing");
@@ -151,7 +154,7 @@ describe("AppRouter", () => {
     renderRoute("/admin");
 
     expect(
-      await screen.findByRole("heading", { name: "GROOVE 관리자" }),
+      await screen.findByRole("heading", { name: "GROOVE 관리자" }, lazyRouteWait),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "메뉴 열기" })).not.toBeInTheDocument();
     expect(screen.queryByRole("contentinfo")).not.toBeInTheDocument();
@@ -164,7 +167,9 @@ describe("AppRouter", () => {
     const get = vi.spyOn(httpClient, "get").mockResolvedValue(orderTableEnvelope);
     renderRoute("/pub/elec-eh/table-a");
 
-    expect(await screen.findByRole("list", { name: "상차림비" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("list", { name: "상차림비" }, lazyRouteWait),
+    ).toBeInTheDocument();
     expect(screen.getAllByRole("img", { name: "GROOVE" })).toHaveLength(1);
     expect(screen.queryByRole("link", { name: "GROOVE 홈" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "메뉴 열기" })).not.toBeInTheDocument();
