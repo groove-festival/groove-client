@@ -9,6 +9,7 @@ import { ApiError } from "@/shared/api";
 import { useMyBallots } from "../api/getMyBallots";
 import { useSubmitBallot } from "../api/submitBallot";
 import { useContestLocationGate } from "../model/useContestLocationGate";
+import { GoogleSignInGuide } from "./GoogleSignInGuide";
 import { VoteCastingPanel } from "./VoteCastingPanel";
 
 vi.mock("../model/useContestLocationGate", () => ({
@@ -65,8 +66,15 @@ const openVote = {
 };
 
 const submitMutate = vi.fn();
+const REGULAR_BROWSER_USER_AGENT = "Mozilla/5.0 Chrome/140.0.0.0 Mobile Safari/537.36";
+const SAFARI_USER_AGENT =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 Version/18.6 Mobile/15E148 Safari/604.1";
 
 beforeEach(() => {
+  Object.defineProperty(navigator, "userAgent", {
+    configurable: true,
+    value: REGULAR_BROWSER_USER_AGENT,
+  });
   useContestLocationGateMock.mockReturnValue({ status: "in-range", retry: vi.fn() });
   useVotesMock.mockReturnValue({ data: [openVote] } as unknown as ReturnType<
     typeof useVotes
@@ -110,6 +118,55 @@ describe("VoteCastingPanel", () => {
     expect(retry).toHaveBeenCalled();
   });
 
+  it("shows a permission message and Safari settings after Safari denial", () => {
+    Object.defineProperty(navigator, "userAgent", {
+      configurable: true,
+      value: SAFARI_USER_AGENT,
+    });
+    useContestLocationGateMock.mockReturnValue({
+      status: "permission-denied",
+      retry: vi.fn(),
+    });
+
+    renderPanel();
+
+    expect(screen.getByText("위치 권한을 허용해주세요")).toBeInTheDocument();
+    expect(
+      screen.getByRole("complementary", { name: "Safari 위치 권한 설정 방법" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("무대 주변으로 이동하면 투표가 가능해요"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not show Safari settings after Chrome permission denial", () => {
+    useContestLocationGateMock.mockReturnValue({
+      status: "permission-denied",
+      retry: vi.fn(),
+    });
+
+    renderPanel();
+
+    expect(screen.getByText("위치 권한을 허용해주세요")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("complementary", { name: "Safari 위치 권한 설정 방법" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows a lookup failure separately from being outside the venue", () => {
+    useContestLocationGateMock.mockReturnValue({
+      status: "unavailable",
+      retry: vi.fn(),
+    });
+
+    renderPanel();
+
+    expect(screen.getByText("위치를 확인할 수 없어요")).toBeInTheDocument();
+    expect(
+      screen.queryByText("무대 주변으로 이동하면 투표가 가능해요"),
+    ).not.toBeInTheDocument();
+  });
+
   it("opens the Google sign-in guide when a logged-out participant taps a tile", () => {
     useAuthMeMock.mockReturnValue({
       data: { loggedIn: false },
@@ -121,6 +178,43 @@ describe("VoteCastingPanel", () => {
     expect(
       screen.getByRole("dialog", { name: "가요제 투표 안내 사항" }),
     ).toBeInTheDocument();
+  });
+
+  it("blocks the vote flow and provides the address inside Everytime", () => {
+    Object.defineProperty(navigator, "userAgent", {
+      configurable: true,
+      value: "Everytime/7.2.1 Android WebView",
+    });
+
+    renderPanel();
+    expect(
+      screen.getByText("GPS와 Google 로그인을 사용할 수 없어"),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "주소 복사" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "IT대학" })).not.toBeInTheDocument();
+    expect(useContestLocationGateMock).toHaveBeenCalledWith(false);
+    expect(useGoogleSignInMock).not.toHaveBeenCalled();
+  });
+
+  it("replaces the Google button inside an in-app login guide", () => {
+    Object.defineProperty(navigator, "userAgent", {
+      configurable: true,
+      value: "Mozilla/5.0 Instagram 352.0.0.0 Mobile",
+    });
+
+    render(<GoogleSignInGuide onClose={() => {}} onIdToken={() => {}} />);
+
+    const dialog = screen.getByRole("dialog", { name: "가요제 투표 안내 사항" });
+    expect(
+      within(dialog).getByText(
+        "인스타그램·에브리타임 인앱에서는 Google 로그인을 사용할 수 없어요.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("button", { name: "주소 복사" }),
+    ).toBeInTheDocument();
+    expect(within(dialog).queryByText("Google로 계속하기")).not.toBeInTheDocument();
+    expect(useGoogleSignInMock).not.toHaveBeenCalled();
   });
 
   it("still asks for a Google login when only an admin session is active", () => {
