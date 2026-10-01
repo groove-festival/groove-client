@@ -147,6 +147,7 @@ const BoothOrderContent = ({
           </div>
 
           <OrderBottomBar
+            isDisabled={isPlacingOrder}
             isVisible={isBottomBarVisible}
             label={getBottomBarLabel()}
             onClick={handleBottomBarClick}
