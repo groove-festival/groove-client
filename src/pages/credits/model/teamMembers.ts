@@ -10,7 +10,9 @@ import kimJiAnProfile3x from "../festival-visuals/profile-kimjian-192.png";
 import kimJiHunProfile1x from "../festival-visuals/profile-kimjihun-64.png";
 import kimJiHunProfile2x from "../festival-visuals/profile-kimjihun-128.png";
 import kimJiHunProfile3x from "../festival-visuals/profile-kimjihun-192.png";
-import kimTaeHuiProfile from "../festival-visuals/profile-kimtaehui.png";
+import kimTaeHuiProfile1x from "../festival-visuals/profile-kimtaehui-64.webp";
+import kimTaeHuiProfile2x from "../festival-visuals/profile-kimtaehui-128.webp";
+import kimTaeHuiProfile3x from "../festival-visuals/profile-kimtaehui-192.webp";
 import leeSangMinProfile1x from "../festival-visuals/profile-leesangmin-64.jpg";
 import leeSangMinProfile2x from "../festival-visuals/profile-leesangmin-128.jpg";
 import leeSangMinProfile3x from "../festival-visuals/profile-leesangmin-192.jpg";
@@ -89,7 +91,8 @@ export const creditSections: CreditSection[] = [
       {
         name: "김태희",
         affiliation: "글로벌SW융합전공 24학번",
-        profileImage: kimTaeHuiProfile,
+        profileImage: kimTaeHuiProfile2x,
+        profileImageSrcSet: `${kimTaeHuiProfile1x} 1x, ${kimTaeHuiProfile2x} 2x, ${kimTaeHuiProfile3x} 3x`,
         instagram: "kt.gml",
         github: "TaeHuiKKIM",
       },

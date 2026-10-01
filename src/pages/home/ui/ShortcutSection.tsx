@@ -1,12 +1,11 @@
 import { Link } from "react-router";
 
-import { cardChevronIcon } from "@/shared/ui";
+import { cardChevronIcon, storyIconSprite } from "@/shared/ui";
 
 import shortcutContest from "../festival-visuals/shortcut-contest.png";
 import shortcutEvent from "../festival-visuals/shortcut-event.png";
 import shortcutPlaylist from "../festival-visuals/shortcut-playlist.png";
 import shortcutPub from "../festival-visuals/shortcut-pub.png";
-import shortcutStory from "../festival-visuals/shortcut-story-sprite.png";
 import {
   type ContestShortcutBadgeStatus,
   shortcutBadgeLabels,
@@ -35,7 +34,7 @@ const shortcuts: Shortcut[] = [
     title: "사연신청",
     description: "무대에서 소개될 사연 신청",
     to: "/story",
-    icon: shortcutStory,
+    icon: storyIconSprite,
   },
   {
     id: "contest",

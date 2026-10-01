@@ -1,6 +1,12 @@
-import { FestivalMap } from "@/shared/ui";
+import { FestivalMap, type FestivalMapFocusRequest } from "@/shared/ui";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { CAMPUS_MAP_ALT, CAMPUS_MAP_SIZE } from "../model/places";
+import {
+  type CampusLocationProjection,
+  projectCampusLocation,
+} from "../model/georeference";
+import { useCampusLocation } from "../model/useCampusLocation";
 import {
   type CampusMapBox,
   type CampusMapView,
@@ -8,12 +14,15 @@ import {
   toMapFocus,
 } from "../model/view";
 import { CampusMapLayer, type CampusMapLayerProps } from "./CampusMapLayer";
+import { CampusLocationControl } from "./CampusLocationControl";
 
 // 지명 뱃지는 충분히 당겼을 때만 띄운다. 멀리서는 뱃지가 지도를 가리고 서로 겹친다.
 // [박스 폭에 배치도가 이만큼(배치도 px) 들어올 만큼 멀어지면 사라짐, 이만큼 당기면
 // 다 보임]. 기본값은 메인 처음 화면(216)에서는 숨고, 확대 버튼을 한 번만 누르거나
 // (216 → 135) 주막·이벤트 부스 필터를 고르면(140) 선명하게 보이는 선이다.
 const DEFAULT_LABEL_WIDTHS = [170, 140] as const;
+const PRECISE_INITIAL_FIX_METERS = 50;
+const COARSE_FIX_WAIT_MS = 10_000;
 
 // 배치도 그림은 장소 레이어가 같은 SVG 안에 직접 그린다 (CampusMapLayer).
 const CAMPUS_MAP_SOURCE = {
@@ -22,7 +31,10 @@ const CAMPUS_MAP_SOURCE = {
   alt: CAMPUS_MAP_ALT,
 };
 
-interface CampusMapProps extends Omit<CampusMapLayerProps, "labelVisibleScale"> {
+interface CampusMapProps extends Omit<
+  CampusMapLayerProps,
+  "labelVisibleScale" | "location"
+> {
   // 지도 박스의 시안 크기. 박스는 폭을 꽉 채우고 이 비율을 지킨다.
   box: CampusMapBox;
   initialView: CampusMapView;
@@ -56,35 +68,144 @@ export const CampusMap = ({
   bordered = false,
   labelWidths = DEFAULT_LABEL_WIDTHS,
   ...layerProps
-}: CampusMapProps) => (
-  <div
-    className="relative w-full"
-    style={{ aspectRatio: `${box.width} / ${box.height}` }}
-  >
-    {/* 흐름에서 빼야 지도 내용이 바깥 박스의 비율을 밀어내지 않는다. */}
-    <div className="absolute inset-0">
-      <FestivalMap
-        className={`size-full ${className}`}
-        controlsClassName={controlsClassName}
-        focus={focus && toMapFocus(box, focus)}
-        initialCenter={initialView}
-        initialScale={getViewScale(box, initialView.width)}
-        maxScale={getViewScale(box, closestWidth)}
-        resetTo={resetTo && toMapFocus(box, resetTo)}
-        source={CAMPUS_MAP_SOURCE}
-      >
-        <CampusMapLayer
-          labelVisibleScale={[
-            getViewScale(box, labelWidths[0]),
-            getViewScale(box, labelWidths[1]),
-          ]}
-          {...layerProps}
-        />
-      </FestivalMap>
-    </div>
+}: CampusMapProps) => {
+  const { reading, start, status } = useCampusLocation();
+  const location = useMemo(
+    () => (reading ? projectCampusLocation(reading) : null),
+    [reading],
+  );
+  const [focusRequest, setFocusRequest] = useState<FestivalMapFocusRequest | null>(
+    null,
+  );
+  const focusRequestIdRef = useRef(0);
+  const hasAutoFocusedRef = useRef(false);
+  const bestInitialLocationRef = useRef<CampusLocationProjection | null>(null);
+  const coarseFixTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    {bordered && (
-      <div className="pointer-events-none absolute inset-0 rounded-3xl border border-[#767676]" />
-    )}
-  </div>
-);
+  const clearCoarseFixTimer = useCallback(() => {
+    if (coarseFixTimerRef.current === null) return;
+    clearTimeout(coarseFixTimerRef.current);
+    coarseFixTimerRef.current = null;
+  }, []);
+
+  const focusLocation = useCallback(
+    (projection: CampusLocationProjection) => {
+      focusRequestIdRef.current += 1;
+      setFocusRequest({
+        ...toMapFocus(box, projection.focus),
+        requestId: focusRequestIdRef.current,
+      });
+    },
+    [box],
+  );
+
+  const completeInitialFocus = useCallback(
+    (projection: CampusLocationProjection) => {
+      if (projection.boundaryStatus === "outside") return;
+      hasAutoFocusedRef.current = true;
+      clearCoarseFixTimer();
+      focusLocation(projection);
+    },
+    [clearCoarseFixTimer, focusLocation],
+  );
+
+  useEffect(() => {
+    if (
+      status !== "tracking" ||
+      !reading ||
+      !location ||
+      location.boundaryStatus === "outside" ||
+      hasAutoFocusedRef.current
+    ) {
+      return;
+    }
+
+    const best = bestInitialLocationRef.current;
+    if (!best || location.accuracyMeters < best.accuracyMeters) {
+      bestInitialLocationRef.current = location;
+    }
+
+    if (reading.accuracy <= PRECISE_INITIAL_FIX_METERS) {
+      completeInitialFocus(location);
+      return;
+    }
+
+    if (coarseFixTimerRef.current !== null) return;
+    coarseFixTimerRef.current = setTimeout(() => {
+      coarseFixTimerRef.current = null;
+      const bestAvailable = bestInitialLocationRef.current;
+      if (bestAvailable) completeInitialFocus(bestAvailable);
+    }, COARSE_FIX_WAIT_MS);
+  }, [completeInitialFocus, location, reading, status]);
+
+  useEffect(() => {
+    if (status === "tracking" || status === "locating" || status === "idle") return;
+    clearCoarseFixTimer();
+  }, [clearCoarseFixTimer, status]);
+
+  useEffect(() => clearCoarseFixTimer, [clearCoarseFixTimer]);
+
+  const handleLocationClick = () => {
+    if (status === "tracking" && location) {
+      completeInitialFocus(location);
+      return;
+    }
+
+    clearCoarseFixTimer();
+    hasAutoFocusedRef.current = false;
+    bestInitialLocationRef.current = null;
+    start();
+  };
+
+  const showLocationAccuracyNotice =
+    location !== null && location.boundaryStatus !== "outside";
+
+  return (
+    <div className="flex w-full flex-col gap-1.5">
+      <div
+        className="relative w-full"
+        style={{ aspectRatio: `${box.width} / ${box.height}` }}
+      >
+        {/* 흐름에서 빼야 지도 내용이 바깥 박스의 비율을 밀어내지 않는다. */}
+        <div className="absolute inset-0">
+          <FestivalMap
+            className={`size-full ${className}`}
+            controlsClassName={controlsClassName}
+            focus={focus && toMapFocus(box, focus)}
+            focusRequest={focusRequest}
+            initialCenter={initialView}
+            initialScale={getViewScale(box, initialView.width)}
+            maxScale={getViewScale(box, closestWidth)}
+            resetTo={resetTo && toMapFocus(box, resetTo)}
+            source={CAMPUS_MAP_SOURCE}
+          >
+            <CampusMapLayer
+              labelVisibleScale={[
+                getViewScale(box, labelWidths[0]),
+                getViewScale(box, labelWidths[1]),
+              ]}
+              location={location}
+              {...layerProps}
+            />
+          </FestivalMap>
+        </div>
+
+        <CampusLocationControl
+          boundaryStatus={location?.boundaryStatus ?? null}
+          onClick={handleLocationClick}
+          status={status}
+        />
+
+        {bordered && (
+          <div className="pointer-events-none absolute inset-0 rounded-3xl border border-[#767676]" />
+        )}
+      </div>
+
+      {showLocationAccuracyNotice && (
+        <p className="px-1 text-center text-[11px] leading-4 font-medium text-[#a2a2a2]">
+          GPS 환경에 따라 실제 위치와 차이가 있을 수 있어요
+        </p>
+      )}
+    </div>
+  );
+};

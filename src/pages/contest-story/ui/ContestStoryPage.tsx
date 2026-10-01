@@ -24,6 +24,7 @@ import {
   LoadingFallback,
   NetworkErrorFallback,
   lockIllustration,
+  storyIconSprite,
 } from "@/shared/ui";
 
 import {
@@ -44,7 +45,6 @@ import {
   type StoryTitleAppearance,
 } from "../model/storyTitleAppearance";
 import { nextStoryBoundaryAt, parseStoryPhaseOverride } from "../model/storyPhase";
-import storyIconSprite from "../festival-visuals/story-icon-sprite.png";
 import { StoryForm } from "./StoryForm";
 import { StoryGuideModal } from "./StoryGuideModal";
 

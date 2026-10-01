@@ -44,6 +44,11 @@ export interface FestivalMapFocus extends MapRatioPoint {
   scale?: number;
 }
 
+export interface FestivalMapFocusRequest extends FestivalMapFocus {
+  // 같은 좌표를 다시 누른 경우에도 이동하도록 요청마다 증가시키는 값.
+  requestId: number;
+}
+
 interface FestivalMapProps {
   source: FestivalMapSource;
   // 배율 1은 지도 한 장이 컨테이너에 전부 들어오는 상태다.
@@ -56,6 +61,9 @@ interface FestivalMapProps {
   initialCenter?: MapRatioPoint;
   // 값이 바뀔 때마다 그 자리로 확대·이동한다. null이면 그대로 둔다.
   focus?: FestivalMapFocus | null;
+  // focus와 별개인 명시적 재중앙 요청. 내 위치 버튼처럼 같은 점을 반복해서
+  // 누를 수 있는 조작에 쓴다.
+  focusRequest?: FestivalMapFocusRequest | null;
   // 되돌리기 버튼이 돌아갈 자리. 없으면 처음 화면(initialCenter·initialScale)이다.
   // 필터마다 보는 자리가 달라지는 지도가 처음 화면을 흔들지 않고 넘긴다.
   resetTo?: FestivalMapFocus | null;
@@ -82,6 +90,7 @@ export const FestivalMap = ({
   maxScale = 8,
   initialCenter = MAP_CENTER,
   focus = null,
+  focusRequest = null,
   resetTo = null,
   className = "",
   controlsClassName = "",
@@ -176,6 +185,28 @@ export const FestivalMap = ({
       FOCUS_ANIMATION_MS,
     );
   }, [focusX, focusY, focusScale, isMeasured]);
+
+  const requestedX = focusRequest?.xRatio ?? null;
+  const requestedY = focusRequest?.yRatio ?? null;
+  const requestedScale = focusRequest?.scale ?? initialScale;
+  const focusRequestId = focusRequest?.requestId ?? null;
+
+  useEffect(() => {
+    if (
+      !isMeasured ||
+      focusRequestId === null ||
+      requestedX === null ||
+      requestedY === null
+    ) {
+      return;
+    }
+
+    moveToRef.current(
+      { xRatio: requestedX, yRatio: requestedY },
+      requestedScale,
+      FOCUS_ANIMATION_MS,
+    );
+  }, [focusRequestId, isMeasured, requestedScale, requestedX, requestedY]);
 
   // 확대·축소 버튼은 보던 자리를 그대로 두고 배율만 바꾼다. 라이브러리의
   // zoomIn·zoomOut이 화면 한가운데를 기준으로 삼아 주므로 그대로 쓰되,
