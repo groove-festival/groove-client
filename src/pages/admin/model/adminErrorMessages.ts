@@ -188,3 +188,13 @@ export function tableCountErrorMessage(error: unknown): string {
     "테이블 설정에 실패했어요. 잠시 후 다시 시도해 주세요."
   );
 }
+
+export function rivalScoreErrorMessage(error: unknown): string {
+  if (error instanceof ApiError && error.code === "C001") {
+    return "점수는 -100000 ~ 100000, 사유는 200자 이내로 입력해 주세요.";
+  }
+  return (
+    adminAccessErrorMessage(error) ??
+    "점수 반영에 실패했어요. 점수판을 새로고침해 확인한 뒤 다시 시도해 주세요."
+  );
+}
