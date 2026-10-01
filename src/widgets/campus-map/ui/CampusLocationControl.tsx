@@ -7,13 +7,14 @@ interface CampusLocationControlProps {
   status: CampusLocationStatus;
   boundaryStatus: CampusBoundaryStatus | null;
   onClick: () => void;
+  temporaryMessage?: string | null;
 }
 
 const getStatusMessage = (
   status: CampusLocationStatus,
   boundaryStatus: CampusBoundaryStatus | null,
 ) => {
-  if (status === "permission-denied") return "권한을 허용해 주세요";
+  if (status === "permission-denied") return "위치 권한을 허용해주세요";
   if (status === "unavailable") return "위치를 확인할 수 없어요";
   if (boundaryStatus === "outside") return "캠퍼스 외부에 있어요";
   if (status === "locating") return "위치를 확인하고 있어요";
@@ -24,15 +25,21 @@ export const CampusLocationControl = ({
   boundaryStatus,
   onClick,
   status,
+  temporaryMessage = null,
 }: CampusLocationControlProps) => {
-  const message = getStatusMessage(status, boundaryStatus);
+  const message = temporaryMessage ?? getStatusMessage(status, boundaryStatus);
+  const hasTemporaryMessage = temporaryMessage !== null;
 
   return (
     <div className="absolute bottom-3 left-3 z-30 flex flex-col items-start gap-2">
       {message && (
         <span
           aria-live="polite"
-          className="festival-glass max-w-[220px] rounded-full px-3 py-2 text-sm leading-5 font-semibold text-[#f4f7fb] backdrop-blur-[40px]"
+          className={`festival-glass px-3 py-2 text-sm leading-5 font-semibold whitespace-pre-line text-[#f4f7fb] backdrop-blur-[40px] ${
+            hasTemporaryMessage
+              ? "max-w-[280px] rounded-2xl"
+              : "max-w-[220px] rounded-full"
+          }`}
           role="status"
         >
           {message}

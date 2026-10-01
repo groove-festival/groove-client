@@ -3,7 +3,8 @@ import { createPortal } from "react-dom";
 
 import { appConfig } from "@/shared/config";
 import { useGoogleSignIn } from "@/entities/auth";
-import { googleLogoIcon } from "@/shared/ui";
+import { getRestrictedInAppBrowser } from "@/shared/lib/in-app-browser";
+import { googleLogoIcon, InAppBrowserNotice } from "@/shared/ui";
 
 import voteGuideIcon from "../festival-visuals/vote-guide-icon.svg";
 
@@ -12,9 +13,11 @@ interface GoogleSignInGuideProps {
   onIdToken: (idToken: string) => void;
 }
 
-// 비로그인 상태로 투표를 시도했을 때만 뜨는 안내 팝업 (node 1441:16201).
-export function GoogleSignInGuide({ onClose, onIdToken }: GoogleSignInGuideProps) {
-  const dialogRef = useRef<HTMLDivElement>(null);
+interface GoogleSignInActionProps {
+  onIdToken: (idToken: string) => void;
+}
+
+const GoogleSignInAction = ({ onIdToken }: GoogleSignInActionProps) => {
   const { hiddenButtonRef } = useGoogleSignIn({
     clientId: appConfig.googleClientId ?? "",
     onIdToken,
@@ -42,6 +45,33 @@ export function GoogleSignInGuide({ onClose, onIdToken }: GoogleSignInGuideProps
       window.clearTimeout(pressTimerRef.current);
     };
   }, [hiddenButtonRef]);
+
+  return (
+    <div className="relative h-14 w-full" onPointerDown={showPress}>
+      <div
+        className={`flex h-14 w-full items-center justify-center gap-2.5 rounded-[12px] bg-[#ff0080] transition-transform duration-150 ease-out motion-reduce:transition-none ${isPressed ? "scale-[0.97]" : ""}`}
+      >
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#fcfcfc] p-1">
+          <img alt="" className="size-full" src={googleLogoIcon} />
+        </span>
+        <span className="text-base font-semibold text-[#fcfcfc]">
+          Google로 계속하기
+        </span>
+      </div>
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 flex items-center justify-center overflow-hidden opacity-0 [&>div]:scale-x-110 [&>div]:scale-y-150"
+        data-testid="google-sign-in-overlay"
+        ref={hiddenButtonRef}
+      />
+    </div>
+  );
+};
+
+// 비로그인 상태로 투표를 시도했을 때만 뜨는 안내 팝업 (node 1441:16201).
+export function GoogleSignInGuide({ onClose, onIdToken }: GoogleSignInGuideProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const [restrictedInAppBrowser] = useState(() => getRestrictedInAppBrowser());
 
   useEffect(() => {
     dialogRef.current?.focus();
@@ -114,24 +144,14 @@ export function GoogleSignInGuide({ onClose, onIdToken }: GoogleSignInGuideProps
           </li>
         </ul>
 
-        <div className="relative h-14 w-full" onPointerDown={showPress}>
-          <div
-            className={`flex h-14 w-full items-center justify-center gap-2.5 rounded-[12px] bg-[#ff0080] transition-transform duration-150 ease-out motion-reduce:transition-none ${isPressed ? "scale-[0.97]" : ""}`}
-          >
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#fcfcfc] p-1">
-              <img alt="" className="size-full" src={googleLogoIcon} />
-            </span>
-            <span className="text-base font-semibold text-[#fcfcfc]">
-              Google로 계속하기
-            </span>
-          </div>
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 flex items-center justify-center overflow-hidden opacity-0 [&>div]:scale-x-110 [&>div]:scale-y-150"
-            data-testid="google-sign-in-overlay"
-            ref={hiddenButtonRef}
+        {restrictedInAppBrowser ? (
+          <InAppBrowserNotice
+            showIosSafariLocationGuide
+            unavailableMessage="인스타그램·에브리타임 인앱에서는 Google 로그인을 사용할 수 없어요."
           />
-        </div>
+        ) : (
+          <GoogleSignInAction onIdToken={onIdToken} />
+        )}
       </section>
     </div>,
     document.body,

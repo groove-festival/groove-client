@@ -1,4 +1,13 @@
-import { FestivalMap, type FestivalMapFocusRequest } from "@/shared/ui";
+import {
+  getIsSafariBrowser,
+  getRestrictedInAppBrowser,
+} from "@/shared/lib/in-app-browser";
+import {
+  FestivalMap,
+  InAppBrowserNotice,
+  IosSafariLocationGuide,
+  type FestivalMapFocusRequest,
+} from "@/shared/ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { CAMPUS_MAP_ALT, CAMPUS_MAP_SIZE } from "../model/places";
@@ -23,6 +32,9 @@ import { CampusLocationControl } from "./CampusLocationControl";
 const DEFAULT_LABEL_WIDTHS = [170, 140] as const;
 const PRECISE_INITIAL_FIX_METERS = 50;
 const COARSE_FIX_WAIT_MS = 10_000;
+const IN_APP_LOCATION_MESSAGE_MS = 4_000;
+const IN_APP_LOCATION_MESSAGE =
+  "위치를 확인할 수 없어요.\n인스타그램, 에브리타임 인앱의 경우\n브라우저로 접속해 주세요.";
 
 // 배치도 그림은 장소 레이어가 같은 SVG 안에 직접 그린다 (CampusMapLayer).
 const CAMPUS_MAP_SOURCE = {
@@ -70,6 +82,9 @@ export const CampusMap = ({
   ...layerProps
 }: CampusMapProps) => {
   const { reading, start, status } = useCampusLocation();
+  const [restrictedInAppBrowser] = useState(() => getRestrictedInAppBrowser());
+  const [safariBrowser] = useState(getIsSafariBrowser);
+  const [showInAppLocationMessage, setShowInAppLocationMessage] = useState(false);
   const location = useMemo(
     () => (reading ? projectCampusLocation(reading) : null),
     [reading],
@@ -81,6 +96,7 @@ export const CampusMap = ({
   const hasAutoFocusedRef = useRef(false);
   const bestInitialLocationRef = useRef<CampusLocationProjection | null>(null);
   const coarseFixTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inAppMessageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearCoarseFixTimer = useCallback(() => {
     if (coarseFixTimerRef.current === null) return;
@@ -145,7 +161,28 @@ export const CampusMap = ({
 
   useEffect(() => clearCoarseFixTimer, [clearCoarseFixTimer]);
 
+  useEffect(
+    () => () => {
+      if (inAppMessageTimerRef.current !== null) {
+        clearTimeout(inAppMessageTimerRef.current);
+      }
+    },
+    [],
+  );
+
   const handleLocationClick = () => {
+    if (restrictedInAppBrowser) {
+      if (inAppMessageTimerRef.current !== null) {
+        clearTimeout(inAppMessageTimerRef.current);
+      }
+      setShowInAppLocationMessage(true);
+      inAppMessageTimerRef.current = setTimeout(() => {
+        setShowInAppLocationMessage(false);
+        inAppMessageTimerRef.current = null;
+      }, IN_APP_LOCATION_MESSAGE_MS);
+      return;
+    }
+
     if (status === "tracking" && location) {
       completeInitialFocus(location);
       return;
@@ -159,6 +196,7 @@ export const CampusMap = ({
 
   const showLocationAccuracyNotice =
     location !== null && location.boundaryStatus !== "outside";
+  const showSafariPermissionGuide = safariBrowser && status === "permission-denied";
 
   return (
     <div className="flex w-full flex-col gap-1.5">
@@ -194,6 +232,7 @@ export const CampusMap = ({
           boundaryStatus={location?.boundaryStatus ?? null}
           onClick={handleLocationClick}
           status={status}
+          temporaryMessage={showInAppLocationMessage ? IN_APP_LOCATION_MESSAGE : null}
         />
 
         {bordered && (
@@ -201,10 +240,38 @@ export const CampusMap = ({
         )}
       </div>
 
-      {showLocationAccuracyNotice && (
-        <p className="px-1 text-center text-[11px] leading-4 font-medium text-[#a2a2a2]">
-          GPS 환경에 따라 실제 위치와 차이가 있을 수 있어요
-        </p>
+      {(showLocationAccuracyNotice ||
+        restrictedInAppBrowser ||
+        showSafariPermissionGuide) && (
+        <div className="flex w-full flex-col gap-2">
+          {(showLocationAccuracyNotice || restrictedInAppBrowser) && (
+            <p className="px-1 text-center text-[11px] leading-4 font-medium text-[#a2a2a2]">
+              GPS 환경에 따라 실제 위치와 차이가 있을 수 있어요
+            </p>
+          )}
+
+          {restrictedInAppBrowser && (
+            <InAppBrowserNotice
+              browserInstruction="크롬, 사파리등 브라우저로 접속해주세요."
+              showIosSafariLocationGuide
+              unavailableMessage={
+                <>
+                  <span className="block">인스타그램, 에브리타임 인앱의 경우</span>
+                  <span className="block">GPS 기능을 사용할 수 없어요.</span>
+                </>
+              }
+            />
+          )}
+
+          {showSafariPermissionGuide && (
+            <aside
+              aria-label="Safari 위치 권한 설정 방법"
+              className="w-full rounded-2xl border border-white/20 bg-[rgba(28,28,28,0.58)] px-4 py-3 backdrop-blur-xl"
+            >
+              <IosSafariLocationGuide />
+            </aside>
+          )}
+        </div>
       )}
     </div>
   );
