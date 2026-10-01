@@ -74,6 +74,12 @@ describe("CampusMap location", () => {
     expect(
       screen.getByText("GPS 환경에 따라 실제 위치와 차이가 있을 수 있어요"),
     ).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "GPS 측정 기록" })).toHaveTextContent(
+      "GPS 측정 #1",
+    );
+    expect(screen.getByRole("region", { name: "GPS 측정 기록" })).toHaveTextContent(
+      "35.8886615",
+    );
     expect(screen.queryByText("이 범위 안 어딘가")).not.toBeInTheDocument();
     const firstMarkerLeft = screen.getByRole("img", { name: "현재 위치" }).parentElement
       ?.style.left;
@@ -89,6 +95,9 @@ describe("CampusMap location", () => {
       expect(
         screen.getByRole("img", { name: "현재 위치" }).parentElement?.style.left,
       ).not.toBe(firstMarkerLeft),
+    );
+    expect(screen.getByRole("region", { name: "GPS 측정 기록" })).toHaveTextContent(
+      "GPS 측정 #2",
     );
     expect(festivalMapSpy.props?.focusRequest?.requestId).toBe(1);
 

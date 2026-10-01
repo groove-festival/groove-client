@@ -8,9 +8,14 @@ export type CampusLocationStatus =
 interface CampusLocationState {
   status: CampusLocationStatus;
   reading: CampusLocationReading | null;
+  sampleNumber: number;
 }
 
-const INITIAL_STATE: CampusLocationState = { status: "idle", reading: null };
+const INITIAL_STATE: CampusLocationState = {
+  status: "idle",
+  reading: null,
+  sampleNumber: 0,
+};
 const GEOLOCATION_PERMISSION_DENIED = 1;
 
 export const useCampusLocation = () => {
@@ -27,14 +32,14 @@ export const useCampusLocation = () => {
     stop();
 
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setState((current) => ({ ...current, status: "unavailable" }));
+      setState({ status: "unavailable", reading: null, sampleNumber: 0 });
       return;
     }
 
-    setState({ status: "locating", reading: null });
+    setState({ status: "locating", reading: null, sampleNumber: 0 });
     watchIdRef.current = navigator.geolocation.watchPosition(
       ({ coords, timestamp }) => {
-        setState({
+        setState((current) => ({
           status: "tracking",
           reading: {
             accuracy: coords.accuracy,
@@ -42,12 +47,14 @@ export const useCampusLocation = () => {
             longitude: coords.longitude,
             timestamp,
           },
-        });
+          sampleNumber: current.sampleNumber + 1,
+        }));
       },
       (error) => {
         stop();
         setState({
           reading: null,
+          sampleNumber: 0,
           status:
             error.code === GEOLOCATION_PERMISSION_DENIED
               ? "permission-denied"

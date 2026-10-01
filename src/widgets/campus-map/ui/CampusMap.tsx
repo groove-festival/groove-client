@@ -15,6 +15,7 @@ import {
 } from "../model/view";
 import { CampusMapLayer, type CampusMapLayerProps } from "./CampusMapLayer";
 import { CampusLocationControl } from "./CampusLocationControl";
+import { CampusLocationLog } from "./CampusLocationLog";
 
 // 지명 뱃지는 충분히 당겼을 때만 띄운다. 멀리서는 뱃지가 지도를 가리고 서로 겹친다.
 // [박스 폭에 배치도가 이만큼(배치도 px) 들어올 만큼 멀어지면 사라짐, 이만큼 당기면
@@ -69,7 +70,7 @@ export const CampusMap = ({
   labelWidths = DEFAULT_LABEL_WIDTHS,
   ...layerProps
 }: CampusMapProps) => {
-  const { reading, start, status } = useCampusLocation();
+  const { reading, sampleNumber, start, status } = useCampusLocation();
   const location = useMemo(
     () => (reading ? projectCampusLocation(reading) : null),
     [reading],
@@ -195,6 +196,14 @@ export const CampusMap = ({
           onClick={handleLocationClick}
           status={status}
         />
+
+        {status === "tracking" && reading && location && (
+          <CampusLocationLog
+            location={location}
+            reading={reading}
+            sampleNumber={sampleNumber}
+          />
+        )}
 
         {bordered && (
           <div className="pointer-events-none absolute inset-0 rounded-3xl border border-[#767676]" />
