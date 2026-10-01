@@ -1,4 +1,11 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import type { ReactNode } from "react";
 
 import { CampusMap } from "./CampusMap";
@@ -48,8 +55,7 @@ afterEach(() => {
 });
 
 describe("CampusMap location", () => {
-  it("shows the browser notice and does not request GPS inside a restricted app", () => {
-    vi.useFakeTimers();
+  it("opens the browser notice on location click without requesting GPS inside a restricted app", () => {
     Object.defineProperty(navigator, "userAgent", {
       configurable: true,
       value: "Mozilla/5.0 Instagram 352.0.0.0 Mobile",
@@ -67,25 +73,37 @@ describe("CampusMap location", () => {
       />,
     );
 
-    expect(screen.getByText("인스타그램, 에브리타임 인앱의 경우")).toBeInTheDocument();
-    expect(screen.getByText("GPS 기능을 사용할 수 없어요.")).toBeInTheDocument();
     expect(
-      screen.getByText("크롬, 사파리등 브라우저로 접속해주세요."),
-    ).toBeInTheDocument();
+      screen.queryByRole("dialog", { name: "GPS 기능 안내" }),
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByText("아이폰 iOS의 경우(사파리) 위치 허용 방법:"),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "주소 복사" })).toBeInTheDocument();
+      screen.queryByText("인스타그램, 에브리타임 인앱의 경우"),
+    ).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "내 위치 보기" }));
 
     expect(watchPosition).not.toHaveBeenCalled();
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "위치를 확인할 수 없어요. 인스타그램, 에브리타임 인앱의 경우 브라우저로 접속해 주세요.",
-    );
+    const dialog = screen.getByRole("dialog", { name: "GPS 기능 안내" });
+    expect(
+      within(dialog).getByText("인스타그램, 에브리타임 인앱의 경우"),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText("GPS 기능을 사용할 수 없어요."),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText("크롬, 사파리등 브라우저로 접속해주세요."),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText("아이폰 iOS의 경우(사파리) 위치 허용 방법:"),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("button", { name: "주소 복사" }),
+    ).toBeInTheDocument();
 
-    act(() => vi.advanceTimersByTime(4_000));
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole("button", { name: "확인했습니다" }));
+    expect(
+      screen.queryByRole("dialog", { name: "GPS 기능 안내" }),
+    ).not.toBeInTheDocument();
   });
 
   it("auto-focuses once, keeps moving the marker, and recenters on another click", async () => {

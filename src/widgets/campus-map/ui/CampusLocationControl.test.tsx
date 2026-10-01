@@ -26,18 +26,4 @@ describe("CampusLocationControl", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent("캠퍼스 외부에 있어요");
   });
-
-  it("prioritizes a temporary in-app message", () => {
-    render(
-      <CampusLocationControl
-        boundaryStatus={null}
-        onClick={() => {}}
-        status="permission-denied"
-        temporaryMessage="인앱 브라우저 안내"
-      />,
-    );
-
-    expect(screen.getByRole("status")).toHaveTextContent("인앱 브라우저 안내");
-    expect(screen.queryByText("위치 권한을 허용해주세요")).not.toBeInTheDocument();
-  });
 });
