@@ -1,4 +1,4 @@
-import { LocateFixed } from "lucide-react";
+import { LocateFixed, X } from "lucide-react";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 
@@ -25,9 +25,18 @@ export const CampusInAppLocationDialog = ({
       <section
         aria-labelledby="campus-in-app-location-title"
         aria-modal="true"
-        className="flex max-h-[calc(100dvh-32px)] w-full max-w-[320px] flex-col items-center gap-8 overflow-y-auto rounded-[36px] bg-[rgba(252,252,252,0.5)] px-6 py-8 backdrop-blur-[24px]"
+        className="relative flex max-h-[calc(100dvh-32px)] w-full max-w-[320px] flex-col items-center gap-8 overflow-y-auto rounded-[36px] bg-[rgba(252,252,252,0.5)] px-6 pt-[52px] pb-8 backdrop-blur-[24px]"
         role="dialog"
       >
+        <button
+          aria-label="안내 닫기"
+          className="absolute top-7 right-7 flex size-6 items-center justify-center text-[#fcfcfc] transition-transform duration-150 ease-out active:scale-90 motion-reduce:transition-none"
+          onClick={onClose}
+          type="button"
+        >
+          <X aria-hidden="true" className="size-6" strokeWidth={1.75} />
+        </button>
+
         <div className="flex w-full flex-col items-center gap-3 text-[#fcfcfc]">
           <LocateFixed aria-hidden="true" className="size-[72px]" strokeWidth={1.5} />
           <h1
@@ -41,6 +50,7 @@ export const CampusInAppLocationDialog = ({
         <InAppBrowserNotice
           browserInstruction="크롬, 사파리등 브라우저로 접속해주세요."
           className="!rounded-none !border-0 !bg-transparent !p-0 !backdrop-blur-none"
+          copyButtonClassName="!min-h-14 !bg-[#cfff04] !text-base"
           showIosSafariLocationGuide
           unavailableMessage={
             <>
@@ -49,14 +59,6 @@ export const CampusInAppLocationDialog = ({
             </>
           }
         />
-
-        <button
-          className="h-14 w-full rounded-[12px] bg-[#cfff04] text-center text-base font-semibold text-[#1c1c1c] transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
-          onClick={onClose}
-          type="button"
-        >
-          확인했습니다
-        </button>
       </section>
     </div>,
     document.body,

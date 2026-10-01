@@ -6,6 +6,7 @@ interface InAppBrowserNoticeProps {
   unavailableMessage: ReactNode;
   browserInstruction?: string;
   className?: string;
+  copyButtonClassName?: string;
   showIosSafariLocationGuide?: boolean;
 }
 
@@ -69,6 +70,7 @@ const copyCurrentAddress = async (): Promise<void> => {
 export const InAppBrowserNotice = ({
   browserInstruction = "브라우저로 접속해 주세요.",
   className = "",
+  copyButtonClassName = "",
   showIosSafariLocationGuide = false,
   unavailableMessage,
 }: InAppBrowserNoticeProps) => {
@@ -114,7 +116,7 @@ export const InAppBrowserNotice = ({
       )}
 
       <button
-        className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#fcfcfc] px-4 py-2 text-sm font-semibold text-[#1c1c1c] transition-transform duration-150 ease-out active:scale-[0.98] motion-reduce:transition-none"
+        className={`inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#fcfcfc] px-4 py-2 text-sm font-semibold text-[#1c1c1c] transition-transform duration-150 ease-out active:scale-[0.98] motion-reduce:transition-none ${copyButtonClassName}`}
         onClick={handleCopy}
         type="button"
       >
