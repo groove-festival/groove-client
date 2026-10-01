@@ -536,6 +536,65 @@ describe("BoothOrderPage", () => {
     expect(getBottomBar()).toHaveAttribute("inert");
   });
 
+  // 10/1 운영: 이체 안내를 닫으면 같은 메뉴가 담긴 채로 주문하기가 다시 보여
+  // 한 번 더 눌러 같은 주문이 두 건 들어갔다.
+  it("empties the cart once the order is placed, so closing the transfer guide cannot repeat it", async () => {
+    await showMenuScreen();
+    await placeOrder();
+
+    fireEvent.click(screen.getByRole("button", { name: "계좌이체 안내 닫기" }));
+
+    expect(getBottomBar()).toHaveAttribute("inert");
+    expect(
+      screen.getByRole("button", { name: "아직 완료되지 않은 주문이 있어요" }),
+    ).toBeInTheDocument();
+    expect(httpPost).toHaveBeenCalledTimes(1);
+  });
+
+  it("sends a single order when the button is tapped again while it is being placed", async () => {
+    let resolveOrder: (value: unknown) => void = () => {};
+    httpPost.mockImplementationOnce(
+      () => new Promise((resolve) => (resolveOrder = resolve)),
+    );
+    await showMenuScreen();
+    addSeparateCharge();
+    addFirstMenu();
+
+    const orderButton = screen.getByRole("button", { name: "27,000원 주문하기" });
+    fireEvent.click(orderButton);
+    fireEvent.click(orderButton); // 같은 프레임 안의 더블탭
+    const pendingButton = await screen.findByRole("button", { name: "주문하는 중…" });
+    expect(pendingButton).toBeDisabled();
+    fireEvent.click(pendingButton);
+    await waitFor(() => expect(httpPost).toHaveBeenCalledTimes(1));
+
+    currentOrder = createOrderBody();
+    resolveOrder(envelope({ ...currentOrder, orderToken: ORDER_TOKEN }));
+    await screen.findByRole("dialog", { name: "계좌이체 안내" });
+    expect(httpPost).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries with the same idempotency key when the first try got no response", async () => {
+    httpPost.mockRejectedValueOnce(new AxiosError("Network Error", "ERR_NETWORK"));
+    await showMenuScreen();
+    addSeparateCharge();
+    addFirstMenu();
+
+    fireEvent.click(screen.getByRole("button", { name: "27,000원 주문하기" }));
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "27,000원 주문하기" })).toBeEnabled(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "27,000원 주문하기" }));
+    await screen.findByRole("dialog", { name: "계좌이체 안내" });
+
+    const keys = httpPost.mock.calls.map(
+      ([, , config]) =>
+        (config as { headers: Record<string, string> }).headers["Idempotency-Key"],
+    );
+    expect(keys).toHaveLength(2);
+    expect(keys[0]).toBe(keys[1]);
+  });
+
   it("creates the order with menu ids, quantities and an idempotency key", async () => {
     await showMenuScreen();
     await placeOrder();
