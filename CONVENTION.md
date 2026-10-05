@@ -86,7 +86,7 @@ slice, segment, public API를 결정한다.
 app → pages → widgets → features → entities → shared
 ```
 
-- 현재 사용하는 `app`, `pages`, `widgets`, `entities`, `shared`를 유지한다.
+- 현재 사용하는 `app`, `pages`, `widgets`, `features`, `entities`, `shared`를 유지한다.
   `features`는 실제 책임과 재사용 경계가 생길 때 추가하며 빈 레이어를 미리
   만들지 않는다.
 - 코드는 자신보다 아래 레이어만 import한다. 같은 레이어의 다른 slice를 직접

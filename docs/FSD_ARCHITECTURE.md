@@ -7,13 +7,14 @@
 ## 1. 기본 결정
 
 Feature-Sliced Design의 표준 레이어를 사용한다. 현재 사용하는 레이어는
-`app`, `pages`, `widgets`, `entities`, `shared`이며, 빈 디렉터리를 미리 만들지 않는다.
+`app`, `pages`, `widgets`, `features`, `entities`, `shared`이며, 빈 디렉터리를 미리 만들지 않는다.
 
 ```text
 src/
 ├─ app/       # 앱 조립, 라우팅, 전역 스타일, 분석 초기화, 진입점
 ├─ pages/     # 라우트 단위 화면 slice
 ├─ widgets/   # 화면 간 재사용하는 독립 UI 블록
+├─ features/  # 화면 간 재사용하는 사용자 행동
 ├─ entities/  # 재사용하는 도메인 개념과 데이터
 └─ shared/    # 외부 연동, 환경 설정, 재사용 가능한 기반 코드
 ```
@@ -86,10 +87,19 @@ React Hook Form, Zod, TanStack Query를 사용한다는 이유만으로 전역 w
 별도 레이어를 만들지 않는다. 폼 스키마와 요청은 해당 기능 slice에 두고,
 여러 slice에 정말 공통인 기반만 `shared`로 내린다.
 
-`features/google-auth`는 가요제 사연 신청과 향후 가요제 투표에서 같은 Google
-로그인·세션 기능을 사용하기 위해 먼저 분리했다. 투표 화면 구현 전에는 참조하는
-page slice가 하나이므로 `fsd/insignificant-slice`만 이 slice에 한정해 제외한다.
-투표 화면이 이 기능을 사용하게 되면 `steiger.config.ts`의 예외를 제거한다.
+`features/google-auth`는 사연 신청과 가요제 투표가 공유하는 Google 로그인 버튼,
+SDK 로딩·실패·재시도와 인증 오류 표현을 소유한다. 계정과 세션 API는
+`entities/auth`에 유지한다. 두 page slice가 사용하므로 Steiger 예외를 두지 않는다.
+Google SDK는 한 번 초기화하고 현재 마운트된 버튼의 콜백으로 인증 정보를 전달한다.
+초기화 정책은 [Google 공식 API 문서](https://developers.google.com/identity/gsi/web/reference/js-reference)를 따른다.
+
+사연 접수 상태 전이는 `pages/contest-story/model/useStorySubmission`, 투표 선택과
+확정은 `pages/song-contest/model/useVoteCasting`이 소유한다. 가요제 일정 시각과
+스크롤 처리는 같은 slice의 `model/useContestOverview`, 표현은 `ui/ContestOverview`에 둔다.
+사연 제목 목록은 현재 숨김 정책이므로 조회·배치·미리보기 코드를 유지하지 않는다.
+
+모달의 Escape 처리, 포커스 유지·복원과 중첩 화면의 스크롤 잠금은
+`shared/ui/Dialog`가 관리한다. 각 화면의 모달은 내용·배치·닫기 동작을 소유한다.
 
 ## 5. `/groove` 경로와 분석 데이터
 
