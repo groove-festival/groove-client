@@ -53,7 +53,6 @@ describe("StageVoteRow", () => {
     });
     renderRow(scheduledVote);
 
-    // 공연이 끝난 뒤 누르는 버튼이라 그 의미를 먼저 알려준다. 기본 투표 시간은 5분이다.
     expect(
       screen.getByText(/참가팀 공연이 모두 끝나면 투표를 시작해 주세요/),
     ).toBeInTheDocument();
@@ -167,7 +166,6 @@ describe("StageVoteRow", () => {
   });
 
   it("picks the winner of a 1:1 match with one tap and shows votes only as a reference", async () => {
-    // 득표가 더 많은 팀이 져도 무대팀이 고른 대로 저장된다 (심사 점수 합산).
     respondTallies([
       { voteParticipantId: 1, voteCount: 30 },
       { voteParticipantId: 2, voteCount: 12 },
@@ -175,7 +173,6 @@ describe("StageVoteRow", () => {
     httpPut.mockResolvedValueOnce(ok({ ...scheduledVote, status: "CLOSED" }));
     renderRow({ ...scheduledVote, status: "CLOSED" });
 
-    // 마감됐는데 결과가 없으면 결과 입력이 펼쳐져 있다.
     expect(await screen.findByText("30표 (참고)")).toBeInTheDocument();
     const confirmButton = screen.getByRole("button", { name: "결과 확정" });
     expect(confirmButton).toBeDisabled();
@@ -252,7 +249,7 @@ describe("StageVoteRow", () => {
         ),
       );
     rankOf("A팀", 1);
-    rankOf("B팀", 1); // A팀의 1위가 풀린다
+    rankOf("B팀", 1);
     rankOf("A팀", 3);
     expect(screen.getByRole("button", { name: "결과 확정" })).toBeDisabled();
     rankOf("C팀", 2);
@@ -268,6 +265,51 @@ describe("StageVoteRow", () => {
         ],
       }),
     );
+  });
+
+  it("does not save a result when closing the vote fails", async () => {
+    respondTallies([]);
+    httpPatch.mockRejectedValueOnce(new Error("offline"));
+    renderRow({
+      ...scheduledVote,
+      status: "OPEN",
+      endsAt: "2026-10-02T19:10:00+09:00",
+    });
+    fireEvent.click(screen.getByRole("button", { name: "결과 입력" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "이 팀 승리" })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "결과 확정하고 투표 마감" }));
+    fireEvent.click(screen.getByRole("button", { name: "확정하고 마감" }));
+
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(httpPut).not.toHaveBeenCalled();
+  });
+
+  it("reports a closed vote with an unsaved result and retries only the result", async () => {
+    respondTallies([]);
+    httpPatch.mockResolvedValueOnce(ok({ ...scheduledVote, status: "CLOSED" }));
+    httpPut.mockRejectedValueOnce(new Error("offline"));
+    httpPut.mockResolvedValueOnce(ok({ ...scheduledVote, status: "CLOSED" }));
+    renderRow({
+      ...scheduledVote,
+      status: "OPEN",
+      endsAt: "2026-10-02T19:10:00+09:00",
+    });
+    fireEvent.click(screen.getByRole("button", { name: "결과 입력" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "이 팀 승리" })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "결과 확정하고 투표 마감" }));
+    fireEvent.click(screen.getByRole("button", { name: "확정하고 마감" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "투표는 마감됐지만 결과를 저장하지 못했어요",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "결과 확정" }));
+    fireEvent.click(screen.getByRole("button", { name: "확정" }));
+    expect(
+      await screen.findByText("결과를 저장했어요. 이긴 팀이 다음 경연으로 올라갔어요."),
+    ).toBeInTheDocument();
+    expect(httpPatch).toHaveBeenCalledOnce();
+    expect(httpPut).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("shows the saved result on the row", () => {

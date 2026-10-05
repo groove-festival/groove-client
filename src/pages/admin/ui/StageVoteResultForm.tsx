@@ -3,12 +3,7 @@ import { useState } from "react";
 import type { Vote } from "@/entities/contest";
 
 import { useVoteResults } from "../api/getVoteResults";
-import { useSubmitVoteResult } from "../api/submitVoteResult";
-import { useToggleVoteStatus } from "../api/toggleVoteStatus";
-import {
-  submitVoteResultErrorMessage,
-  toggleVoteStatusErrorMessage,
-} from "../model/adminErrorMessages";
+import { useFinalizeStageVote } from "../model/useFinalizeStageVote";
 import {
   assignRank,
   describeRanking,
@@ -23,15 +18,8 @@ interface StageVoteResultFormProps {
   vote: Vote;
 }
 
-// SING-A8. 최종 결과는 득표수만으로 정하지 않는다 — 관객 투표와 심사위원 평가를
-// 합쳐 무대팀이 정한다. 그래서 득표는 옆에 참고로만 보여주고 승자는 직접 고른다.
-//
-// 1:1 경기는 이긴 팀만 누르면 되고(1위·2위가 저절로 정해진다), 결선은 팀마다
-// 1·2·3위를 누른다. "결과 확정"은 투표가 아직 열려 있으면 먼저 마감하고 결과를
-// 저장한다 — 결과를 넣고 마감을 잊으면 끝난 경기에 표가 계속 들어온다.
 export function StageVoteResultForm({ vote }: StageVoteResultFormProps) {
-  const submitResult = useSubmitVoteResult();
-  const closeVote = useToggleVoteStatus();
+  const finalize = useFinalizeStageVote(vote);
   const tallies = useVoteResults(vote.singingVoteId, { live: vote.status === "OPEN" });
   const [selection, setSelection] = useState<RankSelection>(() =>
     initialRankSelection(vote),
@@ -39,9 +27,9 @@ export function StageVoteResultForm({ vote }: StageVoteResultFormProps) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const isFinal = vote.participants.length > 2;
-  const isOpen = vote.status === "OPEN";
+  const isOpen = finalize.isOpen;
   const isComplete = isCompleteRanking(vote, selection);
-  const isSaving = submitResult.isPending || closeVote.isPending;
+  const isSaving = finalize.isPending;
   const countOf = new Map(
     (tallies.data?.tallies ?? []).map((entry) => [
       entry.voteParticipantId,
@@ -49,25 +37,14 @@ export function StageVoteResultForm({ vote }: StageVoteResultFormProps) {
     ]),
   );
 
-  const confirm = async () => {
+  const confirm = () => {
     setIsConfirmOpen(false);
-    try {
-      if (isOpen) {
-        await closeVote.mutateAsync({
-          singingVoteId: vote.singingVoteId,
-          status: "CLOSED",
-        });
-      }
-      await submitResult.mutateAsync({
-        singingVoteId: vote.singingVoteId,
-        results: vote.participants.map((participant) => ({
-          voteParticipantId: participant.voteParticipantId,
-          rank: selection[participant.voteParticipantId],
-        })),
-      });
-    } catch {
-      // 두 요청의 오류는 아래 문구로 보여준다.
-    }
+    finalize.mutate(
+      vote.participants.map((participant) => ({
+        voteParticipantId: participant.voteParticipantId,
+        rank: selection[participant.voteParticipantId],
+      })),
+    );
   };
 
   return (
@@ -147,14 +124,12 @@ export function StageVoteResultForm({ vote }: StageVoteResultFormProps) {
         })}
       </ul>
 
-      {(submitResult.isError || closeVote.isError) && (
+      {finalize.isError && (
         <p className="text-xs text-[#ff5b5b]" role="alert">
-          {closeVote.isError
-            ? toggleVoteStatusErrorMessage(closeVote.error)
-            : submitVoteResultErrorMessage(submitResult.error)}
+          {finalize.errorMessage}
         </p>
       )}
-      {submitResult.isSuccess && (
+      {finalize.isSuccess && (
         <p className="text-xs text-[#7bffb0]">
           결과를 저장했어요{isFinal ? "." : ". 이긴 팀이 다음 경연으로 올라갔어요."}
         </p>
@@ -175,7 +150,7 @@ export function StageVoteResultForm({ vote }: StageVoteResultFormProps) {
           isFinal ? "" : " — 1위 팀이 다음 경연으로 올라가요."
         }${isOpen ? " 투표도 함께 마감돼요." : ""}`}
         onCancel={() => setIsConfirmOpen(false)}
-        onConfirm={() => void confirm()}
+        onConfirm={confirm}
         open={isConfirmOpen}
         title={`${vote.title} 결과를 확정할까요?`}
       />
