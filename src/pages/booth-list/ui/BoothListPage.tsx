@@ -12,6 +12,7 @@ import {
   useBooths,
 } from "@/entities/booth";
 import { LoadingFallback, NetworkErrorFallback } from "@/shared/ui";
+import { readStorageItem, writeStorageItem } from "@/shared/lib/storage";
 
 import { getBoothsByArea, type PubMapArea } from "../model/pubMap";
 
@@ -19,26 +20,17 @@ import filterChevron from "../festival-visuals/filter-chevron.svg";
 import { BoothNoticeDialog } from "./BoothNoticeDialog";
 import { PubBoothMap } from "./PubBoothMap";
 
-// 펼친 단대 목록과 화면 아래 끝 사이에 남길 여백.
 const MENU_BOTTOM_MARGIN_PX = 16;
-// 지도에서 고른 주막 카드가 뷰포트 하단에 보일 때 남길 여백.
+
 const SELECTED_BOOTH_BOTTOM_MARGIN_PX = 24;
 
 const NOTICE_DISMISSED_STORAGE_KEY = "groove:booth-notice-dismissed";
-// 확인한 안내는 같은 탭에서 다시 띄우지 않는다. 상세에서 뒤로 돌아올 때마다
-// 목록이 새로 마운트되며 안내가 다시 뜨는 것을 막는다.
+
 const NOTICE_CONFIRMED_SESSION_KEY = "groove:booth-notice-confirmed";
 
-const hasDismissedNotice = () => {
-  try {
-    return (
-      window.localStorage.getItem(NOTICE_DISMISSED_STORAGE_KEY) === "true" ||
-      window.sessionStorage.getItem(NOTICE_CONFIRMED_SESSION_KEY) === "true"
-    );
-  } catch {
-    return false;
-  }
-};
+const hasDismissedNotice = () =>
+  readStorageItem("local", NOTICE_DISMISSED_STORAGE_KEY) === "true" ||
+  readStorageItem("session", NOTICE_CONFIRMED_SESSION_KEY) === "true";
 
 const BoothFilterMenu = ({
   onChange,
@@ -50,8 +42,6 @@ const BoothFilterMenu = ({
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // 펼친 목록이 화면 아래로 잘리면 잘린 만큼만 내려 준다. 화면 안에 다 들어와
-  // 있으면 움직이지 않는다.
   useEffect(() => {
     if (!isOpen) return;
 
@@ -92,7 +82,7 @@ const BoothFilterMenu = ({
         <div
           aria-label="단과대 필터"
           ref={menuRef}
-          // 버튼(37px) 바로 아래 한 픽셀부터 이어 붙인다.
+
           className="absolute top-[38px] left-0 flex w-[111px] flex-col items-center justify-center rounded-xl bg-[rgba(252,252,252,0.4)] px-4 py-2 text-base font-medium text-[#fcfcfc] backdrop-blur-[24px]"
           role="listbox"
         >
@@ -122,15 +112,14 @@ const BoothFilterMenu = ({
 const BoothListPage = () => {
   const [selectedFilter, setSelectedFilter] = useState<BoothFilter>("all");
   const [selectedArea, setSelectedArea] = useState<PubMapArea>("all");
-  // 날짜별 두 주막이 한 천막을 공유할 수 있어 지도 선택은 자리 단위로 관리한다.
+
   const [selectedSpotCode, setSelectedSpotCode] = useState<string | null>(null);
   const [isNoticeOpen, setIsNoticeOpen] = useState(() => !hasDismissedNotice());
   const pubMapRef = useRef<HTMLDivElement>(null);
   const selectedBoothResultRef = useRef<HTMLLIElement>(null);
   const boothsQuery = useBooths();
   const booths = useMemo(() => boothsQuery.data ?? [], [boothsQuery.data]);
-  // 구역과 단대를 모두 통과한 기본 목록. 자리 하나를 고르기 전과 선택을
-  // 해제한 뒤에는 이 목록을 그대로 보여준다.
+
   const baseFilteredBooths = useMemo(
     () => getBoothsByArea(getBoothsByFilter(booths, selectedFilter), selectedArea),
     [booths, selectedArea, selectedFilter],
@@ -158,7 +147,6 @@ const BoothListPage = () => {
   );
   const selectedLabel = selectedBooths.map(getBoothDisplayName).join(" · ");
 
-  // 필터를 바꾸면 고른 주막이 목록에서 사라질 수 있어 선택을 함께 푼다.
   const changeFilter = (filter: BoothFilter) => {
     setSelectedFilter(filter);
     setSelectedSpotCode(null);
@@ -223,20 +211,12 @@ const BoothListPage = () => {
   }
 
   const dismissNoticePermanently = () => {
-    try {
-      window.localStorage.setItem(NOTICE_DISMISSED_STORAGE_KEY, "true");
-    } catch {
-      // Storage can be unavailable in private or restricted browsing contexts.
-    }
+    writeStorageItem("local", NOTICE_DISMISSED_STORAGE_KEY, "true");
     setIsNoticeOpen(false);
   };
 
   const confirmNotice = () => {
-    try {
-      window.sessionStorage.setItem(NOTICE_CONFIRMED_SESSION_KEY, "true");
-    } catch {
-      // Storage can be unavailable in private or restricted browsing contexts.
-    }
+    writeStorageItem("session", NOTICE_CONFIRMED_SESSION_KEY, "true");
     setIsNoticeOpen(false);
   };
 
@@ -276,8 +256,7 @@ const BoothListPage = () => {
 
       <ul
         aria-label={`${boothFilterOptions.find(({ id }) => id === selectedFilter)?.label} 주막 목록`}
-        // 펼친 단대 드롭다운(버튼 아래 342px)보다 목록이 짧아도 푸터가 그 위로
-        // 올라오지 않도록 최소 높이를 준다. 카드가 많으면 영향이 없다.
+
         className="mt-4 flex min-h-[300px] flex-col gap-4 pb-6"
       >
         {filteredBooths.length === 0 && (
@@ -293,7 +272,7 @@ const BoothListPage = () => {
                 : ""
             }
             key={booth.boothCode}
-            // 여러 장이면 마지막 카드까지 보이도록 끝 카드를 기준으로 내린다.
+
             ref={booth === selectedBooths.at(-1) ? selectedBoothResultRef : null}
           >
             <BoothCard

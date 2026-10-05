@@ -1,17 +1,15 @@
 import { type AdminOrder } from "./adminOrder";
+import { readStorageItem, writeStorageItem } from "@/shared/lib/storage";
 
-// 알바생이 자기가 맡은 테이블만 보는 필터. 사람마다 다른 설정이라 서버가 아니라
-// 그 기기에만 남긴다. 주막마다 테이블 구성이 달라 주막 코드로 나눠 저장한다.
 export const tableFilterStorageKey = (boothCode: string): string =>
   `groove:pub-admin:tables:${boothCode}`;
 
 const isTableNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isInteger(value) && value > 0;
 
-// 저장소를 못 읽거나(시크릿 모드·차단) 값이 깨졌으면 전체 테이블로 연다.
 export const readTableFilter = (boothCode: string): number[] => {
   try {
-    const raw = window.localStorage.getItem(tableFilterStorageKey(boothCode));
+    const raw = readStorageItem("local", tableFilterStorageKey(boothCode));
     const parsed: unknown = raw ? JSON.parse(raw) : [];
 
     return Array.isArray(parsed)
@@ -22,21 +20,13 @@ export const readTableFilter = (boothCode: string): number[] => {
   }
 };
 
-export const writeTableFilter = (boothCode: string, tables: number[]): void => {
-  try {
-    const key = tableFilterStorageKey(boothCode);
+export const writeTableFilter = (boothCode: string, tables: number[]): boolean =>
+  writeStorageItem(
+    "local",
+    tableFilterStorageKey(boothCode),
+    tables.length === 0 ? null : JSON.stringify(tables),
+  );
 
-    if (tables.length === 0) {
-      window.localStorage.removeItem(key);
-    } else {
-      window.localStorage.setItem(key, JSON.stringify(tables));
-    }
-  } catch {
-    // 저장하지 못해도 이번 화면에서는 필터가 동작한다.
-  }
-};
-
-// 빈 배열은 "전체 테이블"이다.
 export const filterOrdersByTables = (
   orders: AdminOrder[],
   tables: number[],
