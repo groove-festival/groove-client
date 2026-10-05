@@ -77,4 +77,10 @@ export default tseslint.config(
       "no-restricted-syntax": ["error", noReactComponentType],
     },
   },
+  {
+    files: ["src/app/analytics/initializeGoogleAnalytics.ts"],
+    rules: {
+      "prefer-rest-params": "off",
+    },
+  },
 );

@@ -14,8 +14,6 @@ export function initializeGoogleAnalytics(measurementId: string): void {
 
   window.dataLayer ??= [];
   window.gtag ??= function () {
-    // gtag.js ignores rest-parameter arrays; it requires an Arguments command.
-    // eslint-disable-next-line prefer-rest-params
     window.dataLayer?.push(arguments);
   };
 

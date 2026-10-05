@@ -15,6 +15,11 @@ GROOVE PLAYLIST의 사용자 행동, 신청 성공률, 프론트엔드 오류를
 Clarity와 Sentry Replay를 동시에 사용하지 않는다. 세션 행동은 Clarity, 오류
 원인은 Sentry로 나눠 녹화 중복과 개인정보 노출 면적을 줄인다.
 
+Google Analytics 초기화는 `dataLayer`에 실제 `Arguments` 객체를 전달한다.
+rest parameter 배열로 바꾸면 기존 gtag 명령 형식이 달라지므로,
+`initializeGoogleAnalytics.ts`에만 ESLint의 `prefer-rest-params` 예외를 둔다.
+이 예외는 기존 인라인 도구 지시 주석을 설정 파일로 옮긴 것이다.
+
 ## 개인정보 경계
 
 학번, 이름, 학과, 닉네임, 검색어, 곡명, 아티스트, trackId, 폼 값, API

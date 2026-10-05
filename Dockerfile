@@ -1,16 +1,13 @@
 # syntax=docker/dockerfile:1.4
 
-# 1단계: Node로 빌드
 FROM node:24-alpine AS builder
 WORKDIR /app
 
-# 패키지 설치
 RUN corepack enable && corepack prepare pnpm@10 --activate
 COPY package.json pnpm-lock.yaml* ./
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile --ignore-scripts
 
-# 소스 복사 후 빌드
 COPY . .
 ARG VITE_API_BASE_URL
 ARG VITE_GA_MEASUREMENT_ID
@@ -32,7 +29,6 @@ ENV SENTRY_PROJECT=$SENTRY_PROJECT
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 RUN pnpm build
 
-# 2단계: 빌드 결과만 nginx로 서빙
 FROM nginx:alpine
 RUN rm -rf /usr/share/nginx/html/* && \
     mkdir -p /usr/share/nginx/html/groove
@@ -43,10 +39,8 @@ COPY --chmod=755 <<-"EOF" /docker-entrypoint.d/40-replace-env.sh
 #!/bin/sh
 set -eu
 
-# 치환 대상 디렉터리 (/groove 하위의 빌드 산출물)
 TARGET_DIR="/usr/share/nginx/html/groove"
 
-# 환경변수가 비어있을 경우 기본값 처리
 VITE_API_BASE_URL="${VITE_API_BASE_URL:-}"
 VITE_GA_MEASUREMENT_ID="${VITE_GA_MEASUREMENT_ID:-}"
 VITE_TELEMETRY_ENABLED="${VITE_TELEMETRY_ENABLED:-false}"
@@ -57,7 +51,6 @@ SENTRY_ORG="${SENTRY_ORG:-}"
 SENTRY_PROJECT="${SENTRY_PROJECT:-}"
 VITE_GOOGLE_CLIENT_ID="${VITE_GOOGLE_CLIENT_ID:-}"
 
-# dist 내의 모든 js 파일에서 플레이스홀더를 실제 환경변수로 치환
 find "$TARGET_DIR" -type f -name "*.js" -exec sed -i \
   -e "s|__VITE_API_BASE_URL__|$VITE_API_BASE_URL|g" \
   -e "s|__VITE_GA_MEASUREMENT_ID__|$VITE_GA_MEASUREMENT_ID|g" \

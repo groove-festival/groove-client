@@ -10,8 +10,6 @@ import { defineConfig } from "vitest/config";
 const sourceRoot = fileURLToPath(new URL("./src", import.meta.url));
 
 export default defineConfig(({ mode }) => {
-  // Vite는 config 평가 전에 .env 파일을 process.env에 자동 주입하지 않는다.
-  // 로컬 production 검증과 CI 환경변수를 모두 지원하되 아래 네 키만 읽는다.
   const buildEnvironment = { ...loadEnv(mode, process.cwd(), ""), ...process.env };
   const sentryAuthToken = buildEnvironment.SENTRY_AUTH_TOKEN;
   const sentryOrganization = buildEnvironment.SENTRY_ORG;
@@ -27,8 +25,6 @@ export default defineConfig(({ mode }) => {
   return {
     base: "/groove/",
     build: {
-      // 소스맵 업로드 자격 증명이 모두 있을 때만 생성한다. 업로드 후에는
-      // filesToDeleteAfterUpload로 dist에서 제거해 원본 소스를 공개하지 않는다.
       sourcemap: canUploadSentrySourceMaps ? ("hidden" as const) : false,
     },
     define: {
