@@ -160,7 +160,6 @@ describe("toAdminPubAccount", () => {
     ],
     ["은행명이 없을 때", { accountHolder: "홍", accountNumber: "1", bankName: null }],
   ])("treats a partial account as unregistered — %s", (_label, account) => {
-    // 하나라도 비면 손님이 이체할 수 없는 계좌다. 미등록으로 다뤄야 경고가 뜬다.
     expect(toAdminPubAccount(account)).toBeNull();
   });
 });
@@ -352,7 +351,7 @@ describe("image uploads", () => {
     expect(url).toBe("/admin/pub/menu-board-image");
     expect(body).toBeInstanceOf(FormData);
     expect((body as FormData).get("file")).toBe(imageFile);
-    // 직접 헤더를 지정하면 boundary가 빠져 서버가 파싱하지 못한다.
+
     expect(config).toBeUndefined();
   });
 

@@ -22,9 +22,8 @@ import { PubOrderRow } from "./PubOrderRow";
 const sorts: TableSort[] = ["number", "oldestLastOrder"];
 
 interface PubTableOrdersProps {
-  // 등록된 테이블 번호. 주문이 없는 테이블도 보여준다.
   tableNumbers: number[];
-  // 담당 테이블 필터. 빈 배열이면 전체.
+
   visibleTables: number[];
 }
 
@@ -49,9 +48,6 @@ const TableSummary = ({ now, table }: { now: number; table: TableOrders }) => {
   );
 };
 
-// 테이블마다 들어온 주문을 모아 보는 화면. 서빙 직원이 한 테이블이 무엇을
-// 시켰는지, 마지막으로 언제 시켰는지를 보고 추가 주문·상차림비를 판단한다.
-// 마지막 주문이 오래된 순으로 정렬하면 한참 조용한 테이블부터 살필 수 있다.
 export const PubTableOrders = ({
   tableNumbers,
   visibleTables,
@@ -132,7 +128,6 @@ export const PubTableOrders = ({
                   {table.tableNumber}번
                 </span>
                 <span className="min-w-0 flex-1 truncate text-xs text-[#a2a2a2] tabular-nums">
-                  {/* 주문을 받기 전에 "주문 없음"으로 보이면 오해한다. */}
                   {orders.isSuccess ? (
                     <TableSummary now={orders.dataUpdatedAt} table={table} />
                   ) : (

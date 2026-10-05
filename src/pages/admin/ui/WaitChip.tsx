@@ -11,7 +11,6 @@ interface WaitChipProps {
   tone: WaitTone;
 }
 
-// 얼마나 기다렸는지를 색으로 먼저 읽히게 한다. 초록 → 노랑 → 빨강.
 export const WaitChip = ({ minutes, tone }: WaitChipProps) => (
   <span
     className={`shrink-0 rounded px-1.5 py-0.5 text-[11px] leading-none font-semibold ${toneClasses[tone]}`}

@@ -25,7 +25,6 @@ describe("getMenuDraftError", () => {
     );
   });
 
-  // 0원은 서버가 거부한다 (price: must be greater than or equal to 1).
   it.each(["", "1500원", "-100", "1.5", "12 000", "0"])(
     "rejects the price %s",
     (price) => {
@@ -77,7 +76,7 @@ describe("menu options", () => {
           options: [
             option(" 불파게티로 변경 ", "1000"),
             option("메인 메뉴와 함께 주문했어요", " -1000 "),
-            // 휴대폰 자판이 넣는 마이너스 기호도 음수로 읽는다.
+
             option("학생증 할인", "−500"),
           ],
         }),
@@ -126,7 +125,6 @@ describe("menu options", () => {
   });
 
   it("replaces the whole option list on update, an empty list clearing it", () => {
-    // PUB-A6은 options를 보내면 목록을 통째로 바꾼다. 빈 배열을 보내야 지울 수 있다.
     expect(toMenuUpdateBody(toMenuDraftPayload(draft({}))!).options).toEqual([]);
     expect(
       toMenuUpdateBody(
@@ -138,8 +136,6 @@ describe("menu options", () => {
 
 describe("toMenuUpdateBody", () => {
   it("clears the description with an empty string, not null", () => {
-    // 서버는 null 을 "보내지 않음"으로 읽어 기존 설명을 그대로 둔다. null 로 보내면
-    // 한 번 넣은 설명을 지울 수 없다 (실서버 확인).
     const payload = toMenuDraftPayload(draft({ description: "   " }));
 
     expect(payload?.description).toBeNull();

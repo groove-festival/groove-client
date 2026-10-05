@@ -24,15 +24,12 @@ import { useOrderStatusChange } from "../model/useOrderStatusChange";
 import { OrderStatusError } from "./OrderStatusError";
 import { WaitChip } from "./WaitChip";
 
-// 테이블 번호 칸의 색이 곧 대기 시간이다. 주방에서 멀리서도 빨간 칸부터 집는다.
 const tableBlockClasses: Record<WaitTone, string> = {
   fresh: "bg-[#3a3a3a] text-[#fcfcfc]",
   waiting: "bg-[#ffb020] text-[#0b0b0b]",
   late: "bg-[#ff5c5c] text-[#0b0b0b]",
 };
 
-// 옵션은 조리법이 바뀌는 신호다 ("불파게티로 변경"). 메뉴 이름과 색을 달리해
-// 바쁜 주방에서도 놓치지 않게 한다. 이미 나간 줄은 전체를 흐리게 둔다.
 const KitchenLineName = ({ line }: { line: AdminOrderLine }) => (
   <>
     {line.name}
@@ -53,13 +50,6 @@ interface KitchenTicketProps {
   orderNumber: number | undefined;
 }
 
-// 조리 주문 한 건을 한 줄짜리 티켓으로. 왼쪽 테이블 번호, 가운데 만들 메뉴,
-// 오른쪽 서빙완료. 금액·입금자명은 주방에 필요 없고 개인정보라 싣지 않는다.
-// 취소는 주방에서 누를 일이 아니라 주문 내역 화면에만 둔다.
-//
-// 한 주문을 여러 직원이 나눠 나르면 무엇이 이미 나갔는지 헷갈린다. 티켓을
-// 펼치면 메뉴마다 서빙을 체크할 수 있고, 체크는 서버에 남아 다른 직원의
-// 화면에도 취소선으로 보인다. 마지막 메뉴까지 체크되면 주문이 끝난다.
 const KitchenTicket = ({
   isPending,
   now,
@@ -193,12 +183,9 @@ const KitchenTicket = ({
 };
 
 export interface PubKitchenBoardProps {
-  // 담당 테이블 필터. 비어 있으면 전체.
   visibleTables: number[];
 }
 
-// 결제가 확인돼 조리에 들어간 주문만 보여주는 주방용 화면 (FR-1.8). 입금
-// 확인과 다른 기기에서 띄워 두는 것을 전제로, 먼저 들어온 주문이 위에 온다.
 export const PubKitchenBoard = ({ visibleTables }: PubKitchenBoardProps) => {
   const orders = useAdminOrders();
   const statusChange = useOrderStatusChange();

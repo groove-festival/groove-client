@@ -13,8 +13,6 @@ interface SongRequestRowProps {
   busy: boolean;
 }
 
-// 부모(SongRequestList)에서만 쓰는 행 컴포넌트. 비공개 정보(본명·학번·학과)는
-// 화면에만 노출한다.
 const SongRequestRow = ({
   song,
   onToggleSelected,

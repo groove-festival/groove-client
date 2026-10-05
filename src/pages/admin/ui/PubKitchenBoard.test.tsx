@@ -158,7 +158,7 @@ describe("PubKitchenBoard", () => {
     await screen.findByRole("article");
     expect(screen.queryByText("김입금")).not.toBeInTheDocument();
     expect(screen.queryByText("15,000원")).not.toBeInTheDocument();
-    // 취소는 주문 내역 화면에서 한다.
+
     expect(screen.queryByRole("button", { name: "주문취소" })).not.toBeInTheDocument();
   });
 
@@ -215,13 +215,13 @@ describe("PubKitchenBoard", () => {
         ],
       }),
     ]);
-    // 응답이 늦어도 화면은 누르는 즉시 바뀌어야 한다.
+
     httpPatch.mockReturnValue(new Promise(() => {}));
     renderBoard();
 
     const ticket = await screen.findByRole("article", { name: "1번 테이블 조리 주문" });
     expect(ticket).toHaveTextContent("1/2 나감");
-    // 이미 나간 콜라는 만들 메뉴 합계에서 빠진다.
+
     const totals = screen.getByRole("region", { name: "만들 메뉴 합계" });
     expect(totals).toHaveTextContent("닭발 1");
     expect(totals).not.toHaveTextContent("콜라");

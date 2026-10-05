@@ -13,8 +13,6 @@ const statusOptions: { label: string; value: BoothStatus }[] = [
   { label: "준비중", value: "PREPARING" },
 ];
 
-// PUB-A2. 준비중이면 손님 주문이 즉시 막힌다. 계좌가 없으면 오픈해도 주문이
-// 409(PUB006)로 거부되므로 먼저 경고한다.
 export const PubStatusToggle = ({ hasAccount, status }: PubStatusToggleProps) => {
   const changeStatus = useChangePubStatus();
 

@@ -2,7 +2,7 @@ import { getPubImageFileError, MAX_PUB_IMAGE_BYTES } from "./pubImageFile";
 
 const file = (type: string, size: number) => {
   const created = new File(["x"], "menu.jpg", { type });
-  // File 생성자로는 크기를 원하는 만큼 만들 수 없어 size만 덮어쓴다.
+
   Object.defineProperty(created, "size", { value: size });
 
   return created;
@@ -31,8 +31,6 @@ describe("getPubImageFileError", () => {
   });
 
   it("rejects a file of exactly 10MB, which nginx always blocks", () => {
-    // client_max_body_size 가 요청 본문 전체에 걸려, multipart 경계가 붙는 순간
-    // 10MB 파일은 언제나 초과한다 (실서버 확인: 10MB-512B 통과, 10MB 차단).
     expect(getPubImageFileError(file("image/png", 10 * 1024 * 1024))).not.toBeNull();
   });
 

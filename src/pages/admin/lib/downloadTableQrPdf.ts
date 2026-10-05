@@ -9,7 +9,6 @@ import {
   tableQrPdfFileName,
 } from "../model/tableQrSheet";
 
-// A4를 150dpi로 그린다. QR 한 칸(모듈)이 10px 넘게 나와 인쇄해도 번지지 않는다.
 const PAGE_WIDTH_MM = 210;
 const PAGE_HEIGHT_MM = 297;
 const PAGE_WIDTH_PX = 1240;
@@ -17,12 +16,9 @@ const PAGE_HEIGHT_PX = 1754;
 const QR_SIZE_PX = 340;
 const FONT_FAMILY = "Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif";
 
-// 화면에 이미 쓰는 qrcode.react로 SVG를 만들고 이미지로 읽는다. 같은 QR 생성기를
-// 쓰므로 화면의 QR과 인쇄물의 QR이 어긋날 일이 없다.
 const loadQrImage = async (value: string): Promise<HTMLImageElement> => {
   const { renderToStaticMarkup } = await import("react-dom/server");
-  // 이미지로 읽는 SVG는 xmlns가 없으면 디코딩되지 않는데, React는 이를 붙이지
-  // 않는다.
+
   const markup = renderToStaticMarkup(
     createElement(QRCodeSVG, {
       level: "M",
@@ -89,9 +85,6 @@ const drawCutLines = (context: CanvasRenderingContext2D) => {
   context.restore();
 };
 
-// 테이블마다 붙일 QR을 A4 PDF로 내려받는다. 텍스트는 캔버스에 그려 이미지로
-// 싣는다 — jsPDF에 한글 글꼴을 넣으면 파일이 수 MB가 되고, 캔버스는 기기에
-// 있는 글꼴로 한글을 그린다. 라이브러리는 버튼을 누를 때 불러온다.
 export async function downloadTableQrPdf(
   pubName: string,
   labels: TableQrLabel[],
@@ -136,7 +129,7 @@ export async function downloadTableQrPdf(
     if (pageIndex > 0) {
       pdf.addPage();
     }
-    // 흑백 선화라 무손실 압축이 잘 먹는다. 압축을 끄면 A4 한 장이 6MB를 넘는다.
+
     pdf.addImage(
       canvas.toDataURL("image/png"),
       "PNG",

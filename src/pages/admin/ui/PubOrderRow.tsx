@@ -21,8 +21,6 @@ const statusToneClasses: Record<AdminOrderStatus, string> = {
   CANCELED: "bg-[#3a3a3a] text-[#a2a2a2]",
 };
 
-// 결제완료(돈 확인)와 서빙완료(음식 전달)는 누르는 사람과 뜻이 달라 색으로
-// 구분한다. 결제완료는 결제완료 배지와 같은 초록, 서빙완료는 보라.
 const primaryButtonClasses: Partial<Record<AdminOrderStatus, string>> = {
   PAID: "bg-[#00b37e] text-[#0b0b0b]",
   COMPLETED: "bg-[#5d00ff] text-[#fcfcfc]",
@@ -34,16 +32,12 @@ export interface PubOrderRowProps {
   onChangeStatus: (order: AdminOrder, status: AdminOrderStatus) => void;
   order: AdminOrder;
   orderNumber: number | undefined;
-  // 목록이 이미 상태별로 묶여 있으면 상태 배지는 같은 말을 반복할 뿐이다.
+
   showStatus?: boolean;
-  // 끝난 주문은 기다린 시간이 의미 없어 경과 칩을 숨긴다.
+
   waitThresholds?: WaitThresholds;
 }
 
-// 휴대폰에서 여러 주문을 한 화면에 훑을 수 있게 한 주문을 두 줄로 줄인 행.
-// 입금 대사에 필요한 테이블·입금자명·금액·시각만 접힌 상태에 두고, 메뉴와
-// 되돌릴 수 없는 취소는 행을 눌러 펼쳤을 때만 보인다. 다음 단계로 넘기는
-// 버튼은 엄지가 닿는 오른쪽에 항상 둔다.
 export const PubOrderRow = ({
   isPending,
   now,

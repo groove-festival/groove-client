@@ -8,8 +8,6 @@ export interface PubMenuBoardImageFieldProps {
   menuBoardImageUrl: string | null;
 }
 
-// PUB-A4. 주막 전체의 실물 메뉴판을 찍은 1장. 준비중일 때 손님에게 보이는 게
-// 이 사진이라 메뉴 등록보다 먼저 올려두는 편이 낫다.
 export const PubMenuBoardImageField = ({
   menuBoardImageUrl,
 }: PubMenuBoardImageFieldProps) => {

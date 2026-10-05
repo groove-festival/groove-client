@@ -10,8 +10,6 @@ export interface UploadMenuImageArgs {
   menuId: number;
 }
 
-// PUB-A12. 메뉴 카드에 들어가는 개별 음식 사진. 형식·용량 제한은 메뉴판
-// 사진(PUB-A4)과 같다.
 export async function uploadMenuImage({
   file,
   menuId,

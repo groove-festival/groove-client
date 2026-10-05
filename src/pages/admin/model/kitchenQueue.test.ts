@@ -96,7 +96,6 @@ describe("summarizeKitchenMenus", () => {
   });
 
   it("counts the same menu separately per option set", () => {
-    // 옵션이 다르면 만드는 법이 달라 주방이 따로 봐야 한다.
     const line = (itemId: number, labels: string[], quantity: number) => ({
       itemId,
       menuId: 30,

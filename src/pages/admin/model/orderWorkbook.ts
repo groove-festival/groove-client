@@ -8,27 +8,19 @@ import {
   formatAdminLineName,
 } from "./adminOrder";
 
-// 주막 정산용 엑셀. 서버 주문 목록(PUB-A8) 한 번으로 만들 수 있어 서버에
-// 별도 내보내기 API를 두지 않는다. 시트 구성은 정산할 때 보는 순서다 —
-// 요약으로 총액을 맞추고, 주문 내역으로 통장과 대조하고, 나머지로 무엇이
-// 언제 얼마나 팔렸는지 본다.
-
 export interface OrderWorkbookSheet {
   columnWidths: number[];
   data: SheetData;
-  // 머리글 행이 있는 표 시트만 첫 줄을 고정한다. 요약은 표가 여러 개라 고정하지 않는다.
+
   hasHeaderRow: boolean;
   name: string;
 }
 
 export interface OrderWorkbookContext {
-  // 파일을 만든 시각. 시트에 적어 두어야 나중에 어느 시점 자료인지 안다.
   exportedAt: Date;
   pubName: string;
 }
 
-// 결제가 확인된 주문만 매출로 센다. 입금대기·입금확인중은 아직 돈을 받았는지
-// 모르고, 취소는 받지 않았거나 돌려준 돈이다.
 const REVENUE_STATUSES: ReadonlySet<AdminOrderStatus> = new Set(["PAID", "COMPLETED"]);
 
 export const isRevenueOrder = (order: AdminOrder): boolean =>
@@ -49,9 +41,6 @@ const paymentMethodLabels: Record<AdminPaymentMethod, string> = {
 
 const WON_FORMAT = "#,##0";
 
-// 서버는 오프셋 없는 KST 시각(LocalDateTime)을 내려준다. Date로 읽으면 기기
-// 시간대에 따라 값이 바뀌므로 문자열 그대로 자른다. 오프셋이 붙어 오면 KST로
-// 바꿔 적는다.
 const kstFormatter = new Intl.DateTimeFormat("sv-SE", {
   timeZone: "Asia/Seoul",
   year: "numeric",
@@ -241,9 +230,6 @@ interface MenuTally extends Tally {
 }
 
 const buildMenuSheet = (revenueOrders: AdminOrder[]): OrderWorkbookSheet => {
-  // 메뉴 이름은 주문 당시 스냅샷이다. 축제 중에 이름을 고쳤어도 같은 메뉴로
-  // 묶이도록 menuId로 모으고, 이름은 가장 최근 주문의 것을 쓴다. 옵션은 메뉴를
-  // 가르지 않는다 — 매출에는 옵션 가격 차이가 단가에 이미 들어가 있다.
   const menus = new Map<number, MenuTally>();
 
   for (const order of revenueOrders) {
@@ -328,8 +314,6 @@ const buildTableSheet = (revenueOrders: AdminOrder[]): OrderWorkbookSheet => {
 };
 
 const buildHourlySheet = (revenueOrders: AdminOrder[]): OrderWorkbookSheet => {
-  // "2026-10-01 18" 까지 잘라 한 시간 단위로 묶는다. 문자열이 시각 순으로
-  // 정렬되는 형식이라 그대로 정렬한다.
   const hours = [
     ...tallyBy(revenueOrders, (order) =>
       toKstDateTimeText(order.orderedAt).slice(0, 13),
@@ -368,7 +352,6 @@ export const buildOrderWorkbook = (
   ];
 };
 
-// 파일 이름에 쓸 수 없는 문자를 걷어낸다. 주막 이름은 운영팀이 넣은 자유 텍스트다.
 export const orderWorkbookFileName = ({
   exportedAt,
   pubName,

@@ -16,7 +16,6 @@ const phaseLabels: Record<PlaylistPhase, string> = {
   PUBLISHED: "공개",
 };
 
-// null = 자동 판정으로 되돌리기.
 type PendingTarget = PlaylistPhase | null;
 
 export const PhaseOverridePanel = () => {

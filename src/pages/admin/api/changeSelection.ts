@@ -10,8 +10,6 @@ interface ChangeSelectionArgs {
   selected: boolean;
 }
 
-// PLST-A3. 최종 선정 여부 토글. 선정을 해제하면 서버가 그 곡의 공개 순서도
-// 함께 비운다.
 export async function changeSelection({
   songRequestId,
   selected,

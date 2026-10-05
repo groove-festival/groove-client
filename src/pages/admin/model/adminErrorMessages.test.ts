@@ -10,8 +10,6 @@ describe("pubImageUploadErrorMessage", () => {
   });
 
   it("explains the size limit when nginx answers instead of the app", () => {
-    // 용량 초과는 앞단 nginx 가 먼저 막고, 그 응답은 공통 봉투가 아니라 HTML 이라
-    // code 가 비어 NETWORK 로 정규화된다. code 만 보면 일반 실패 문구가 뜬다.
     expect(
       pubImageUploadErrorMessage(new ApiError("NETWORK", "Request failed", 413)),
     ).toContain("너무 커요");

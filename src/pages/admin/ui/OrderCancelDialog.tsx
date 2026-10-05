@@ -5,7 +5,6 @@ interface OrderCancelDialogProps {
   statusChange: ReturnType<typeof useOrderStatusChange>;
 }
 
-// 취소는 되돌릴 수 없어 한 번 더 묻는다.
 export const OrderCancelDialog = ({ statusChange }: OrderCancelDialogProps) => (
   <ConfirmDialog
     confirmLabel="주문취소"

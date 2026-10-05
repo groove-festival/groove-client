@@ -102,7 +102,6 @@ describe("PubTableOrders", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "마지막 주문 오래된 순" }));
 
-    // 2번의 마지막 주문 18:20 이 1번 18:40 보다 오래됐다. 주문 없는 3번은 맨 아래.
     expect(tableRows()).toEqual(["2", "1", "3"]);
   });
 

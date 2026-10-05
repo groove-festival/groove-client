@@ -30,7 +30,6 @@ const order = (over: Partial<AdminOrder>): AdminOrder => ({
   ...over,
 });
 
-// 셀 스타일을 걷어내고 값만 본다.
 const valueOf = (cell: Cell): unknown =>
   cell !== null &&
   typeof cell === "object" &&
@@ -147,7 +146,6 @@ describe("buildOrderWorkbook", () => {
   it("writes one row per ordered menu", () => {
     const rows = sheet("주문 품목");
 
-    // 주문 4건의 품목 5줄 + 머리글
     expect(rows).toHaveLength(6);
     expect(rows.at(-1)).toEqual([
       2,
@@ -191,7 +189,7 @@ describe("buildOrderWorkbook", () => {
     expect(rowsOf("주문 품목")[1][4]).toBe(
       "짜파게티 (불파게티로 변경, 메인 메뉴와 함께 주문했어요)",
     );
-    // 메뉴별 판매는 옵션과 상관없이 메뉴 단위로 모은다.
+
     expect(rowsOf("메뉴별 판매")[1]).toEqual(["짜파게티", 2, 10_000, 1]);
   });
 

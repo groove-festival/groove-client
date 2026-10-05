@@ -24,8 +24,6 @@ const OrderGroup = ({
   renderRow,
   title,
 }: OrderGroupProps) => (
-  // aria-label을 단 section이라 스크린리더가 "입금확인중 주문" 묶음으로 읽고,
-  // 테스트도 묶음 단위로 확인할 수 있다.
   <section aria-label={title} className="flex flex-col gap-1.5">
     <div className="flex items-baseline gap-2 px-1">
       <h3 className="text-sm font-bold text-[#fcfcfc]">{title}</h3>
@@ -42,10 +40,7 @@ const OrderGroup = ({
   </section>
 );
 
-// 결제 확인 전 주문만 모아 통장과 대조하는 화면이다 (FR-1.8-1, FR-1.8-2).
-// 결제완료로 올린 주문은 주방 화면으로 넘어가고, 끝난 주문은 주문 내역에서 본다.
 export interface PubPaymentBoardProps {
-  // 담당 테이블 필터. 비어 있으면 전체.
   visibleTables: number[];
 }
 
@@ -54,18 +49,15 @@ export const PubPaymentBoard = ({ visibleTables }: PubPaymentBoardProps) => {
   const statusChange = useOrderStatusChange();
   const [isStaleOpen, setIsStaleOpen] = useState(false);
 
-  // 폴링이 데이터를 받아온 시각을 "지금"으로 쓴다. 렌더 중에 Date.now()를
-  // 부르면 리렌더마다 기준이 흔들려 같은 주문이 접혔다 펴졌다 한다. 아직
-  // 받아온 적이 없으면 0이라 아무것도 오래된 것으로 치지 않는다.
   const now = orders.dataUpdatedAt;
   const allOrders = orders.data ?? [];
   const board = partitionAdminOrders(
     filterOrdersByTables(allOrders, visibleTables),
     now,
   );
-  // 순번은 필터와 상관없이 주막 전체 기준이다. 필터를 바꿔도 같은 주문은 같은 번호다.
+
   const orderNumbers = numberOrdersByArrival(allOrders);
-  // 필터가 걸린 채 비어 있으면 주문이 없는 게 아니라 안 보이는 것일 수 있다.
+
   const scope = visibleTables.length > 0 ? "담당 테이블에는 " : "";
 
   const renderRow = (order: AdminOrder) => (

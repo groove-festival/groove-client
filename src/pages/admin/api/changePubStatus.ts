@@ -9,7 +9,6 @@ interface ChangePubStatusResponseBody {
   status: BoothStatus;
 }
 
-// PUB-A2. 준비중으로 내리면 손님 주문 페이지(PUB-3/PUB-4)의 주문이 즉시 막힌다.
 export async function changePubStatus(status: BoothStatus): Promise<BoothStatus> {
   const response = await requestData<ChangePubStatusResponseBody>(() =>
     httpClient.patch<ApiEnvelope<ChangePubStatusResponseBody>>("/admin/pub/status", {

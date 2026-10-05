@@ -2,8 +2,6 @@ import { buildTableOrderUrl } from "./tableQr";
 
 describe("buildTableOrderUrl", () => {
   it("builds the front-end order route, not the API path the server returns", () => {
-    // PUB-A11의 orderPath는 `/pubs/{boothCode}/tables/{tableCode}` 라 그대로
-    // QR에 넣으면 열리지 않는다.
     expect(
       buildTableOrderUrl({
         basePath: "/groove",

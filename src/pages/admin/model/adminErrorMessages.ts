@@ -85,8 +85,6 @@ export function deleteStoryErrorMessage(error: unknown): string {
   );
 }
 
-// ---- 주막(PUB_ADMIN) 대시보드 ----
-
 export function pubStatusErrorMessage(error: unknown): string {
   return (
     adminAccessErrorMessage(error) ??
@@ -127,7 +125,6 @@ export function orderStatusErrorMessage(error: unknown): string {
   );
 }
 
-// PUB-A14. 다른 직원이 먼저 주문을 끝내거나 취소하면 PUB010이 온다.
 export function orderItemServedErrorMessage(error: unknown): string {
   if (error instanceof ApiError && error.code === "PUB010") {
     return "이미 끝났거나 취소된 주문이에요. 목록을 새로고침했어요.";
@@ -158,9 +155,6 @@ export function menuMutationErrorMessage(error: unknown): string {
 }
 
 export function pubImageUploadErrorMessage(error: unknown): string {
-  // 용량 초과는 앱(C413)이 아니라 앞단 nginx 가 먼저 막고, 그 응답은 공통 봉투가
-  // 아니라 HTML 이라 code 가 비어 있다 (실서버 확인, 2026-09-25). code 만 보면
-  // 일반 실패 문구가 떠서 사용자가 이유를 모른다. status 로도 잡는다.
   if (error instanceof ApiError && (error.code === "C413" || error.status === 413)) {
     return "이미지가 너무 커요. 10MB 보다 작은 파일로 올려 주세요.";
   }

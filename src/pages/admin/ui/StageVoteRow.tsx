@@ -8,7 +8,6 @@ import { ConfirmDialog } from "./ConfirmDialog";
 import { StageVoteResultForm } from "./StageVoteResultForm";
 import { StageVoteResultsView } from "./StageVoteResultsView";
 
-// 경연 상태는 곧 관객 투표 상태다 — "열기"는 공연이 아니라 투표를 여는 것이다.
 const statusLabels = {
   SCHEDULED: "투표 전",
   OPEN: "투표 중",
@@ -22,7 +21,7 @@ interface StageVoteRowProps {
 export function StageVoteRow({ vote }: StageVoteRowProps) {
   const toggleStatus = useToggleVoteStatus();
   const [extendMinutesInput, setExtendMinutesInput] = useState("5");
-  // 마감됐는데 결과가 아직 없는 경기는 결과 입력을 펼쳐 둔다 — 다음으로 할 일이 그것뿐이다.
+
   const hasResult = vote.participants.some(
     (participant) => participant.resultRank !== null,
   );
@@ -32,9 +31,6 @@ export function StageVoteRow({ vote }: StageVoteRowProps) {
   const [showResults, setShowResults] = useState(false);
   const [confirmReopen, setConfirmReopen] = useState(false);
 
-  // 결선(3라운드)만 3자 대결이라 참가팀 3명이 다 차야 한다. 그 외에는 2명.
-  // 앞 라운드 결과가 하나만 들어온 상태(예: 2명 중 1명만 채워짐)에서는
-  // 아직 열 수 없다.
   const expectedParticipantCount = vote.round === "ROUND_3" ? 3 : 2;
   const isFullyFormed = vote.participants.length >= expectedParticipantCount;
 
@@ -49,8 +45,6 @@ export function StageVoteRow({ vote }: StageVoteRowProps) {
   };
 
   const onOpen = () => {
-    // 이미 마감된 경기를 다시 열 때만 확인을 거친다 — 최초 오픈은 되돌릴
-    // 데이터가 없어 바로 진행해도 안전하다.
     if (vote.status === "CLOSED") {
       setConfirmReopen(true);
       return;

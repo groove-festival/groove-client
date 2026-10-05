@@ -16,8 +16,6 @@ export interface ChangeOrderItemServedRequestBody {
   served: boolean;
 }
 
-// PUB-A14. 조리 중(PAID) 주문의 항목 하나를 서빙 체크한다. 마지막 항목까지
-// 체크되면 서버가 주문을 COMPLETED로 올려 응답한다.
 export async function changeOrderItemServed({
   itemId,
   orderId,
@@ -33,8 +31,6 @@ export async function changeOrderItemServed({
   return toAdminOrder(response);
 }
 
-// 주방에서 연달아 누르는 버튼이라 5초 폴링을 기다리지 않고 바로 반영한다.
-// 서버가 거절하면 이전 목록으로 되돌리고 다시 받아온다.
 export function useChangeOrderItemServed() {
   const queryClient = useQueryClient();
   const queryKey = pubAdminQueryKeys.orders();

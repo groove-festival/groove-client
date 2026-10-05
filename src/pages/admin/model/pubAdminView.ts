@@ -7,7 +7,6 @@ import {
   Wallet,
 } from "lucide-react";
 
-// 주막 관리자 화면 목록. 주소의 ?view= 값이자 하단 탭의 순서다.
 export type PubAdminView = "payment" | "kitchen" | "tables" | "history" | "settings";
 
 export const pubAdminViews: { icon: LucideIcon; id: PubAdminView; label: string }[] = [

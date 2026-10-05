@@ -6,8 +6,6 @@ interface StageVoteResultsViewProps {
   vote: Vote;
 }
 
-// SING-A3. 진행 중인 경기도 포함해 언제든 득표 현황을 참고용으로 본다 —
-// 최종 결과는 득표수가 아니라 심사위원 점수로 무대팀이 직접 입력한다.
 export function StageVoteResultsView({ vote }: StageVoteResultsViewProps) {
   const results = useVoteResults(vote.singingVoteId);
   const countByParticipant = new Map(

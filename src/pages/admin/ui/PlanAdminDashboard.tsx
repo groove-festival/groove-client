@@ -10,7 +10,6 @@ import { rivalScoreErrorMessage } from "../model/adminErrorMessages";
 import { AdminHeader } from "./AdminHeader";
 import { ConfirmDialog } from "./ConfirmDialog";
 
-// 점수판이 아직 안 왔을 때도 단대를 고를 수 있도록 순서와 이름을 둔다(API College 선언 순).
 const colleges: { id: RivalsCollege; label: string }[] = [
   { id: "IT", label: "IT대학" },
   { id: "NURSING", label: "간호대학" },
@@ -24,9 +23,6 @@ const quickPoints = [10, 50, 100] as const;
 
 const formatPoints = (points: number) => `${points > 0 ? "+" : ""}${points}점`;
 
-// 기획팀(PLAN_ADMIN). GROOVE RIVALS 단대 점수를 더하거나(양수) 잘못 넣은 것을
-// 빼서(음수) 고친다(PLAN-A1). 점수는 덮어쓰지 않고 누적되므로, 넣기 전에 단대·점수를
-// 한 번 더 확인시킨다. 위 점수판은 참여자 이벤트 화면과 같은 값이다.
 export function PlanAdminDashboard() {
   const scores = useAdminRivalScores();
   const addScore = useAddRivalScore();

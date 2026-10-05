@@ -83,7 +83,6 @@ const renderDashboard = (initialEntry = "/admin") => {
 };
 
 beforeEach(() => {
-  // jsdom은 스크롤을 구현하지 않는다. 탭을 바꾸면 맨 위로 올리는지만 본다.
   window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
 });
 

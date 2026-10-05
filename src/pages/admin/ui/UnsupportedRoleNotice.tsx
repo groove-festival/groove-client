@@ -1,7 +1,5 @@
 import { AdminHeader } from "./AdminHeader";
 
-// 로그인 자체는 됐지만 이 프론트에 아직 대시보드가 없는 역할(SUPER_ADMIN)을
-// 위한 안내.
 export function UnsupportedRoleNotice() {
   return (
     <div className="min-h-dvh">

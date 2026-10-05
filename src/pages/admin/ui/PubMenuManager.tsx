@@ -30,8 +30,6 @@ interface EditTarget {
   menuId: number;
 }
 
-// PUB-A5·A6·A7·A12. 손님 화면과 달리 분류별로 묶지 않고 서버가 준 순서 그대로
-// 나열한다 — 고칠 메뉴를 찾는 목록이라 묶음이 오히려 방해가 된다.
 export const PubMenuManager = ({ menus }: PubMenuManagerProps) => {
   const createMenu = useCreateMenu();
   const updateMenu = useUpdateMenu();
@@ -53,14 +51,11 @@ export const PubMenuManager = ({ menus }: PubMenuManagerProps) => {
     Boolean,
   );
 
-  // 다이얼로그의 포커스 effect가 부모 리렌더마다 다시 돌지 않도록 닫기
-  // 콜백의 정체성을 고정한다. 입력 중에 포커스를 빼앗기면 글자를 잃는다.
   const closeCreateDialog = useCallback(() => setIsCreateOpen(false), []);
   const closeEditDialog = useCallback(() => setEditTarget(null), []);
   const closeDeleteDialog = useCallback(() => setDeleteTarget(null), []);
 
   const onToggleSoldOut = (menu: BoothMenuItem) => {
-    // 부분 전송이라 품절 여부만 보낸다 (PUB-A6).
     updateMenu.mutate({ menuId: menu.id, requestBody: { soldOut: !menu.isSoldOut } });
   };
 

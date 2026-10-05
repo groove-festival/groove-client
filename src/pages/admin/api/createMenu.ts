@@ -10,14 +10,11 @@ import { type ApiEnvelope, httpClient, requestData } from "@/shared/api";
 
 import { pubAdminQueryKeys } from "./queryKeys";
 
-// 분류는 필수다. 비면 손님 화면에서 어느 묶음에도 들어가지 못하는 메뉴가
-// 생기므로 등록 시점에 받는다 (PUB-A5). 품절 여부는 등록 시 기본 판매중이라
-// 보내지 않는다.
 export interface CreateMenuRequestBody {
   category: MenuCategory;
   description: string | null;
   name: string;
-  // 옵션은 최대 10개, 이름은 50자까지. 비우거나 빼면 옵션 없는 메뉴가 된다.
+
   options?: { label: string; priceDelta: number }[];
   price: number;
   separateCharge: boolean;

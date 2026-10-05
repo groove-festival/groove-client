@@ -15,8 +15,6 @@ interface PubProfileFormProps {
   >;
 }
 
-// PUB-A15. 주막 이름과 한 줄 소개. 손님 목록 카드·상세·지도 라벨이 이 이름을 쓴다.
-// 사범대처럼 한 자리를 날짜별로 나눠 쓰는 학과는 자기 날 주막만 바뀐다는 것을 함께 알린다.
 export const PubProfileForm = ({ booth }: PubProfileFormProps) => {
   const updateProfile = useUpdatePubProfile();
   const [draft, setDraft] = useState<{ description: string; name: string } | null>(

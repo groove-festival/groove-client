@@ -10,13 +10,11 @@ import { type ApiEnvelope, httpClient, requestData } from "@/shared/api";
 
 import { pubAdminQueryKeys } from "./queryKeys";
 
-// PUB-A6은 부분 전송이다. 보내지 않은 항목은 기존 값이 유지되므로 품절 토글만
-// 할 때 이름·가격을 함께 보내지 않는다. 사진은 여기서 바꾸지 않는다 (PUB-A12).
 export interface UpdateMenuRequestBody {
   category?: MenuCategory;
   description?: string | null;
   name?: string;
-  // 보내면 기존 옵션 목록을 통째로 바꾼다. 빈 배열은 옵션을 모두 지운다.
+
   options?: { label: string; priceDelta: number }[];
   price?: number;
   separateCharge?: boolean;

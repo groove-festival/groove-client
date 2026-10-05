@@ -7,8 +7,6 @@ export function areOrdersEqual(a: readonly number[], b: readonly number[]): bool
   return a.length === b.length && a.every((id, index) => id === b[index]);
 }
 
-// 선정된 곡을 공개(재생) 순서로 정렬한다. displayOrder가 있는 곡이 그 값 순서로
-// 먼저 오고, 아직 순서가 없는 곡은 신청 순(뒤쪽)에 붙는다.
 export function sortByDisplayOrder<T extends Orderable>(songs: readonly T[]): T[] {
   return [...songs].sort((a, b) => {
     const ao = a.displayOrder;
@@ -26,8 +24,6 @@ export function sortByDisplayOrder<T extends Orderable>(songs: readonly T[]): T[
   });
 }
 
-// 배열에서 index 항목을 delta(+1/-1)만큼 이동한 새 배열을 돌려준다. 범위를
-// 벗어나면 원본을 그대로 돌려준다.
 export function moveByOffset<T>(
   items: readonly T[],
   index: number,

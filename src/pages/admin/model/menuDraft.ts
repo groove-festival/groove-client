@@ -1,13 +1,10 @@
 import { type BoothMenuItem, type MenuCategory } from "@/entities/booth";
 
-// 메뉴 옵션 한 줄의 입력값. 가격 차이는 "-"만 친 상태도 있어 문자열로 둔다.
 export interface MenuOptionDraft {
   label: string;
   priceDelta: string;
 }
 
-// 메뉴 등록·수정 폼의 입력값. 가격은 입력 중 빈 문자열일 수 있어 문자열로
-// 들고 있다가 제출 시점에 숫자로 바꾼다.
 export interface MenuDraft {
   category: MenuCategory;
   description: string;
@@ -28,7 +25,6 @@ export const emptyMenuDraft: MenuDraft = {
 
 export const emptyMenuOptionDraft: MenuOptionDraft = { label: "", priceDelta: "" };
 
-// 서버가 받는 옵션 한도 (PUB-A5·A6).
 export const MAX_MENU_OPTIONS = 10;
 export const MAX_MENU_OPTION_LABEL_LENGTH = 50;
 
@@ -51,9 +47,6 @@ export const menuCategoryLabels: Record<MenuCategory, string> = {
   DRINK: "음료",
 };
 
-// 서버가 요구하는 최소 가격. 0원 메뉴는 등록·수정 모두 거부된다 (실서버 확인,
-// 2026-09-25: `price: must be greater than or equal to 1`). 프론트가 0을 통과시키면
-// 저장 순간에야 모호한 안내가 뜬다.
 const MIN_MENU_PRICE = 1;
 
 const parsePrice = (price: string): number | null => {
@@ -68,8 +61,6 @@ const parsePrice = (price: string): number | null => {
   return parsed < MIN_MENU_PRICE ? null : parsed;
 };
 
-// 할인 옵션("메인 메뉴와 함께 주문 시 −1,000원")이 있어 음수를 받는다. 휴대폰
-// 자판이 마이너스 기호(−)를 넣는 경우도 하이픈과 같게 읽는다.
 const parsePriceDelta = (priceDelta: string): number | null => {
   const trimmed = priceDelta.trim().replace(/^−/, "-");
 
@@ -94,8 +85,6 @@ const getMenuOptionError = (option: MenuOptionDraft): string | null => {
   return null;
 };
 
-// 서버에 보내기 전에 막을 입력이면 문구를, 괜찮으면 null을 준다. 분류는
-// select로만 고르므로 여기서 검사하지 않는다.
 export const getMenuDraftError = (draft: MenuDraft): string | null => {
   if (!draft.name.trim()) {
     return "메뉴 이름을 입력해 주세요.";
@@ -119,7 +108,6 @@ export const getMenuDraftError = (draft: MenuDraft): string | null => {
     }
   }
 
-  // 할인 옵션을 모두 체크해도 한 개 값이 0원 아래로 내려가면 안 된다.
   const totalDiscount = draft.options.reduce(
     (sum, option) => sum + Math.min(0, parsePriceDelta(option.priceDelta) ?? 0),
     0,
@@ -141,14 +129,12 @@ export interface MenuDraftPayload {
   category: MenuCategory;
   description: string | null;
   name: string;
-  // 수정(PUB-A6)에서 보내면 기존 옵션 목록을 통째로 바꾼다. 빈 배열은 모두 지운다.
+
   options: MenuOptionPayload[];
   price: number;
   separateCharge: boolean;
 }
 
-// 검증을 통과한 draft만 넘긴다. 통과하지 못하면 null을 돌려 호출부가 제출을
-// 멈추게 한다. 등록(PUB-A5)은 설명이 없으면 null로 보낸다.
 export const toMenuDraftPayload = (draft: MenuDraft): MenuDraftPayload | null => {
   const price = parsePrice(draft.price);
 
@@ -173,9 +159,6 @@ export type MenuUpdateBody = Omit<MenuDraftPayload, "description"> & {
   description: string;
 };
 
-// 수정(PUB-A6)에 보낼 본문. 등록과 달리 설명을 비울 때 null이 아니라 빈 문자열을
-// 보낸다 — 서버는 null을 "이 항목은 보내지 않음"으로 읽어 기존 설명을 그대로 두므로,
-// null로 보내면 한 번 넣은 설명을 지울 방법이 없다 (실서버 확인, 2026-09-25).
 export const toMenuUpdateBody = (payload: MenuDraftPayload): MenuUpdateBody => ({
   ...payload,
   description: payload.description ?? "",

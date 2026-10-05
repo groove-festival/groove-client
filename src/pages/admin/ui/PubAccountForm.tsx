@@ -22,9 +22,6 @@ const emptyValues: Record<FieldKey, string> = {
   accountHolder: "",
 };
 
-// PUB-A3. 여기 등록한 계좌가 손님의 주문 완료 모달에 복사 가능한 형태로
-// 노출된다. 세 항목이 모두 차 있어야 저장한다 — 하나라도 비면 손님이 이체할
-// 수 없는 계좌가 된다.
 export const PubAccountForm = ({ account }: PubAccountFormProps) => {
   const updateAccount = useUpdatePubAccount();
   const [draft, setDraft] = useState<Record<FieldKey, string> | null>(null);

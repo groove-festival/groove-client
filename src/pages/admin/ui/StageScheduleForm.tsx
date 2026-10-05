@@ -54,9 +54,6 @@ const phaseTextTones: Record<StagePhase, string> = {
   CLOSED: "bg-[rgba(255,0,128,0.14)] text-[#ff9acb]",
 };
 
-// SING-A4. 네 값 모두 선택이며, 비어 있는 쪽의 단계는 fail-closed로
-// BEFORE에 머문다 (§11-16). 화면에서는 사연·투표 일정을 나눠 보여주지만,
-// 저장할 때는 반대쪽 기존 값도 함께 보내 탭 간 데이터가 지워지지 않게 한다.
 export function StageScheduleForm({ section }: { section: StageScheduleSection }) {
   const status = useFestivalStatus();
   const setSchedule = useSetStageSchedule();

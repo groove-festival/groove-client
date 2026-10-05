@@ -41,7 +41,7 @@ describe("allowed transitions", () => {
       "PAID",
       "CANCELED",
     ]);
-    // 현금 결제 단축 전이 (FR-1.4-5).
+
     expect(getAllowedAdminOrderTransitions("PENDING_DEPOSIT")).toEqual([
       "PAID",
       "CANCELED",
@@ -54,7 +54,6 @@ describe("allowed transitions", () => {
   });
 
   it("does not let the administrator mark a deposit as claimed", () => {
-    // 입금확인중으로 가는 것은 손님의 입금자명 제출(PUB-6)로만 일어난다.
     expect(getAllowedAdminOrderTransitions("PENDING_DEPOSIT")).not.toContain(
       "DEPOSIT_CLAIMED",
     );
@@ -138,8 +137,6 @@ describe("partitionAdminOrders", () => {
   });
 
   it("treats every order as fresh before the first poll lands", () => {
-    // dataUpdatedAt은 아직 받아온 적이 없으면 0이다. 그때 전부 오래된 것으로
-    // 접히면 주문이 통째로 사라져 보인다.
     const board = partitionAdminOrders([order({ id: 1 })], 0);
 
     expect(board.stalePendingDeposit).toEqual([]);

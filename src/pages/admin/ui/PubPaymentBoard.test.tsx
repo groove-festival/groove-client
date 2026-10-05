@@ -75,8 +75,6 @@ describe("PubPaymentBoard", () => {
     ]);
     renderBoard();
 
-    // 묶음 자체는 로딩 중에도 비어 있는 채로 그려지므로 데이터가 붙기를 먼저
-    // 기다린 뒤에 묶음별로 확인한다.
     await screen.findByText("김입금");
 
     const claimed = await groupSection("입금확인중");
@@ -87,7 +85,6 @@ describe("PubPaymentBoard", () => {
     expect(within(pending).getByText("1번 테이블")).toBeInTheDocument();
     expect(within(pending).getByText("미제출")).toBeInTheDocument();
 
-    // 결제완료된 주문은 주방 화면으로 넘어간다.
     expect(screen.queryByText("3번 테이블")).not.toBeInTheDocument();
   });
 
@@ -98,11 +95,11 @@ describe("PubPaymentBoard", () => {
     renderBoard();
 
     expect(await screen.findByRole("button", { name: "결제완료" })).toBeInTheDocument();
-    // 되돌릴 수 없는 취소는 행을 펼쳐야 보인다 — 결제완료 옆에서 잘못 누르지 않게.
+
     expect(screen.queryByRole("button", { name: "주문취소" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { expanded: false }));
     expect(screen.getByRole("button", { name: "주문취소" })).toBeInTheDocument();
-    // 입금확인중에서 곧바로 서빙완료로 보내지 않는다.
+
     expect(screen.queryByRole("button", { name: "서빙완료" })).not.toBeInTheDocument();
   });
 
@@ -153,7 +150,7 @@ describe("PubPaymentBoard", () => {
 
     expect(await screen.findByText("현금")).toBeInTheDocument();
     expect(screen.getByText("현금 결제")).toBeInTheDocument();
-    // 현금은 입금대기에서 결제완료로 바로 넘긴다 (FR-1.4-5).
+
     expect(screen.getByRole("button", { name: "결제완료" })).toBeInTheDocument();
   });
 
@@ -192,10 +189,9 @@ describe("PubPaymentBoard", () => {
     const dialog = await screen.findByRole("dialog", {
       name: "이 주문을 취소할까요?",
     });
-    // 확인 전에는 아무것도 보내지 않는다.
+
     expect(httpPatch).not.toHaveBeenCalled();
 
-    // 카드의 취소 버튼과 다이얼로그의 확인 버튼이 같은 문구라 다이얼로그 안에서 고른다.
     fireEvent.click(within(dialog).getByRole("button", { name: "주문취소" }));
 
     await waitFor(() =>

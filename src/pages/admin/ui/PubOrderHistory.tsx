@@ -40,15 +40,13 @@ type ExportState = "idle" | "working" | "failed";
 
 interface PubOrderHistoryProps {
   pubName: string;
-  // 담당 테이블 필터. 목록에만 적용하고 매출 요약·엑셀은 주막 전체 기준이다.
+
   visibleTables: number[];
 }
 
 const sumAmount = (orders: AdminOrder[]): number =>
   orders.reduce((sum, order) => sum + order.totalPrice, 0);
 
-// 지난 주문을 상태별로 찾아보고, 정산용 엑셀을 내려받는 화면. 결제완료 뒤의
-// 취소처럼 입금 확인·주방 화면에서 하지 않는 처리도 여기서 한다.
 export const PubOrderHistory = ({ pubName, visibleTables }: PubOrderHistoryProps) => {
   const orders = useAdminOrders();
   const statusChange = useOrderStatusChange();
@@ -63,7 +61,6 @@ export const PubOrderHistory = ({ pubName, visibleTables }: PubOrderHistoryProps
   const canceledCount = allOrders.filter((order) => order.status === "CANCELED").length;
   const orderNumbers = numberOrdersByArrival(allOrders);
 
-  // 최신 주문이 위로 온다. 방금 처리한 주문을 찾는 용도가 가장 많다.
   const visibleOrders = filterOrdersByTables(allOrders, visibleTables)
     .filter((order) => filter === "ALL" || order.status === filter)
     .sort((left, right) => right.orderedAt.localeCompare(left.orderedAt));
@@ -72,7 +69,6 @@ export const PubOrderHistory = ({ pubName, visibleTables }: PubOrderHistoryProps
     setExportState("working");
 
     try {
-      // 화면의 목록은 최대 5초 전 것이라 내려받기 직전에 다시 받는다.
       const latest = await orders.refetch({ throwOnError: true });
       const context = { exportedAt: new Date(), pubName };
 
@@ -149,7 +145,6 @@ export const PubOrderHistory = ({ pubName, visibleTables }: PubOrderHistoryProps
       <OrderStatusError statusChange={statusChange} />
 
       <section aria-label="주문 목록" className="flex flex-col gap-1.5">
-        {/* 필터는 한 줄로 두고 넘치면 옆으로 민다. 줄바꿈되면 목록이 그만큼 밀려난다. */}
         <div
           aria-label="주문 상태 필터"
           className="-mx-4 flex [scrollbar-width:none] gap-1.5 overflow-x-auto px-4 pb-1"

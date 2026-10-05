@@ -11,9 +11,6 @@ export interface ChangeOrderStatusArgs {
   status: AdminOrderStatus;
 }
 
-// PUB-A9. 허용 전이는 model/adminOrder의 전이표와 같다. 손님이 CASH로 선언해
-// 뒀어도 관리자가 현금을 받은 뒤 직접 PAID로 올린다 — 선언은 자동 전이를
-// 일으키지 않는다.
 export async function changeOrderStatus({
   orderId,
   status,

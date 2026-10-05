@@ -6,9 +6,6 @@ interface PubAdminTabBarProps {
   onSelect: (view: PubAdminView) => void;
 }
 
-// 화면 전환을 하단에 고정한다. 휴대폰에서 긴 주문 목록을 내려 본 상태로도
-// 엄지로 바로 다른 화면으로 넘어갈 수 있어야 한다. 앱 프레임(600px)에 맞춰
-// 가운데 정렬하고, 홈 인디케이터 영역만큼 아래 여백을 둔다.
 export const PubAdminTabBar = ({
   activeView,
   badgeCounts,

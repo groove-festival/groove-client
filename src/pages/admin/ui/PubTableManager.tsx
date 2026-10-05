@@ -13,7 +13,7 @@ import { TableQrCard } from "./TableQrCard";
 
 export interface PubTableManagerProps {
   boothCode: string;
-  // 인쇄물 라벨에 적는다.
+
   pubName: string;
 }
 
@@ -25,9 +25,6 @@ const parseCount = (value: string): number | null => {
   return /^\d+$/.test(trimmed) ? Number(trimmed) : null;
 };
 
-// PUB-A10·A11. 개수를 보내면 서버가 1번부터 그 수만큼 만들고 테이블 코드를
-// 랜덤으로 발급한다. 줄이는 요청은 주문이 들어온 테이블을 자를 수 있어
-// 확인을 한 번 받는다.
 export const PubTableManager = ({ boothCode, pubName }: PubTableManagerProps) => {
   const tables = useAdminTables();
   const setTableCount = useSetTableCount();
@@ -59,7 +56,6 @@ export const PubTableManager = ({ boothCode, pubName }: PubTableManagerProps) =>
     submit(nextCount);
   };
 
-  // origin은 브라우저에서만 읽을 수 있다. 서버 렌더가 없는 앱이라 안전하다.
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   const orderUrlOf = (tableCode: string) =>
     buildTableOrderUrl({ boothCode, origin, tableCode });

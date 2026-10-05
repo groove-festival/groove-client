@@ -26,7 +26,7 @@ export const PubMenuRow = ({
 
   const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    // 같은 파일을 다시 고를 수 있도록 값을 비운다.
+
     event.target.value = "";
 
     if (file) {

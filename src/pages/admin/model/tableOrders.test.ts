@@ -24,14 +24,14 @@ describe("groupOrdersByTable", () => {
       orderedAt: "2026-10-01T18:30:00",
       totalPrice: 5_000,
     }),
-    // 취소는 합계·마지막 주문에서 빠진다.
+
     order({
       id: 4,
       tableNumber: 1,
       orderedAt: "2026-10-01T19:00:00",
       status: "CANCELED",
     }),
-    // 테이블을 줄인 뒤 남은 옛 번호도 보인다.
+
     order({ id: 5, tableNumber: 9, orderedAt: "2026-10-01T17:00:00" }),
   ];
 
@@ -53,7 +53,6 @@ describe("groupOrdersByTable", () => {
   it("puts the table whose last order is oldest first and empty tables last", () => {
     const tables = groupOrdersByTable(orders, [1, 2, 3, 4], "oldestLastOrder");
 
-    // 9번 17:00 → 1번 18:10(19:00 은 취소) → 2번 18:30 → 주문 없는 3·4번
     expect(tables.map((table) => table.tableNumber)).toEqual([9, 1, 2, 3, 4]);
   });
 });

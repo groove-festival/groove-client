@@ -4,8 +4,6 @@ import { type ApiEnvelope, httpClient, requestData } from "@/shared/api";
 
 import { stageAdminQueryKeys } from "./queryKeys";
 
-// SING-A5. 무대 낭독 전 검수용. 참여자용(SING-8)과 달리 본명·학번·학과·본문까지
-// 포함하는 유일한 경로다.
 export interface AdminStory {
   storySubmissionId: number;
   college: string;
@@ -13,7 +11,7 @@ export interface AdminStory {
   studentNumber: string;
   name: string;
   nickname: string | null;
-  // 사연과 관련된 노래("가수 - 노래 제목"). 9/29 이전에 받은 사연은 null.
+
   song: string | null;
   title: string;
   content: string;
