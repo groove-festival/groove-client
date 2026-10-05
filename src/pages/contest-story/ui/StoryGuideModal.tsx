@@ -1,8 +1,10 @@
-import { useEffect, useId, useRef } from "react";
+import { useId, useRef } from "react";
 import { createPortal } from "react-dom";
 
+import { GoogleSignInButton } from "@/features/google-auth";
+import { useDialogLifecycle } from "@/shared/ui";
+
 import microphone from "../festival-visuals/microphone.png";
-import { GoogleSignInButton } from "./GoogleSignInButton";
 
 interface StoryGuideModalProps {
   authError: boolean;
@@ -35,25 +37,7 @@ export const StoryGuideModal = ({
   const descriptionId = useId();
   const dialogRef = useRef<HTMLElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
-
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    dialogRef.current?.focus();
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = previousOverflow;
-      previouslyFocused?.focus({ preventScroll: true });
-    };
-  }, [onClose, open]);
+  useDialogLifecycle({ dialogRef, open, onDismiss: onClose });
 
   if (!open) return null;
 
