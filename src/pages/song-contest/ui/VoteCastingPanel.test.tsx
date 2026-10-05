@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 
-import { useAuthMe, useGoogleSignIn, useLoginWithGoogle } from "@/entities/auth";
+import { useAuthMe, useLoginWithGoogle } from "@/entities/auth";
 import { useVotes } from "@/entities/contest";
 import { ApiError } from "@/shared/api";
 
@@ -27,7 +27,6 @@ vi.mock("@/entities/auth", async () => {
     ...actual,
     useAuthMe: vi.fn(),
     useLoginWithGoogle: vi.fn(),
-    useGoogleSignIn: vi.fn(),
   };
 });
 
@@ -37,7 +36,24 @@ const useMyBallotsMock = vi.mocked(useMyBallots);
 const useSubmitBallotMock = vi.mocked(useSubmitBallot);
 const useAuthMeMock = vi.mocked(useAuthMe);
 const useLoginWithGoogleMock = vi.mocked(useLoginWithGoogle);
-const useGoogleSignInMock = vi.mocked(useGoogleSignIn);
+const googleButton = vi.hoisted(() => ({ render: vi.fn() }));
+vi.mock("@/features/google-auth", async () => ({
+  ...(await vi.importActual<Record<string, unknown>>("@/features/google-auth")),
+  GoogleSignInButton: (props: {
+    onCredential: (credential: string) => void;
+    disabled?: boolean;
+  }) => {
+    googleButton.render(props);
+    return (
+      <button
+        disabled={props.disabled}
+        onClick={() => props.onCredential("test-id-token")}
+      >
+        Google로 계속하기
+      </button>
+    );
+  },
+}));
 
 const renderPanel = () => {
   const queryClient = new QueryClient({
@@ -91,13 +107,10 @@ beforeEach(() => {
   useAuthMeMock.mockReturnValue({ data: { loggedIn: false } } as unknown as ReturnType<
     typeof useAuthMe
   >);
-  useLoginWithGoogleMock.mockReturnValue({ mutate: vi.fn() } as unknown as ReturnType<
-    typeof useLoginWithGoogle
-  >);
-  useGoogleSignInMock.mockReturnValue({
-    hiddenButtonRef: { current: null },
-    ready: false,
-  } as unknown as ReturnType<typeof useGoogleSignIn>);
+  useLoginWithGoogleMock.mockReturnValue({
+    mutate: vi.fn(),
+    reset: vi.fn(),
+  } as unknown as ReturnType<typeof useLoginWithGoogle>);
 });
 
 afterEach(() => {
@@ -219,7 +232,7 @@ describe("VoteCastingPanel", () => {
     expect(screen.getByRole("button", { name: "주소 복사" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "IT대학" })).not.toBeInTheDocument();
     expect(useContestLocationGateMock).toHaveBeenCalledWith(false);
-    expect(useGoogleSignInMock).not.toHaveBeenCalled();
+    expect(googleButton.render).not.toHaveBeenCalled();
   });
 
   it("replaces the Google button inside an in-app login guide", () => {
@@ -240,12 +253,10 @@ describe("VoteCastingPanel", () => {
       within(dialog).getByRole("button", { name: "주소 복사" }),
     ).toBeInTheDocument();
     expect(within(dialog).queryByText("Google로 계속하기")).not.toBeInTheDocument();
-    expect(useGoogleSignInMock).not.toHaveBeenCalled();
+    expect(googleButton.render).not.toHaveBeenCalled();
   });
 
   it("still asks for a Google login when only an admin session is active", () => {
-    // 관리자(STAGE_ADMIN 등) 세션도 loggedIn: true라, role까지 확인하지 않으면
-    // 구글 로그인을 한 것으로 착각한다.
     useAuthMeMock.mockReturnValue({
       data: { loggedIn: true, role: "STAGE_ADMIN" },
     } as unknown as ReturnType<typeof useAuthMe>);
@@ -259,9 +270,8 @@ describe("VoteCastingPanel", () => {
 
   it("applies the tapped participant automatically once Google login succeeds", () => {
     let capturedOnIdToken: ((idToken: string) => void) | undefined;
-    useGoogleSignInMock.mockImplementation((args) => {
-      capturedOnIdToken = args.onIdToken;
-      return { hiddenButtonRef: { current: null }, ready: false };
+    googleButton.render.mockImplementation((args) => {
+      capturedOnIdToken = args.onCredential;
     });
     const loginMutate = vi.fn(
       (_idToken: string, options?: { onSuccess?: () => void }) =>
@@ -269,6 +279,7 @@ describe("VoteCastingPanel", () => {
     );
     useLoginWithGoogleMock.mockReturnValue({
       mutate: loginMutate,
+      reset: vi.fn(),
     } as unknown as ReturnType<typeof useLoginWithGoogle>);
 
     renderPanel();
@@ -289,6 +300,74 @@ describe("VoteCastingPanel", () => {
     );
   });
 
+  it("keeps login errors visible and disables sign-in while a retry is pending", () => {
+    const login = {
+      mutate: vi.fn(),
+      reset: vi.fn(),
+      error: new Error("login failed"),
+      isPending: false,
+    };
+    useLoginWithGoogleMock.mockReturnValue(
+      login as unknown as ReturnType<typeof useLoginWithGoogle>,
+    );
+    const view = renderPanel();
+    fireEvent.click(screen.getByRole("button", { name: "IT대학" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Google 로그인에 실패했어요");
+    useLoginWithGoogleMock.mockReturnValue({
+      ...login,
+      error: null,
+      isPending: true,
+    } as unknown as ReturnType<typeof useLoginWithGoogle>);
+    view.rerender(<VoteCastingPanel />);
+    expect(screen.getByRole("status")).toHaveTextContent("Google 로그인을 처리하는 중");
+    expect(screen.getByRole("button", { name: "Google로 계속하기" })).toBeDisabled();
+  });
+
+  it("ignores a late login response after the guide is closed", () => {
+    const login = vi.fn();
+    useLoginWithGoogleMock.mockReturnValue({
+      mutate: login,
+      reset: vi.fn(),
+    } as unknown as ReturnType<typeof useLoginWithGoogle>);
+    renderPanel();
+    fireEvent.click(screen.getByRole("button", { name: "IT대학" }));
+    fireEvent.click(screen.getByRole("button", { name: "Google로 계속하기" }));
+    fireEvent.click(screen.getByRole("button", { name: "안내 닫기" }));
+    act(() => login.mock.calls[0]![1].onSuccess());
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "IT대학" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+  });
+
+  it("does not replace a new participant selection with a canceled login response", () => {
+    const login = vi.fn();
+    useLoginWithGoogleMock.mockReturnValue({
+      mutate: login,
+      reset: vi.fn(),
+    } as unknown as ReturnType<typeof useLoginWithGoogle>);
+    renderPanel();
+    fireEvent.click(screen.getByRole("button", { name: "IT대학" }));
+    fireEvent.click(screen.getByRole("button", { name: "Google로 계속하기" }));
+    fireEvent.click(screen.getByRole("button", { name: "안내 닫기" }));
+    fireEvent.click(screen.getByRole("button", { name: "간호대학" }));
+    act(() => login.mock.calls[0]![1].onSuccess());
+    expect(
+      screen.getByRole("dialog", { name: "가요제 투표 안내 사항" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "IT대학" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Google로 계속하기" }));
+    act(() => login.mock.calls[1]![1].onSuccess());
+    expect(screen.getByRole("button", { name: "간호대학" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
   it("selects a participant, confirms, and submits the ballot when logged in", () => {
     useAuthMeMock.mockReturnValue({
       data: { loggedIn: true, role: "USER" },
@@ -297,7 +376,6 @@ describe("VoteCastingPanel", () => {
     renderPanel();
     fireEvent.click(screen.getByRole("button", { name: "IT대학" }));
 
-    // 이미 로그인된 상태라 안내 팝업 없이 바로 선택된다.
     expect(
       screen.queryByRole("dialog", { name: "가요제 투표 안내 사항" }),
     ).not.toBeInTheDocument();
@@ -362,7 +440,7 @@ describe("VoteCastingPanel", () => {
     expect(
       screen.getByText("이미 마감된 경연이에요. 목록을 새로고침해 주세요."),
     ).toBeInTheDocument();
-    // 실패해도 팝업은 닫히지 않는다 — 사용자가 상황을 보고 "닫기"를 고를 수 있다.
+
     expect(screen.getByText("투표하시겠어요?")).toBeInTheDocument();
   });
 
