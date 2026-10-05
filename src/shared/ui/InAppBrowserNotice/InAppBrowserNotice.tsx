@@ -52,17 +52,20 @@ const copyWithLegacyFallback = (value: string): boolean => {
 
 const copyCurrentAddress = async (): Promise<void> => {
   const address = window.location.href;
+  let copied: boolean;
 
   if (navigator.clipboard?.writeText) {
     try {
       await navigator.clipboard.writeText(address);
-      return;
+      copied = true;
     } catch {
-      // 일부 인앱 브라우저는 Clipboard API 를 노출하고도 호출을 거부한다.
+      copied = copyWithLegacyFallback(address);
     }
+  } else {
+    copied = copyWithLegacyFallback(address);
   }
 
-  if (!copyWithLegacyFallback(address)) {
+  if (!copied) {
     throw new Error("Current page address could not be copied");
   }
 };

@@ -56,4 +56,18 @@ describe("InAppBrowserNotice", () => {
       "주소를 복사하지 못했어요.",
     );
   });
+
+  it("copies with the fallback when the exposed clipboard API rejects", async () => {
+    writeText.mockRejectedValueOnce(new Error("blocked"));
+    const copy = vi.fn(() => true);
+    Object.defineProperty(document, "execCommand", { configurable: true, value: copy });
+    render(<InAppBrowserNotice unavailableMessage="인앱에서는 사용할 수 없어요." />);
+    fireEvent.click(screen.getByRole("button", { name: "주소 복사" }));
+
+    expect(
+      await screen.findByRole("button", { name: "주소를 복사했어요" }),
+    ).toBeInTheDocument();
+    expect(copy).toHaveBeenCalledWith("copy");
+    expect(document.querySelector("textarea")).toBeNull();
+  });
 });
