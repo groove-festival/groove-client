@@ -8,7 +8,6 @@ export interface MapPosition {
   y: number;
 }
 
-// 지도 이미지 기준 0.0~1.0 비율 좌표. API의 xRatio·yRatio와 같은 기준이다.
 export interface MapRatioPoint {
   xRatio: number;
   yRatio: number;
@@ -17,8 +16,6 @@ export interface MapRatioPoint {
 export const clampScale = (scale: number, minScale: number, maxScale: number) =>
   Math.min(Math.max(scale, minScale), maxScale);
 
-// 배율 1의 기준 크기. 지도 한 장이 컨테이너 안에 전부 들어오는 크기라
-// 배율 1이면 전체 배치도가 보이고, 배율 n이면 딱 n배 확대된 상태가 된다.
 export const getContainSize = (container: MapSize, source: MapSize): MapSize => {
   if (container.width <= 0 || container.height <= 0 || source.width <= 0) {
     return { width: 0, height: 0 };
@@ -32,17 +29,12 @@ export const getContainSize = (container: MapSize, source: MapSize): MapSize => 
   return { width: source.width * scale, height: source.height * scale };
 };
 
-// 지도가 컨테이너를 빈틈없이 덮는 가장 작은 배율. 지도와 컨테이너의 비율이 다르면
-// 배율 1(전부 들어오는 크기)에서 위아래나 좌우에 빈 띠가 생기므로 이보다 작게는
-// 줄이지 않는다. 비율이 같으면 1이다.
 export const getFillScale = (container: MapSize, content: MapSize) => {
   if (content.width <= 0 || content.height <= 0) return 1;
 
   return Math.max(container.width / content.width, container.height / content.height);
 };
 
-// 비율 좌표가 컨테이너 한가운데 오도록 하는 콘텐츠 왼쪽 위 위치.
-// react-zoom-pan-pinch의 setTransform이 받는 positionX·positionY다.
 export const getFocusPosition = (
   container: MapSize,
   content: MapSize,

@@ -19,7 +19,7 @@ export interface BoothMenuResponseBody {
   imageUrl: string | null;
   menuId: number;
   name: string;
-  // 옵션은 나중에 붙은 필드라 옵션이 없는 서버는 아예 보내지 않는다.
+
   options?: BoothMenuOptionResponseBody[] | null;
   price: number;
   separateCharge: boolean;

@@ -24,12 +24,10 @@ export const MapBadgeVisual = ({ label, strongGlass = false }: MapBadgeVisualPro
   </span>
 );
 
-// 지도에서 선택한 장소에 쓰는 핀 (Figma 1896:17170).
-// 이름 길이에 따라 가로로 늘어나되 지도 박스를 넘길 만큼 긴 이름은 제한한다.
 export const MapPinVisual = ({ label }: MapPinVisualProps) => (
   <div className="flex flex-col items-center">
     <MapBadgeVisual label={label} strongGlass />
-    {/* 세로선 31px 끝에 지름 16/3px 점. 점의 중심이 핀 끝이다. */}
+
     <span aria-hidden="true" className="relative h-[31px] w-px bg-[#fcfcfc]">
       <span className="absolute bottom-0 left-1/2 size-[5.333px] -translate-x-1/2 translate-y-1/2 rounded-full bg-[#fcfcfc]" />
     </span>
@@ -37,14 +35,10 @@ export const MapPinVisual = ({ label }: MapPinVisualProps) => (
 );
 
 interface MapPinProps {
-  // 핀 끝(아래 점)이 닿을 자리. FestivalMap 의 source 크기에 대한 비율이다.
   point: MapRatioPoint;
   label: string;
 }
 
-// 지도 위 장소 이름표 (Figma 1896:17170). FestivalMap 의 children 안에 둔다.
-// 레이어는 지도와 함께 확대되므로, 지금 배율의 역수만큼 줄여 화면에서는
-// 늘 같은 크기로 보이게 한다. 줄이는 기준은 핀 끝이라 확대해도 자리가 밀리지 않는다.
 export const MapPin = ({ point, label }: MapPinProps) => (
   <div
     className="pointer-events-none absolute flex origin-bottom flex-col items-center"

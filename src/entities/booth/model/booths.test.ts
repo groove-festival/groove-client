@@ -67,7 +67,7 @@ describe("day-shift booths", () => {
       { department: "국어교육과", isOwn: true },
       { department: "가정교육과", isOwn: false },
     ]);
-    // 혼자 쓰는 자리는 강조하지 않는다.
+
     expect(getBoothDepartmentParts(booths[0]).some(({ isOwn }) => isOwn)).toBe(false);
   });
 

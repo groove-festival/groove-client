@@ -23,18 +23,14 @@ import {
 } from "./mapGeometry";
 import { MapZoomControls } from "./MapZoomControls";
 
-// 선택한 자리로 미끄러지는 시간. 카드 이동(520ms)보다 짧게 두어 지도가 먼저 멈춘다.
 const FOCUS_ANIMATION_MS = 400;
-// 확대·축소 버튼 한 번에 바뀌는 비율.
+
 const ZOOM_STEP = 1.6;
 const BUTTON_ANIMATION_MS = 200;
 
 export interface FestivalMapSource {
-  // 없으면 배치도 그림도 children 레이어가 직접 그린다. 크게 확대하면 브라우저가
-  // <img> 를 레이어의 인라인 SVG 와 몇 px 어긋나게 그려, 도형을 겹쳐 그리는
-  // 지도는 배치도까지 같은 SVG 안에 넣어야 가장자리가 맞는다.
   src?: string;
-  // 원본 지도의 좌표계 크기. 비율 좌표는 이 크기에 대한 0.0~1.0이다.
+
   width: number;
   height: number;
   alt: string;
@@ -45,44 +41,35 @@ export interface FestivalMapFocus extends MapRatioPoint {
 }
 
 export interface FestivalMapFocusRequest extends FestivalMapFocus {
-  // 같은 좌표를 다시 누른 경우에도 이동하도록 요청마다 증가시키는 값.
   requestId: number;
 }
 
 interface FestivalMapProps {
   source: FestivalMapSource;
-  // 배율 1은 지도 한 장이 컨테이너에 전부 들어오는 상태다.
+
   initialScale?: number;
-  // 지도와 컨테이너의 비율이 달라도 빈 띠가 보이지 않도록, 실제 최소 배율은
-  // 이 값과 컨테이너를 덮는 배율 중 큰 쪽이다.
+
   minScale?: number;
   maxScale?: number;
-  // 처음 화면의 중심. 지도마다 보여줄 자리가 달라 쓰는 쪽이 정한다.
+
   initialCenter?: MapRatioPoint;
-  // 값이 바뀔 때마다 그 자리로 확대·이동한다. null이면 그대로 둔다.
+
   focus?: FestivalMapFocus | null;
-  // focus와 별개인 명시적 재중앙 요청. 내 위치 버튼처럼 같은 점을 반복해서
-  // 누를 수 있는 조작에 쓴다.
+
   focusRequest?: FestivalMapFocusRequest | null;
-  // 되돌리기 버튼이 돌아갈 자리. 없으면 처음 화면(initialCenter·initialScale)이다.
-  // 필터마다 보는 자리가 달라지는 지도가 처음 화면을 흔들지 않고 넘긴다.
+
   resetTo?: FestivalMapFocus | null;
-  // 바깥 박스(비율·테두리·배경)는 시안이 지도마다 달라 쓰는 쪽이 정한다.
+
   className?: string;
   controlsClassName?: string;
-  // 지도와 함께 움직이는 레이어. 비율 좌표계(source 크기) 위에 그린다.
-  // 지금 배율이 CSS 변수 --festival-map-scale 로 들어 있어, 핀처럼 확대돼도
-  // 크기를 지켜야 하는 요소는 그 역수만큼 줄여 그린다.
+
   children?: ReactNode;
 }
 
-// 레이어에 지금 배율을 넘기는 CSS 변수 이름. MapPin 이 읽는다.
 export const MAP_SCALE_VARIABLE = "--festival-map-scale";
 
 const MAP_CENTER: MapRatioPoint = { xRatio: 0.5, yRatio: 0.5 };
 
-// 배치도 이미지 한 장 위에 마커·부스 레이어를 얹고 확대·축소·이동을 담당하는 공용 지도.
-// 얹는 내용과 바깥 박스 모양은 쓰는 화면이 넘긴다.
 export const FestivalMap = ({
   source,
   initialScale = 1,
@@ -155,16 +142,11 @@ export const FestivalMap = ({
       ? moveTo(resetTo, resetTo.scale ?? initialScale, animationMs)
       : moveTo({ xRatio: centerX, yRatio: centerY }, initialScale, animationMs);
 
-  // 아래 두 효과는 moveTo를 의존성에 두지 않는다. 컨테이너 크기는 레이아웃이
-  // 자리를 잡으며 소수점 단위로 흔들리는데, 그때마다 화면을 다시 잡으면
-  // 사용자가 고른 자리나 직접 움직인 위치가 되돌아간다.
   const moveToRef = useRef(moveTo);
   useEffect(() => {
     moveToRef.current = moveTo;
   });
 
-  // 처음 화면. 애니메이션 없이 곧장 놓아야 전체 지도가 잠깐 보였다가
-  // 확대되는 깜빡임이 없다. 크기를 잰 뒤와 보여줄 자리가 정해진 뒤에만 다시 잡는다.
   const isMeasured = contentSize.width > 0;
   useEffect(() => {
     if (!isMeasured) return;
@@ -176,8 +158,6 @@ export const FestivalMap = ({
   const focusScale = focus?.scale ?? initialScale;
 
   useEffect(() => {
-    // 첫 선택이 지도 크기 측정보다 빨라도 요청을 버리지 않는다. 측정 완료로
-    // isMeasured가 바뀌면 같은 focus를 다시 적용해 두 번째 클릭이 필요 없게 한다.
     if (!isMeasured || focusX === null || focusY === null) return;
     moveToRef.current(
       { xRatio: focusX, yRatio: focusY },
@@ -208,10 +188,6 @@ export const FestivalMap = ({
     );
   }, [focusRequestId, isMeasured, requestedScale, requestedX, requestedY]);
 
-  // 확대·축소 버튼은 보던 자리를 그대로 두고 배율만 바꾼다. 라이브러리의
-  // zoomIn·zoomOut이 화면 한가운데를 기준으로 삼아 주므로 그대로 쓰되,
-  // 폭이 절대값이라 지금 배율에 비례하도록 계산해 넘긴다.
-  // 사용자가 직접 끌거나 핀치한 결과까지 반영하려면 현재 배율이 필요하다.
   const viewRef = useRef({ scale: initialScale, positionX: 0, positionY: 0 });
   const scaleRef = useRef(initialScale);
 
@@ -240,7 +216,7 @@ export const FestivalMap = ({
         onTransform={(_, state) => {
           viewRef.current = state;
           scaleRef.current = state.scale;
-          // 매 프레임 불리므로 리렌더 없이 변수만 바꾼다.
+
           layerRef.current?.style.setProperty(MAP_SCALE_VARIABLE, String(state.scale));
         }}
         ref={transformRef}

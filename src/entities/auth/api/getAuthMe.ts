@@ -5,8 +5,6 @@ import { type ApiEnvelope, httpClient, requestData } from "@/shared/api";
 import type { AdminAccount } from "../model/account";
 import { authQueryKeys } from "./queryKeys";
 
-// AUTH-4. 새로고침·재진입 시 로그인 상태 복원용. 비로그인이어도 에러가 아니라
-// loggedIn:false 를 응답한다.
 interface AuthMeResponseBody {
   account: AdminAccount;
 }

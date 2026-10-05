@@ -1,7 +1,5 @@
 import { type Booth, getBoothDepartmentParts } from "../model/booths";
 
-// 학과 조합 한 줄. 한 자리를 날짜별로 나눠 쓰는 연합주막은 두 학과를 모두 적고,
-// 이 주막을 여는 학과만 굵게·밑줄로 짚는다. 다른 날 학과는 흐리게 둔다.
 export const BoothDepartments = ({
   booth,
   className = "",

@@ -5,7 +5,6 @@ import {
   getFocusPosition,
 } from "./mapGeometry";
 
-// 이벤트 지도 기준값. 컨테이너는 393 폭 화면의 지도 박스, 원본은 배치도 SVG다.
 const CONTAINER = { width: 361, height: 320 };
 const SOURCE = { width: 976, height: 1128 };
 
@@ -13,7 +12,6 @@ describe("getContainSize", () => {
   it("fits the whole map inside the container", () => {
     const content = getContainSize(CONTAINER, SOURCE);
 
-    // 세로가 더 빠듯해 높이에 맞춰지고, 가로는 원본 비율을 따른다.
     expect(content.height).toBeCloseTo(320, 5);
     expect(content.width).toBeCloseTo(276.88, 2);
   });
@@ -44,7 +42,6 @@ describe("getFocusPosition", () => {
       16,
     );
 
-    // 위치를 되돌려 계산하면 다시 컨테이너 한가운데다.
     expect(x + 0.6258 * content.width * 16).toBeCloseTo(CONTAINER.width / 2, 5);
     expect(y + 0.5852 * content.height * 16).toBeCloseTo(CONTAINER.height / 2, 5);
   });
@@ -74,7 +71,6 @@ describe("getFillScale", () => {
   it("zooms until the map covers the container without empty bands", () => {
     const content = getContainSize(CONTAINER, SOURCE);
 
-    // 높이에 맞춰진 지도는 폭이 모자라 폭을 채우는 만큼 키워야 한다.
     expect(getFillScale(CONTAINER, content)).toBeCloseTo(361 / 276.88, 3);
   });
 

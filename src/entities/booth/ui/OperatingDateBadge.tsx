@@ -1,7 +1,5 @@
 import { type Booth, formatOperatingDate } from "../model/booths";
 
-// 날짜별로 여는 주막의 운영일. 목록 카드는 다른 주막과 같게 두고 상세 헤더에서만
-// 운영일을 보인다. 이틀 다 여는 주막에는 그리지 않는다.
 export const OperatingDateBadge = ({
   booth,
   length = "short",
