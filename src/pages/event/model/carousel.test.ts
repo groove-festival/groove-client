@@ -5,7 +5,6 @@ import {
   getScrollProgress,
 } from "./carousel";
 
-// Figma 34:3578: 카드 204, 간격 12, 보이는 폭 361.
 const cards = [0, 216, 432, 648, 864].map((left) => ({ left, width: 204 }));
 const VIEWPORT = 361;
 const MAX_SCROLL = 864 + 204 - VIEWPORT;

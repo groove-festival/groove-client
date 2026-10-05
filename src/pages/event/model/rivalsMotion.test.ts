@@ -46,7 +46,6 @@ describe("getCountUpValue", () => {
   });
 
   it("slows down towards the end", () => {
-    // 절반 시간에 이미 절반보다 많이 올라가 있다.
     expect(getCountUpValue(0, 100, 0.5)).toBeGreaterThan(50);
   });
 });

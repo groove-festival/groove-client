@@ -20,18 +20,13 @@ import {
   SELECTED_WIDTH,
 } from "../model/mainMap";
 
-// 응답 전에도 배치도와 고정 장소는 그려야 하므로 빈 목록으로 시작한다.
-// 렌더마다 새 배열을 만들면 장소 목록을 매번 다시 계산하므로 하나를 같이 쓴다.
 const NO_BOOTHS: Booth[] = [];
 const NO_ZONES: ExperienceZone[] = [];
 
-// 축제 전체 지도. 필터를 고르면 그 묶음에 색이 들어오며 해당 구역으로 조금 당기고,
-// 장소를 누르면 그 자리로 확대해 이름표(핀)를 띄운다 (Figma 56:3406).
-// 목록을 못 받아도 지도는 그대로 두고, 그 장소들만 누를 수 없게 된다.
 export const FestivalMapSection = () => {
   const [selectedFilter, setSelectedFilter] = useState<MapFilter>("all");
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
-  // 처음 화면은 initialView 가 잡으므로, 필터나 장소를 고른 뒤에만 지도를 옮긴다.
+
   const [focus, setFocus] = useState<CampusMapView | null>(null);
 
   const { data: booths = NO_BOOTHS } = useBooths();
@@ -46,7 +41,7 @@ export const FestivalMapSection = () => {
 
   const selectPlace = (place: CampusPlace | null) => {
     setSelectedPlaceId(place?.id ?? null);
-    // 빈 곳을 눌러 핀만 닫을 때는 보던 자리를 그대로 둔다.
+
     if (place) {
       setFocus({ ...place.point, width: getPlaceFocusWidth(place, SELECTED_WIDTH) });
     }

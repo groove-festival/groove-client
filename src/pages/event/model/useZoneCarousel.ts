@@ -7,15 +7,13 @@ import {
   getScrollProgress,
 } from "./carousel";
 
-// 선택한 카드로 미끄러지는 시간. 브라우저 기본 smooth보다 길고 부드럽게 맞춘다.
 export const CAROUSEL_SLIDE_DURATION_MS = 520;
 
-// 사용자가 직접 넘기기 시작하면 진행 중인 자동 이동을 멈춘다.
 const USER_SCROLL_EVENTS = ["pointerdown", "touchstart", "wheel"] as const;
 
 interface ScrollMetrics {
   progress: number;
-  // 전체 폭 중 보이는 폭의 비율. 슬라이드바 thumb 폭으로 쓴다.
+
   visibleRatio: number;
 }
 
@@ -29,9 +27,6 @@ const prefersReducedMotion = () =>
   typeof window.matchMedia === "function" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// 선택된 카드를 가운데로 부드럽게 옮기고, 슬라이드바용 스크롤 진행률을 알려준다.
-// 선택은 카드·부스 탭으로만 바뀌고 스크롤·스와이프로는 바뀌지 않는다.
-// 스크롤 영역은 offsetParent가 되도록 position을 지정해야 카드 위치를 읽을 수 있다.
 export const useZoneCarousel = (selectedIndex: number) => {
   const scrollerRef = useRef<HTMLUListElement>(null);
   const cancelSlideRef = useRef<(() => void) | null>(null);

@@ -67,7 +67,6 @@ describe("festival timetable", () => {
   });
 
   it("does not highlight point-in-time items or times outside the festival", () => {
-    // 주막 오픈은 마감 직전까지 켜 둔다. 한 시점 항목은 주막 마감이다.
     expect(activeTitles("2026-10-02T00:30:00")).toEqual(["주막 오픈"]);
     expect(activeTitles("2026-09-30T12:00:00")).toEqual([]);
   });

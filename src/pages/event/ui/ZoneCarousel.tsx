@@ -8,15 +8,14 @@ import { type ExperienceZone, type ZoneType } from "../model/zones";
 
 interface ZoneCardStyle {
   background: string;
-  // 설명 중 굵게 표시하는 부분 (Figma SemiBold 구간).
+
   highlight: string;
   icon: string;
-  // 아이콘 슬롯 크기와 이미지 위치. 내보낸 아이콘은 슬롯 밖으로 조금 넘친다.
+
   iconSlotClass: string;
   iconImageClass: string;
 }
 
-// Figma 34:3578 카드별 배경 그라데이션과 아이콘(34:3675) 배치.
 const zoneCardStyles: Record<ZoneType, ZoneCardStyle> = {
   MOVE: {
     background:
@@ -122,7 +121,6 @@ interface ZoneCarouselProps {
   onSelect: (zone: ZoneType) => void;
 }
 
-// 체험존 카드 가로 목록 (Figma 34:3578)과 시안에 없는 진행 슬라이드바.
 export const ZoneCarousel = ({ zones, selectedZone, onSelect }: ZoneCarouselProps) => {
   const selectedIndex = zones.findIndex(({ type }) => type === selectedZone);
   const { scrollerRef, scrollMetrics } = useZoneCarousel(selectedIndex);
@@ -132,8 +130,7 @@ export const ZoneCarousel = ({ zones, selectedZone, onSelect }: ZoneCarouselProp
     <div className="flex w-full flex-col gap-3">
       <ul
         aria-label="체험존 목록"
-        // 스냅을 걸지 않아야 사용자가 넘긴 정도대로 멈춘다. 지도에서 부스를
-        // 고를 때만 useZoneCarousel이 카드를 가운데로 옮긴다.
+
         className="relative flex w-full [scrollbar-width:none] gap-3 overflow-x-auto overscroll-x-contain [&::-webkit-scrollbar]:hidden"
         ref={scrollerRef}
       >
@@ -148,7 +145,6 @@ export const ZoneCarousel = ({ zones, selectedZone, onSelect }: ZoneCarouselProp
         ))}
       </ul>
 
-      {/* 슬라이드바는 시안에 없는 요소라 디자인팀 확인 전까지 차분한 임시 스타일로 둔다. */}
       <div
         aria-hidden="true"
         className="relative h-1 w-full overflow-hidden rounded-full bg-[#fcfcfc]/15"

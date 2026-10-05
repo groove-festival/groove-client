@@ -59,7 +59,6 @@ const shortcuts: Shortcut[] = [
   },
 ];
 
-// 전체메뉴(FestivalMenu)의 핑크 배지와 다른 메인 전용 배지 (Figma 25:2168).
 const ShortcutStatusBadge = ({ status }: { status: ShortcutBadgeStatus }) => (
   <span className="animate-badge-float flex shrink-0 items-center justify-center rounded-full bg-[#5d00ff] px-2 py-1 text-[10px] leading-[normal] font-semibold whitespace-nowrap text-[#fcfcfc] drop-shadow-[0_0_2px_#5d00ff] motion-reduce:animate-none">
     {shortcutBadgeLabels[status]}

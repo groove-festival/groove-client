@@ -20,8 +20,6 @@ const scrollToFestivalShortcuts = () => {
   });
 };
 
-// 메인 화면 (Figma 25:902 / 25:1775). 히어로는 신청 페이지와 같은 위젯을 쓰고,
-// 그 아래 바로가기·지도·타임테이블 섹션이 스크롤에 따라 차례로 올라온다.
 export default function HomePage() {
   const { data: festivalStatus } = useFestivalStatus();
   const shortcutBadges = getStageShortcutBadges(festivalStatus?.stage);

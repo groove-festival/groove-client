@@ -1,6 +1,5 @@
 import { type RivalScore, splitRivalStandings } from "./rivals";
 
-// PLAN-2 응답처럼 점수 내림차순 6건이다.
 const scores: RivalScore[] = [
   { college: "ART", collegeName: "예술대학", score: 505, rank: 1 },
   { college: "NURSING", collegeName: "간호대학", score: 410, rank: 2 },

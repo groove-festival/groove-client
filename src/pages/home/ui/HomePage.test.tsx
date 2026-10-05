@@ -15,7 +15,6 @@ vi.mock("@/shared/api", async () => {
 
 const httpGet = vi.mocked(httpClient.get);
 
-// PUB-1 · PLAN-1 응답 일부. 지도에 올리는 데 쓰는 필드만 채운다.
 const booths = [
   {
     area: "PARKING",
@@ -30,7 +29,7 @@ const booths = [
   },
   {
     area: "PARKING",
-    // 디자인 도형이 없는 코드는 지도에 올리지 않는다.
+
     boothCode: "unknown-booth",
     colleges: ["IT"],
     departments: ["컴퓨터학부"],
@@ -166,7 +165,6 @@ describe("HomePage", () => {
   it("lights the booth groups that belong to the selected filter", async () => {
     renderPage();
 
-    // 켜진 도형은 회색 덮개를 걷어 색 레이어가 보인다.
     const isLit = (id: string) =>
       screen.getByTestId(`campus-map-cover-${id}`).style.opacity === "0";
     const stageOpacity = () =>
@@ -180,7 +178,7 @@ describe("HomePage", () => {
     expect(isLit("pub:nursing")).toBe(true);
     expect(isLit("zone:RECOVER")).toBe(true);
     expect(stageOpacity()).toBe("1");
-    // 목록에 없는 주막은 디자인에 그려져 있어도 꺼 둔다.
+
     expect(isLit("pub:cse")).toBe(false);
 
     fireEvent.click(mapFilters().getByRole("button", { name: "주막" }));
@@ -194,14 +192,14 @@ describe("HomePage", () => {
     );
     expect(isLit("pub:nursing")).toBe(true);
     expect(isLit("zone:RECOVER")).toBe(false);
-    // 가요제 무대는 필터와 상관없이 늘 켜져 있다.
+
     expect(stageOpacity()).toBe("1");
 
     fireEvent.click(mapFilters().getByRole("button", { name: "이벤트 부스" }));
     expect(isLit("pub:nursing")).toBe(false);
     expect(isLit("zone:RECOVER")).toBe(true);
     expect(stageOpacity()).toBe("1");
-    // 랜드마크는 필터와 상관없이 늘 켜져 있고, 누르지 않아도 이름표가 떠 있다.
+
     expect(screen.getByTestId("campus-map-color-it1").style.opacity).toBe("1");
     expect(screen.getByText("IT1호관")).toBeInTheDocument();
   });
@@ -220,7 +218,7 @@ describe("HomePage", () => {
 
     fireEvent.click(screen.getByTestId("campus-map-background"));
     expect(screen.queryByText("RECOVER ZONE")).not.toBeInTheDocument();
-    // 디자인 도형이 없는 주막은 지도에서 누를 수 없다.
+
     expect(
       screen.queryByRole("button", { name: "도형 없는 주막 위치 보기" }),
     ).not.toBeInTheDocument();
@@ -239,7 +237,7 @@ describe("HomePage", () => {
     ).not.toBeInTheDocument();
     expect(await placeButton("가요제 무대")).toBeInTheDocument();
     expect(await placeButton("RECOVER ZONE")).toBeInTheDocument();
-    // 청록 부스는 필터와 상관없이 늘 켜져 있어 누를 수 있다.
+
     expect(await placeButton("GROOVE RIVALS")).toBeInTheDocument();
     expect(await placeButton("일청담 본부")).toBeInTheDocument();
     expect(await placeButton("IT5호관(융복합관)")).toBeInTheDocument();

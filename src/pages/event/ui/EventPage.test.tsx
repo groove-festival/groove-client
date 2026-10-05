@@ -15,7 +15,6 @@ vi.mock("@/shared/api", async () => {
 
 const httpGet = vi.mocked(httpClient.get);
 
-// jsdom은 레이아웃을 계산하지 않아 Figma(34:3578) 카드 배치를 직접 넣는다.
 const CARD_WIDTH = 204;
 const CARD_STEP = 216;
 const VIEWPORT_WIDTH = 361;
@@ -23,7 +22,6 @@ const VIEWPORT_WIDTH = 361;
 const CENTERED_LEFT = (index: number) =>
   index * CARD_STEP - (VIEWPORT_WIDTH - CARD_WIDTH) / 2;
 
-// PLAN-1 응답 모양. 좌표는 디자인 원본에서 계산한 값이고, 아직 넣지 않았으면 null이다.
 interface ZoneResponse {
   type: string;
   name: string;
@@ -70,7 +68,6 @@ const zones: ZoneResponse[] = [
   },
 ];
 
-// PLAN-2 응답 모양. 점수 내림차순 6건 고정이다.
 const rivalScores = [
   { college: "ART", collegeName: "예술대학", score: 505, rank: 1 },
   { college: "NURSING", collegeName: "간호대학", score: 410, rank: 2 },
@@ -91,7 +88,6 @@ interface RespondOptions {
   rivalsFail?: boolean;
 }
 
-// PUB-1 응답 일부. 이벤트 지도에서는 주막을 늘 켜 둔다.
 const pubs = [
   {
     area: "PARKING",
@@ -126,7 +122,7 @@ const card = (name: string) =>
 const booth = (name: string) =>
   screen.getByRole("button", { name: `${name} 위치 보기` });
 const boothShapes = () => screen.queryAllByTestId(/^campus-map-place-zone:/);
-// 켜진 부스는 회색 덮개를 걷어 색 레이어가 보인다.
+
 const isZoneLit = (type: string) =>
   screen.getByTestId(`campus-map-cover-zone:${type}`).style.opacity === "0";
 const ZONE_TYPES = ["MOVE", "LOVE", "PROVE", "RECOVER", "GROOVE"];
@@ -161,7 +157,6 @@ const Providers = ({ children }: { children: ReactNode }) => (
   <QueryClientProvider client={createQueryClient()}>{children}</QueryClientProvider>
 );
 
-// 가짜 타이머를 쓰므로 쿼리가 풀리려면 타이머도 함께 흘려보내야 한다.
 const settle = async () => {
   await act(async () => {
     await vi.advanceTimersByTimeAsync(0);
@@ -218,7 +213,7 @@ describe("EventPage", () => {
     ["MOVE", "PROVE", "RECOVER", "GROOVE"].forEach((type) =>
       expect(isZoneLit(type)).toBe(false),
     );
-    // 체험존 선택과 상관없이 주막은 늘 켜져 있다.
+
     expect(screen.getByTestId("campus-map-cover-pub:nursing").style.opacity).toBe("0");
   });
 
@@ -250,21 +245,18 @@ describe("EventPage", () => {
   it("pins the selected zone and moves the pin to another place without a zone", async () => {
     await renderLoadedPage();
 
-    // 이름표는 지도 레이어 안에 뜬다. 카드에도 같은 이름이 있어 레이어 안에서 찾는다.
     const mapLayer = () =>
       within(screen.getByRole("group", { name: "축제 장소 위치" }).parentElement!);
 
     fireEvent.click(booth("LOVE ZONE"));
     expect(mapLayer().getByText("LOVE ZONE")).toBeInTheDocument();
 
-    // 체험존이 아닌 곳을 누르면 체험존 선택이 풀리고 그 자리에만 이름표가 뜬다.
     fireEvent.click(booth("간호학과 주막"));
     expect(mapLayer().queryByText("LOVE ZONE")).not.toBeInTheDocument();
     expect(screen.getByText("간호학과 주막")).toBeInTheDocument();
     expect(card("LOVE ZONE")).toHaveAttribute("aria-pressed", "false");
     ZONE_TYPES.forEach((type) => expect(isZoneLit(type)).toBe(true));
 
-    // 카드에서 체험존을 고르면 다른 장소의 이름표는 닫힌다.
     fireEvent.click(card("MOVE ZONE"));
     expect(screen.queryByText("간호학과 주막")).not.toBeInTheDocument();
   });
@@ -300,7 +292,7 @@ describe("EventPage", () => {
     fireEvent.pointerDown(scroller);
     scroller.scrollLeft = CENTERED_LEFT(2);
     fireEvent.scroll(scroller);
-    // 스냅을 걸지 않아 사용자가 넘긴 자리에 그대로 멈춘다.
+
     expect(scroller.className).not.toMatch(/snap-/);
     act(() => void vi.advanceTimersByTime(1000));
 
@@ -315,7 +307,6 @@ describe("EventPage", () => {
     });
     await renderLoadedPage();
 
-    // 카드는 그대로 5장이고 지도에만 그리지 않는다.
     expect(within(zoneList()).getAllByRole("button")).toHaveLength(5);
     expect(boothShapes()).toHaveLength(4);
     expect(isZoneLit("PROVE")).toBe(false);
@@ -382,7 +373,7 @@ describe("EventPage", () => {
       await vi.advanceTimersByTimeAsync(100);
     });
     expect(callsFor("/rivals/scores")).toBe(2);
-    // 체험존은 폴링 대상이 아니다.
+
     expect(callsFor("/zones")).toBe(1);
   });
 
@@ -403,10 +394,9 @@ describe("EventPage", () => {
       await vi.advanceTimersByTimeAsync(RIVAL_SCORES_POLL_INTERVAL_MS);
     });
     await act(async () => {
-      // 응답이 화면까지 반영될 틈을 준다.
       await vi.advanceTimersByTimeAsync(50);
     });
-    // 새 순서로 곧장 다시 그리고, 오른 단대만 비춘다.
+
     const podium = screen.getByRole("list", { name: "라이벌스 1~3위" });
     expect(within(podium).getAllByRole("listitem")[2]).toHaveTextContent("IT대학");
     expect(podium.querySelectorAll("[data-rising]")).toHaveLength(1);
@@ -434,7 +424,6 @@ describe("EventPage", () => {
     respond({ rivalsFail: true });
     await renderLoadedPage();
 
-    // 지도와 카드는 그대로 두고 라이벌스 자리만 대체한다.
     expect(within(zoneList()).getAllByRole("button")).toHaveLength(5);
     expect(boothShapes()).toHaveLength(5);
     expect(

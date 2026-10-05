@@ -11,7 +11,7 @@ describe("isPlacedZone", () => {
   it("treats a zone without coordinates as not placed", () => {
     expect(isPlacedZone(zone("MOVE", 0.6, 0.58))).toBe(true);
     expect(isPlacedZone(zone("MOVE", null, null))).toBe(false);
-    // 한쪽만 들어온 응답도 그릴 수 없다.
+
     expect(isPlacedZone(zone("MOVE", 0.6, null))).toBe(false);
   });
 });

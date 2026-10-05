@@ -24,7 +24,7 @@ import yunJiMinProfile3x from "../festival-visuals/profile-yunjimin-192.png";
 export interface TeamMember {
   name: string;
   affiliation: string | null;
-  /** 실데이터가 제공되면 채운다. 없으면 빈 프로필 원을 표시한다. */
+
   profileImage?: string;
   profileImageSrcSet?: string;
   instagram?: string | null;
@@ -36,8 +36,6 @@ export interface CreditSection {
   members: TeamMember[];
 }
 
-// 각 팀원의 실제 학과/학번·SNS·프로필 사진을 반영한다. 프로필 사진이 없는
-// 팀원은 빈 프로필 원, github이 없는 디자인 파트는 인스타 줄만 표시한다.
 export const creditSections: CreditSection[] = [
   {
     title: "기획",

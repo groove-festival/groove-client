@@ -4,17 +4,15 @@ export type TimetableDateKey = "2026-10-01" | "2026-10-02";
 
 export interface TimetableItem {
   id: string;
-  // "HH:mm" (KST). 06시 이전 시각은 다음 날 새벽으로 본다.
+
   startTime: string;
   endTime?: string;
-  // 표시 문구에는 쓰지 않고 강조만 이 시각까지 유지한다.
-  // 주막 오픈처럼 시작 시각만 보여 주지만 문 닫을 때까지 켜두는 항목에 쓴다.
+
   activeUntil?: string;
   category: TimetableCategory;
   title: string;
 }
 
-// 표시 순서는 이 배열 순서를 그대로 따른다. 시간 문자열로 정렬하지 않는다.
 export const festivalTimetable: Record<TimetableDateKey, TimetableItem[]> = {
   "2026-10-01": [
     {
@@ -164,7 +162,6 @@ const KST_OFFSET = "+09:00";
 const NEXT_DAY_CUTOFF_HOUR = 6;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-// 10/1 일정의 마지막 항목(01:00 주막 마감)까지는 10/1 목록을 유지한다.
 const SECOND_DAY_STARTS_AFTER = Date.parse(`2026-10-02T01:00:00${KST_OFFSET}`);
 
 export function getTimetableDateKey(now: Date): TimetableDateKey {
@@ -177,9 +174,6 @@ function toTimestamp(dateKey: TimetableDateKey, time: string): number {
   return hour < NEXT_DAY_CUTOFF_HOUR ? base + DAY_MS : base;
 }
 
-// 시작~종료 구간 안에 있는 항목만 진행 중으로 본다. 종료 시각은 endTime을
-// 먼저 보고, 시작 시각만 표시하는 항목은 activeUntil을 쓴다. 둘 다 없는
-// 한 시점 항목(주막 마감)은 강조하지 않는다.
 export function isTimetableItemActive(
   item: TimetableItem,
   dateKey: TimetableDateKey,

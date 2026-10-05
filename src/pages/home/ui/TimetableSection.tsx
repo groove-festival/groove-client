@@ -13,11 +13,6 @@ interface TimetableCategoryTone {
   active: string;
 }
 
-// 카테고리 색 (Figma 31:3167). 진행 중이면 색 80% + 같은 색 1px 테두리, 아니면
-// 색 20% + 테두리 30%. 글자는 모두 #fcfcfc. Figma GLASS(흐림 24)는
-// backdrop-blur와 테두리 위에 겹친 반사광(festival-glass-border-rim)으로
-// 근사한다. 진행 중인 항목의 점도 같은 active 색을 쓴다.
-// 카테고리별 색은 이 맵에서만 정한다. 데이터는 category 필드만 가진다.
 const timetableCategoryTones: Record<TimetableCategory, TimetableCategoryTone> = {
   contest: {
     default: "border-magenta/30 bg-magenta/20",
@@ -33,16 +28,11 @@ const timetableCategoryTones: Record<TimetableCategory, TimetableCategoryTone> =
   },
 };
 
-// Figma 25:2147(점). 진행 중이 아니면 어두운 원.
 const inactiveDotTone = "border-[#a2a2a2] bg-[#1c1c1c]";
 
-// Figma 변수 White/900 · White/600. 진행 중이 아닌 카드는 글자 명도를 낮춰
-// 현재 시간대 카드와 위계를 만든다.
 const activeTextTone = "text-[#fcfcfc]";
 const inactiveTextTone = "text-[#a2a2a2]";
 
-// Figma 25:2152(카드). 카드는 제목과 시간만 보여 준다. 제목 폭은 Figma
-// 컴포넌트처럼 147px이고, 두 줄까지는 80px, 세 줄부터 카드 높이가 늘어난다.
 export const TimetableSection = () => {
   const now = useNow(30_000);
   const dateKey = getTimetableDateKey(now);

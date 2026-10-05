@@ -9,7 +9,6 @@ import collegeSocial from "../festival-visuals/college-social.png";
 import { type College, type RivalScore, splitRivalStandings } from "../model/rivals";
 import { getRisenColleges, useCountUpScores, useRankFlip } from "../model/rivalsMotion";
 
-// 단대 아이콘(34:3686). 원형 그라데이션 위에 패딩 8을 두고 아이콘을 얹는다.
 const collegeIcons: Record<College, { icon: string; background: string }> = {
   IT: { icon: collegeIt, background: "linear-gradient(to bottom, #fcfcfc, #cfcfcf)" },
   NURSING: {
@@ -28,8 +27,6 @@ const collegeIcons: Record<College, { icon: string; background: string }> = {
   },
 };
 
-// 순위가 오른 단대는 아이콘 둘레에 라임 빛이 잠깐 번졌다가 사라진다.
-// 연달아 오르면 key 로 다시 그려 효과를 처음부터 튼다.
 interface RiseState {
   id: number;
   colleges: ReadonlySet<College>;
@@ -62,7 +59,6 @@ const CollegeIcon = ({
 };
 
 interface PodiumSlotStyle {
-  // 가운데 1위를 두도록 화면 배치 순서만 바꾼다. 읽는 순서는 등수 순서다.
   orderClass: string;
   widthClass: string;
   rankClass: string;
@@ -71,7 +67,6 @@ interface PodiumSlotStyle {
   textClass: string;
 }
 
-// Figma 34:3625 단상 자리별 크기. 1위 자리만 더 크다.
 const podiumSlotStyles: PodiumSlotStyle[] = [
   {
     orderClass: "order-2",
@@ -151,13 +146,10 @@ interface RivalsSectionProps {
   scores: readonly RivalScore[];
 }
 
-// GROOVE RIVALS 순위 (Figma 34:3619). 1~3위는 단상, 4위부터는 목록 행이다.
-// 5초마다 새 순위가 오면 자리를 옮기고, 점수를 올리고, 오른 단대를 비춘다.
-// 순위 변동 효과는 시안이 없어 이 화면에서 정했다.
 export const RivalsSection = ({ scores }: RivalsSectionProps) => {
   const { podium, others } = splitRivalStandings(scores);
   const standingsRef = useRef<HTMLDivElement>(null);
-  // 폴링 응답이 그대로면 쿼리가 같은 배열을 돌려주므로, 배열이 바뀔 때만 비교한다.
+
   const [previousScores, setPreviousScores] = useState(scores);
   const [rise, setRise] = useState<RiseState>({ id: 0, colleges: new Set() });
   if (scores !== previousScores) {

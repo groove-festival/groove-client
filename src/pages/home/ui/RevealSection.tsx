@@ -6,11 +6,10 @@ interface RevealSectionProps {
   children: ReactNode;
   id?: string;
   label: string;
-  // 여러 섹션이 한 번에 화면에 들어올 때 차례로 올라오도록 주는 지연.
+
   delayMs?: number;
 }
 
-// 스크롤로 화면에 들어오면 아래에서 스르륵 올라오는 섹션 (Figma 메모 25:2166).
 export const RevealSection = ({
   children,
   id,
