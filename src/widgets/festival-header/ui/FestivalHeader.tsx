@@ -8,12 +8,11 @@ import { FestivalMenu } from "./FestivalMenu";
 
 interface FestivalHeaderProps {
   className?: string;
-  // 로고를 눌렀을 때 홈으로 이동할지. 끄면 이동하지 않는 로고만 그린다.
+
   isLogoLinked?: boolean;
-  // 좌상단 전체 메뉴 버튼 표시 여부.
+
   showMenuButton?: boolean;
-  // 헤더 위에 고정 배너가 있을 때 그 높이(px)만큼 헤더를 내린다. 숨김 상태에서는
-  // 헤더가 배너 뒤로 올라가므로 배너가 헤더보다 위 z-index에 있어야 한다.
+
   topOffset?: number;
 }
 

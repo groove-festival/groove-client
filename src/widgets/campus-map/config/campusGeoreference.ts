@@ -1,11 +1,3 @@
-// 캠퍼스 배치도는 지리 좌표가 없는 커스텀 SVG다. 기본 아핀 변환은 공개 랜드마크와
-// 현장에서 확인한 지점을 함께 맞춘 결과다. 개인 이동 정보가 남지 않도록 현장 원본
-// 좌표는 저장하지 않고 최종 변환 계수만 반영한다.
-//
-// 아래 공개 기준점은 Figma에서 식별한 SVG 구조물의 중심과 OpenStreetMap 건물 외곽선의
-// 중심을 연결한다. 커스텀 지도의 단순화 때문에 건물 중심이 완전히 일치하지 않으므로
-// 기존 기준점에는 더 높은 가중치를 주고, 전체 보정값의 60%만 부드럽게 반영한다.
-// 실제 좌표는 2026-10-01 OpenStreetMap 원본 데이터와 경북대학교 캠퍼스 지도로 확인했다.
 export const CAMPUS_GEOREFERENCE_CALIBRATION_POINTS = [
   {
     label: "일청담",
@@ -178,8 +170,6 @@ export const CAMPUS_GEOREFERENCE = {
   calibrationErrorMeters: 27,
 } as const;
 
-// campus-base.svg에서 학교 영역으로 칠한 첫 번째 외곽선과 같은 좌표다.
-// 이 선 밖에 있더라도 위치 정확도 범위가 선에 닿으면 캠퍼스 외부로 단정하지 않는다.
 export const CAMPUS_BOUNDARY_POINTS = [
   [944.497, 613.708],
   [895.194, 525.831],

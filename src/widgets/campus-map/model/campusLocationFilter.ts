@@ -58,9 +58,6 @@ const createFilterState = (
   filteredSpeedMetersPerSecond: 0,
 });
 
-// GPS가 보고하는 정확도 안의 작은 흔들림은 천천히 따라가고, 실제 이동이 커지면
-// 더 빠르게 반응하는 One Euro 방식의 적응형 저역 통과 필터다. 원본 좌표는 이 함수의
-// 계산에만 쓰고 반환 상태에는 마지막 입력과 화면에 표시할 좌표만 유지한다.
 export const updateCampusLocationFilter = (
   current: CampusLocationFilterState | null,
   nextReading: CampusLocationReading,
