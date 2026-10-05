@@ -15,7 +15,7 @@ import {
   type FestivalStatusResponseBody,
 } from "@/entities/festival";
 
-import { usePublicContestStories } from "../api/getPublicContestStories";
+import { ApiError, httpClient } from "@/shared/api";
 import { useSubmitContestStory } from "../api/submitContestStory";
 import ContestStoryPage from "./ContestStoryPage";
 
@@ -24,7 +24,8 @@ vi.mock("@/entities/auth", async () => {
   const actual = await vi.importActual<Record<string, unknown>>("@/entities/auth");
   return { ...actual, useAuthMe: vi.fn(), useLoginWithGoogle: vi.fn() };
 });
-vi.mock("./GoogleSignInButton", () => ({
+vi.mock("@/features/google-auth", async () => ({
+  ...(await vi.importActual<Record<string, unknown>>("@/features/google-auth")),
   GoogleSignInButton: ({
     onCredential,
   }: {
@@ -35,9 +36,6 @@ vi.mock("./GoogleSignInButton", () => ({
     </button>
   ),
 }));
-vi.mock("../api/getPublicContestStories", () => ({
-  usePublicContestStories: vi.fn(),
-}));
 vi.mock("../api/submitContestStory", async () => {
   const actual = await vi.importActual<Record<string, unknown>>(
     "../api/submitContestStory",
@@ -47,7 +45,6 @@ vi.mock("../api/submitContestStory", async () => {
 
 const useFestivalStatusMock = vi.mocked(useFestivalStatus);
 const useAuthMeMock = vi.mocked(useAuthMe);
-const usePublicContestStoriesMock = vi.mocked(usePublicContestStories);
 const useLoginWithGoogleMock = vi.mocked(useLoginWithGoogle);
 const useSubmitContestStoryMock = vi.mocked(useSubmitContestStory);
 
@@ -93,6 +90,22 @@ const renderPage = (path: string) => {
   );
 };
 
+const fillStoryForm = () => {
+  fireEvent.click(screen.getByRole("button", { name: "IT" }));
+  for (const [name, value] of [
+    ["학과 *", "컴퓨터학부"],
+    ["학번 *", "20241234"],
+    ["이름 *", "홍길동"],
+    ["사연 제목 *", "축제 이야기"],
+    ["사연 내용 *", "함께 노래해요."],
+    ["관련 노래: 가수 - 노래 제목 (예: 오반 - flower) *", "오반 - flower"],
+  ]) {
+    fireEvent.change(screen.getByRole("textbox", { name }), { target: { value } });
+  }
+  fireEvent.click(screen.getByRole("checkbox", { name: /GROOVE 웹서비스 이용약관/ }));
+  fireEvent.click(screen.getByRole("checkbox", { name: /개인정보 수집 및 이용/ }));
+};
+
 beforeEach(() => {
   submitStoryMutateAsync.mockResolvedValue({
     storyId: 1,
@@ -117,27 +130,6 @@ beforeEach(() => {
     isPending: false,
     refetch: vi.fn(),
   } as unknown as ReturnType<typeof useAuthMe>);
-  usePublicContestStoriesMock.mockReturnValue({
-    data: [
-      {
-        storyId: 7,
-        title: "함께 부르는 밤",
-        nickname: "groove",
-        college: "IT",
-        submittedAt: "2026-09-22T10:00:00+09:00",
-      },
-      {
-        storyId: 8,
-        title: "첫 무대의 떨림",
-        nickname: null,
-        college: "ART",
-        submittedAt: "2026-09-22T10:05:00+09:00",
-      },
-    ],
-    isError: false,
-    isPending: false,
-    refetch: vi.fn(),
-  } as unknown as ReturnType<typeof usePublicContestStories>);
   useLoginWithGoogleMock.mockReturnValue({
     error: null,
     isPending: false,
@@ -157,6 +149,19 @@ afterEach(() => {
 });
 
 describe("ContestStoryPage", () => {
+  it.each(["before", "open", "closed", "open&preview=stories"])(
+    "does not fetch or display public story titles for %s",
+    (phase) => {
+      const get = vi.spyOn(httpClient, "get");
+      renderPage("/story?phase=" + phase);
+      expect(get).not.toHaveBeenCalled();
+      expect(
+        screen.queryByRole("list", { name: "접수된 사연 제목" }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByText("예시 미리보기")).not.toBeInTheDocument();
+    },
+  );
+
   it("shows only the story notice before collection", () => {
     renderPage("/story");
 
@@ -171,70 +176,6 @@ describe("ContestStoryPage", () => {
     expect(screen.getByText("사연 모집이 끝났어요")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "GROOVE 사연 신청하기" }),
-    ).not.toBeInTheDocument();
-  });
-
-  // 사연 제목 클라우드 임시 숨김(SHOW_STORY_TITLE_CLOUD) 동안 건너뛴다.
-  it.skip("renders public story titles in the open phase", () => {
-    renderPage("/story?phase=open");
-
-    expect(
-      screen.getByRole("heading", { name: "GROOVE 사연 모집 이벤트" }),
-    ).toBeInTheDocument();
-    expect(screen.queryByText("사연 신청 목록")).not.toBeInTheDocument();
-    expect(
-      screen.queryByText("신청한 사연은 축제 무대에서 MC가 소개합니다."),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByText("함께 나누고 싶은 이야기를 남겨 주세요."),
-    ).not.toBeInTheDocument();
-    expect(screen.getByText("함께 부르는 밤")).toBeInTheDocument();
-    expect(screen.getByText("첫 무대의 떨림")).toBeInTheDocument();
-    const [firstStoryTitle] = screen.getAllByTestId("contest-story-title");
-
-    expect(firstStoryTitle).toHaveStyle({ lineHeight: "1.05" });
-    expect(firstStoryTitle?.style.getPropertyValue("--story-float-duration")).toMatch(
-      /s$/,
-    );
-    expect(
-      screen.getAllByTestId("contest-story-title").map((title) => title.style.fontSize),
-    ).toEqual(expect.arrayContaining(["0.75rem", "2.5rem"]));
-    expect(screen.queryByRole("tab", { name: "타임테이블" })).not.toBeInTheDocument();
-  });
-
-  // 사연 제목 클라우드 임시 숨김(SHOW_STORY_TITLE_CLOUD) 동안 건너뛴다.
-  it.skip("shows the story list error and retries", () => {
-    const refetch = vi.fn();
-    usePublicContestStoriesMock.mockReturnValue({
-      data: undefined,
-      isError: true,
-      isPending: false,
-      refetch,
-    } as unknown as ReturnType<typeof usePublicContestStories>);
-
-    renderPage("/story?phase=open");
-    expect(screen.getByText("사연 목록을 불러오지 못했어요.")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "다시 불러오기" }));
-    expect(refetch).toHaveBeenCalledOnce();
-  });
-
-  // 사연 제목 클라우드 임시 숨김(SHOW_STORY_TITLE_CLOUD) 동안 건너뛴다.
-  it.skip("shows clearly labeled sample titles without fetching stories in development preview", () => {
-    usePublicContestStoriesMock.mockReturnValue({
-      data: undefined,
-      isError: true,
-      isPending: false,
-      refetch: vi.fn(),
-    } as unknown as ReturnType<typeof usePublicContestStories>);
-
-    renderPage("/story?phase=open&preview=stories");
-
-    expect(usePublicContestStoriesMock).toHaveBeenCalledWith(false);
-    expect(screen.getByText("예시 미리보기")).toBeInTheDocument();
-    expect(screen.getAllByTestId("contest-story-title")).toHaveLength(12);
-    expect(screen.getByText("졸업 전에 꼭 하고 싶은 이야기")).toBeInTheDocument();
-    expect(
-      screen.queryByText("사연 목록을 불러오지 못했어요."),
     ).not.toBeInTheDocument();
   });
 
@@ -300,6 +241,84 @@ describe("ContestStoryPage", () => {
     expect(
       screen.getByText("Google 로그인에 실패했어요. 잠시 후 다시 시도해 주세요."),
     ).toBeInTheDocument();
+  });
+
+  it("ignores a login response after the guide has been dismissed", () => {
+    const login = vi.fn();
+    useAuthMeMock.mockReturnValue({
+      data: { loggedIn: false },
+    } as unknown as ReturnType<typeof useAuthMe>);
+    useLoginWithGoogleMock.mockReturnValue({
+      mutate: login,
+      reset: googleLoginReset,
+    } as unknown as ReturnType<typeof useLoginWithGoogle>);
+    renderPage("/story?phase=open");
+    fireEvent.click(screen.getByRole("button", { name: "GROOVE 사연 신청하기" }));
+    fireEvent.click(screen.getByRole("button", { name: "Google 계정으로 로그인" }));
+    fireEvent.click(screen.getByRole("button", { name: "안내 닫기" }));
+    act(() => login.mock.calls[0]![1].onSuccess());
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "사연 신청하기" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("requires fresh Google authentication when submission reports an expired session", async () => {
+    const login = vi.fn();
+    useLoginWithGoogleMock.mockReturnValue({
+      mutate: login,
+      reset: googleLoginReset,
+    } as unknown as ReturnType<typeof useLoginWithGoogle>);
+    submitStoryMutateAsync.mockRejectedValueOnce(
+      new ApiError("C003", "세션 만료", 401),
+    );
+    renderPage("/story?phase=open");
+    fireEvent.click(screen.getByRole("button", { name: "GROOVE 사연 신청하기" }));
+    fireEvent.click(screen.getByRole("button", { name: "사연 작성하기" }));
+    fillStoryForm();
+    fireEvent.click(screen.getByRole("button", { name: "사연 접수하기" }));
+    const dialog = await screen.findByRole("dialog", { name: "사연 신청 안내 사항" });
+    expect(
+      within(dialog).getByRole("button", { name: "Google 계정으로 로그인" }),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole("button", { name: "사연 작성하기" }),
+    ).not.toBeInTheDocument();
+    expect(within(dialog).getByRole("alert")).toHaveTextContent(
+      "Google 로그인 후 사연을 접수할 수 있어요.",
+    );
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Google 계정으로 로그인" }),
+    );
+    act(() => login.mock.calls[0]![1].onSuccess());
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "사연 신청하기" })).toBeInTheDocument();
+    expect(
+      screen.queryByText("Google 로그인 후 사연을 접수할 수 있어요."),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not advance a reopened guide with the previous login response", () => {
+    const login = vi.fn();
+    useAuthMeMock.mockReturnValue({
+      data: { loggedIn: false },
+    } as unknown as ReturnType<typeof useAuthMe>);
+    useLoginWithGoogleMock.mockReturnValue({
+      mutate: login,
+      reset: googleLoginReset,
+    } as unknown as ReturnType<typeof useLoginWithGoogle>);
+    renderPage("/story?phase=open");
+    fireEvent.click(screen.getByRole("button", { name: "GROOVE 사연 신청하기" }));
+    fireEvent.click(screen.getByRole("button", { name: "Google 계정으로 로그인" }));
+    fireEvent.click(screen.getByRole("button", { name: "안내 닫기" }));
+    fireEvent.click(screen.getByRole("button", { name: "GROOVE 사연 신청하기" }));
+    act(() => login.mock.calls[0]![1].onSuccess());
+    expect(
+      screen.getByRole("dialog", { name: "사연 신청 안내 사항" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "사연 신청하기" }),
+    ).not.toBeInTheDocument();
   });
 
   it("validates the form and submits the story API body", async () => {
