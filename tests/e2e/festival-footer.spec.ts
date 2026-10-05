@@ -24,21 +24,18 @@ test("keeps the policy footer below a failed story submission", async ({ page })
   );
   await page.route("**/contest/stories", (route) =>
     route.fulfill({
-      status: route.request().method() === "POST" ? 403 : 200,
+      status: 403,
       contentType: "application/json",
-      body:
-        route.request().method() === "POST"
-          ? JSON.stringify({
-              success: false,
-              data: null,
-              error: { code: "SING003", message: "closed" },
-            })
-          : JSON.stringify({ success: true, data: [], error: null }),
+      body: JSON.stringify({
+        success: false,
+        data: null,
+        error: { code: "SING003", message: "closed" },
+      }),
     }),
   );
 
   await page.goto("./story?phase=open");
-  await page.getByRole("button", { name: "신청하기" }).click();
+  await page.getByRole("button", { name: "GROOVE 사연 신청하기", exact: true }).click();
   await page.getByRole("button", { name: "사연 작성하기" }).click();
   await page.getByRole("button", { name: "IT" }).click();
   await page.getByRole("textbox", { name: "학과 *" }).fill("컴퓨터학부");
@@ -46,9 +43,18 @@ test("keeps the policy footer below a failed story submission", async ({ page })
   await page.getByRole("textbox", { name: "이름 *" }).fill("테스트");
   await page.getByRole("textbox", { name: "사연 제목 *" }).fill("테스트");
   await page.getByRole("textbox", { name: "사연 내용 *" }).fill("테스트");
+  await page
+    .getByRole("textbox", { name: "관련 노래: 가수 - 노래 제목 (예: 오반 - flower) *" })
+    .fill("오반 - flower");
   await page.getByRole("checkbox", { name: /GROOVE 웹서비스 이용약관/ }).check();
   await page.getByRole("checkbox", { name: /개인정보 수집 및 이용/ }).check();
+  const rejection = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/contest/stories") &&
+      response.request().method() === "POST",
+  );
   await page.getByRole("button", { name: "사연 접수하기" }).click();
+  expect((await rejection).status()).toBe(403);
   await expect(page.getByText("지금은 사연 모집 기간이 아니에요.")).toBeVisible();
 
   const submitButton = page.getByRole("button", { name: "사연 접수하기" });
