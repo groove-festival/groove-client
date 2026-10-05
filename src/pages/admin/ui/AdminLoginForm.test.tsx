@@ -1,9 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { AxiosError, AxiosHeaders } from "axios";
 import type { ReactNode } from "react";
 
 import { httpClient } from "@/shared/api";
+import { authQueryKeys } from "@/entities/auth";
+
+import { pubAdminQueryKeys } from "../api/queryKeys";
 
 import { AdminLoginForm } from "./AdminLoginForm";
 
@@ -14,10 +17,11 @@ vi.mock("@/shared/api", async () => {
 
 const httpPost = vi.mocked(httpClient.post);
 
-const renderForm = () => {
-  const queryClient = new QueryClient({
+const renderForm = (
+  queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
+  }),
+) => {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
@@ -35,6 +39,33 @@ afterEach(() => {
 });
 
 describe("AdminLoginForm", () => {
+  it("removes the previous pub cache before exposing the new session", async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { staleTime: 30_000 } },
+    });
+    queryClient.setQueryData(pubAdminQueryKeys.me(), { fixture: "pub A" });
+    httpPost.mockResolvedValueOnce({
+      data: { success: true, data: { role: "PUB_ADMIN", pubId: 2 }, error: null },
+      status: 200,
+    });
+    renderForm(queryClient);
+    fillAndSubmit();
+
+    await waitFor(() =>
+      expect(queryClient.getQueryData(authQueryKeys.me())).toMatchObject({
+        loggedIn: true,
+        role: "PUB_ADMIN",
+        pubId: 2,
+      }),
+    );
+    expect(queryClient.getQueryData(pubAdminQueryKeys.me())).toBeUndefined();
+    const fetchPub = vi.fn().mockResolvedValue({ fixture: "pub B" });
+    await expect(
+      queryClient.fetchQuery({ queryKey: pubAdminQueryKeys.me(), queryFn: fetchPub }),
+    ).resolves.toEqual({ fixture: "pub B" });
+    expect(fetchPub).toHaveBeenCalledOnce();
+  });
+
   it("blocks submission and shows a field message when empty", async () => {
     renderForm();
 

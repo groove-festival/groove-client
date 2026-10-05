@@ -1,22 +1,16 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { LogOut } from "lucide-react";
 
-import { authQueryKeys, useLogout } from "@/entities/auth";
+import { useAdminLogoutSession } from "../model/useAdminSession";
 
 interface AdminHeaderProps {
   title: string;
 }
 
-// 역할별 대시보드가 공용으로 쓰는 상단 바(제목 + 로그아웃).
 export function AdminHeader({ title }: AdminHeaderProps) {
-  const queryClient = useQueryClient();
-  const logoutMutation = useLogout();
+  const logoutMutation = useAdminLogoutSession();
 
   const onLogout = () => {
-    logoutMutation.mutate(undefined, {
-      onSuccess: () =>
-        void queryClient.invalidateQueries({ queryKey: authQueryKeys.me() }),
-    });
+    logoutMutation.mutate();
   };
 
   return (
@@ -39,6 +33,11 @@ export function AdminHeader({ title }: AdminHeaderProps) {
           {logoutMutation.isPending ? "로그아웃 중…" : "로그아웃"}
         </button>
       </div>
+      {logoutMutation.isError && (
+        <p className="bg-[#3a2020] px-4 py-2 text-xs text-[#ff8b8b]" role="alert">
+          로그아웃하지 못했어요. 다시 시도해 주세요.
+        </p>
+      )}
     </header>
   );
 }

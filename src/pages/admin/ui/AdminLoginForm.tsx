@@ -1,11 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 
-import { authQueryKeys } from "@/entities/auth";
 import { ApiError } from "@/shared/api";
 
-import { useAdminLogin } from "../api/adminLogin";
+import { useAdminLoginSession } from "../model/useAdminSession";
 import {
   type AdminLoginFormValues,
   adminLoginFormDefaults,
@@ -19,11 +17,8 @@ const loginErrorMessage = (error: unknown): string => {
   return "로그인에 실패했어요. 잠시 후 다시 시도해 주세요.";
 };
 
-// ID/PW 로그인 폼(AUTH-2, 관리자 4종 공용). 로그인 성공 후 역할별 화면
-// 분기는 상위 AdminPage가 담당한다.
 export const AdminLoginForm = () => {
-  const queryClient = useQueryClient();
-  const login = useAdminLogin();
+  const login = useAdminLoginSession();
 
   const {
     formState: { errors, submitCount },
@@ -35,11 +30,7 @@ export const AdminLoginForm = () => {
   });
 
   const onValid = (values: AdminLoginFormValues) => {
-    login.mutate(values, {
-      onSuccess: () => {
-        void queryClient.invalidateQueries({ queryKey: authQueryKeys.me() });
-      },
-    });
+    login.mutate(values);
   };
 
   const firstErrorMessage =
