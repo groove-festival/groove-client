@@ -6,9 +6,6 @@ interface ContestResultsProps {
   votes: Vote[];
 }
 
-// 결과가 나온(participants 중 resultRank가 채워진) 경기만 보여준다. 준 피그마
-// 프레임엔 항상 빈 상태만 있어, 실제 목록 표시는 경연 목록 카드와 같은
-// BracketMatchRow를 재사용해 최소 구현했다.
 export function ContestResults({ votes }: ContestResultsProps) {
   const finishedVotes = votes.filter((vote) =>
     vote.participants.some((participant) => participant.resultRank !== null),

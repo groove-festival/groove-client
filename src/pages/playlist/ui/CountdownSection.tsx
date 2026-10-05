@@ -4,16 +4,9 @@ import { useCountdown } from "../model/useCountdown";
 import { PLAYLIST_BOTTOM_ANCHOR_ID } from "../model/playlistAnchors";
 
 interface CountdownSectionProps {
-  // 접수 시작 시각(ISO). festival/status의 playlist.submissionStartAt.
-  // 아직 모르면 생략하고, 이때 타이머 자리에 placeholder를 보여준다.
   targetIso?: string;
 }
 
-// 신청 전(BEFORE_OPEN) 하단 섹션. Figma 804:4335.
-// 각 텍스트는 Figma 텍스트 박스 높이(66/105/30)에 맞춘 박스 안에서 중앙 정렬해
-// 세로 위치를 원본과 맞춘다. 타이머는 접수 시작 시각까지 1초 간격으로
-// 카운트다운한다. 100시간을 넘어 시(hour)가 3자리 이상이 되면 좌우가 잘리지
-// 않도록 글자 크기를 줄인다.
 export const CountdownSection = ({ targetIso }: CountdownSectionProps) => {
   const target = useMemo(() => {
     if (!targetIso) {

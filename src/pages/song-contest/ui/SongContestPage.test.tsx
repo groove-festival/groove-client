@@ -121,7 +121,7 @@ describe("SongContestPage", () => {
     fireEvent.click(screen.getByRole("tab", { name: "경연 목록" }));
     expect(screen.getByText("오채원샷")).toBeInTheDocument();
     expect(screen.getByText("어리고싶다")).toBeInTheDocument();
-    // 투표 영역은 아직 열리지 않는다.
+
     expect(screen.getByText("가요제 투표는 경연 당일에 열려요")).toBeInTheDocument();
     expect(screen.queryByText("진행 중인 투표")).not.toBeInTheDocument();
   });
@@ -250,7 +250,7 @@ describe("SongContestPage", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "경연 결과" }));
     expect(screen.getByText("가요제 결선")).toBeInTheDocument();
-    // 위쪽 카드는 폭이 좁아 배지 대신 칩 색으로만 우승을 나타낸다.
+
     expect(screen.queryByText("우승")).not.toBeInTheDocument();
     expect(screen.getByText("IT대학").closest("div")).toHaveClass("bg-[#d2066c]");
   });

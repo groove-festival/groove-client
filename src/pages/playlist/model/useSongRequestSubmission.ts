@@ -9,7 +9,6 @@ import {
 } from "./playlistTelemetry";
 import type { CompletedSong, SongRequestFormValues } from "./songRequestForm";
 
-// 검증, 제출 요청, 완료 상태와 제출 관련 분석 이벤트를 관리한다.
 export function useSongRequestSubmission(
   handleSubmit: UseFormHandleSubmit<SongRequestFormValues>,
 ) {

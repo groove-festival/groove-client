@@ -4,7 +4,6 @@ import { isNotPublishedYet, useFinalPlaylist } from "../api/getFinalPlaylist";
 import { PlaylistEntry } from "./PlaylistEntry";
 import { PlaylistLockedScreen } from "./PlaylistLockedScreen";
 
-// 축제 기간에 최종 선정 곡을 보여주는 전용 페이지. Figma 805:12036.
 export default function GroovePlaylistPage() {
   const { data: playlist, isPending, isError, error } = useFinalPlaylist();
   const notPublishedYet = isError && isNotPublishedYet(error);
@@ -17,7 +16,6 @@ export default function GroovePlaylistPage() {
     return <LoadingFallback />;
   }
 
-  // 아직 공개 전 → 목록 대신 전용 잠금 화면. Figma 7:29.
   if (notPublishedYet) {
     return <PlaylistLockedScreen />;
   }

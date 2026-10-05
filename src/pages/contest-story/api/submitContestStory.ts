@@ -14,7 +14,7 @@ export interface SubmitContestStoryRequestBody {
   studentNumber: string;
   name: string;
   nickname: string | null;
-  // 사연과 관련된 노래 ("가수 - 노래 제목").
+
   song: string;
   title: string;
   content: string;
@@ -46,7 +46,6 @@ export function toSubmitContestStoryBody(
   };
 }
 
-// SING-6. 계정당 1건이며 재제출은 서버가 기존 사연을 덮어쓴다.
 export async function submitContestStory(
   body: SubmitContestStoryRequestBody,
 ): Promise<SubmitContestStoryResponseBody> {

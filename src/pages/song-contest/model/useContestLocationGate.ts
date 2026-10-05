@@ -15,15 +15,12 @@ export function useContestLocationGate(enabled = true) {
   const [status, setStatus] = useState<LocationGateStatus>(() =>
     enabled && hasGeolocation() ? "checking" : "unavailable",
   );
-  // 권한 거부 후 "다시 시도"는 watchPosition을 새로 걸어 권한 재요청을
-  // 트리거해야 하므로, 키를 올려 이펙트를 재실행시킨다.
+
   const [watchKey, setWatchKey] = useState(0);
 
   useEffect(() => {
     if (!enabled || !hasGeolocation()) return;
 
-    // 걸어서 반경 안으로 들어오면 자동으로 잠금이 풀리도록 한 번만 조회하지
-    // 않고 계속 추적한다.
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
         const inRange = isWithinContestVenueRadius(

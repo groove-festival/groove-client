@@ -1,6 +1,5 @@
 import { getTeamPhoto } from "./teamPhotos";
 
-// 서버 대진표(ContestBracketInitializer) 1라운드 순서 그대로다.
 const bracketTeams = [
   "오채원샷",
   "어리고싶다",

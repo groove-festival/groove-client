@@ -70,7 +70,6 @@ export const SongTrackPicker = ({ picker }: SongTrackPickerProps) => {
           검색
         </button>
 
-        {/* 결과는 입력창 아래 오버레이로 띄워 폼 높이를 유지한다. */}
         {showResults && (
           <ul
             className="themed-scrollbar absolute top-full right-0 left-0 z-20 mt-2 flex max-h-[200px] flex-col gap-2 overflow-y-auto rounded-2xl border border-[#5d5d5d] bg-[#1c1c1c] p-2 shadow-xl"

@@ -1,4 +1,3 @@
-// 2026/10/2 가요제 순서. 서버 타임테이블 연동 전 화면용 고정 콘텐츠다.
 export const timetable = [
   { time: "18:00", title: "가요제 오프닝" },
   { time: "18:10", title: "밴드동아리 축하 공연" },
@@ -16,7 +15,6 @@ const timetableStarts = timetable.map(({ time }) =>
 );
 const timetableDayEnd = Date.parse("2026-10-03T00:00:00+09:00");
 
-// 진행 중인 순서. 첫 순서 시작 전과 행사 날이 끝난 뒤에는 아무것도 표시하지 않는다.
 export function currentTimetableIndex(nowMs: number): number | null {
   if (nowMs >= timetableDayEnd) return null;
 

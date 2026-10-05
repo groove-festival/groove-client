@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-// 화면 라벨. API enum과 1:1로 매핑한다.
 export const colleges = ["IT", "간호", "예술", "사회", "사범", "자연"] as const;
 
 export type College = (typeof colleges)[number];
@@ -16,8 +15,6 @@ export const collegeToApiValue: Record<College, ApiCollege> = {
   자연: "NATURE",
 };
 
-// 노래 신청 폼 계약. 곡은 PLST-2 검색 결과에서 고른 trackId로만 받는다 —
-// 검색을 거치지 않은 곡은 서버가 거부한다(PLST007). 길이 상한은 명세를 따른다.
 export const songRequestSchema = z.object({
   trackId: z.string().min(1, "곡을 검색해서 선택해 주세요."),
   college: z.enum(colleges),

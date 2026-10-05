@@ -4,9 +4,6 @@ import { type ApiEnvelope, httpClient, requestData } from "@/shared/api";
 
 import { songContestQueryKeys } from "./queryKeys";
 
-// SING-4. "완료된 투표" 표시용. SING-2 목록과 singingVoteId로 조합해 완료된
-// 카드를 그린다. 필드명은 SING-2 실제 응답(singingVoteId·voteParticipantId)과
-// 통일했다.
 export interface MyBallot {
   singingVoteId: number;
   voteParticipantId: number;

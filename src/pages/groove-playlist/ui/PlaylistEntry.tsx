@@ -13,7 +13,6 @@ interface PlaylistEntryProps {
   entry: FinalPlaylistSong;
 }
 
-// 공개 플레이리스트의 한 곡. Figma 301:4281 컴포넌트.
 export const PlaylistEntry = ({ entry }: PlaylistEntryProps) => {
   return (
     <li className="flex items-center gap-4">
@@ -24,7 +23,6 @@ export const PlaylistEntry = ({ entry }: PlaylistEntryProps) => {
           src={entry.albumCoverUrl}
         />
       ) : (
-        // 커버가 없으면 기본 이미지 자리로 폴백한다.
         <div className="aspect-square w-14 shrink-0 rounded-lg bg-[#fcfcfc]" />
       )}
       <div className="flex min-w-0 flex-1 items-start justify-between gap-3">

@@ -13,7 +13,6 @@ interface UseSongTrackPickerOptions {
   onTrackChange: (trackId: string) => void;
 }
 
-// 검색 결과 표시와 선택을 소유한다. 폼에는 선택된 trackId만 전달한다.
 export function useSongTrackPicker({
   onSearchStart,
   onTrackChange,

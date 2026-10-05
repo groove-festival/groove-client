@@ -4,8 +4,6 @@ interface PlaylistStatusErrorProps {
   onRetry: () => void;
 }
 
-// festival/status를 불러오지 못했을 때의 하단 섹션. 단계를 알 수 없으므로 임의로
-// 추측하지 않고 재시도만 제공한다.
 export const PlaylistStatusError = ({ onRetry }: PlaylistStatusErrorProps) => {
   return (
     <section

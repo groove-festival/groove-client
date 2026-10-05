@@ -8,11 +8,11 @@ import { ParticipantTile } from "./ParticipantTile";
 interface VoteMatchPanelProps {
   vote: Vote;
   remainingLabel: string;
-  // 아직 확정하지 않은 이번 세션의 임시 선택.
+
   selectedParticipantId: number | undefined;
   onSelectParticipant: (voteParticipantId: number) => void;
   onOpenConfirm: () => void;
-  // 이미 투표를 마친 경기면 완료 배지+내 선택 강조로 바꾼다.
+
   votedParticipantId: number | undefined;
 }
 
@@ -25,7 +25,7 @@ export function VoteMatchPanel({
   votedParticipantId,
 }: VoteMatchPanelProps) {
   const isVoted = votedParticipantId !== undefined;
-  // 결선(3자 대결)만 참가자를 세로로 쌓고 칩 사이마다 vs를 넣는다.
+
   const isMultiWay = vote.participants.length > 2;
 
   return (

@@ -225,8 +225,6 @@ describe("PlaylistPage", () => {
   });
 
   it("offers a retry when status succeeds without playlist phase info", () => {
-    // 계약 불일치(예: 구버전 백엔드 응답)로 playlist가 비어 있는 경우. 빈
-    // 화면을 남기지 않고 안내한다.
     mockStatus({
       data: {
         phase: "BEFORE",

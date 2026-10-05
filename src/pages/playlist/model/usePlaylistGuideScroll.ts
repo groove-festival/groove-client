@@ -6,7 +6,7 @@ import { PLAYLIST_BOTTOM_ANCHOR_ID } from "./playlistAnchors";
 
 const SCROLL_SETTLE_DELAY_MS = 180;
 const SCROLL_FALLBACK_DELAY_MS = 1_000;
-// 히어로 화살표의 스크롤이 끝난 뒤 신청 안내를 연다.
+
 export function usePlaylistGuideScroll(phase: PlaylistPhase | undefined) {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const isGuideScrollPendingRef = useRef(false);

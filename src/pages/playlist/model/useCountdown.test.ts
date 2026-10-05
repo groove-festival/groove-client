@@ -13,7 +13,6 @@ describe("useCountdown", () => {
   });
 
   it("splits the remaining time and allows 3-digit hours past 100h", () => {
-    // 5일 13시간 2분 7초 -> 133:02:07
     const target = new Date("2026-09-06T13:02:07Z");
     const { result } = renderHook(() => useCountdown(target));
 

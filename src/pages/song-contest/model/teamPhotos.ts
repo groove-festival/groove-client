@@ -35,10 +35,6 @@ import team12x80 from "../festival-visuals/team-12-80.jpg";
 import team12x160 from "../festival-visuals/team-12-160.jpg";
 import team12x240 from "../festival-visuals/team-12-240.jpg";
 
-// 가요제 참가팀 사진. API(SING-1)는 팀 이름만 내려주므로 이름으로 사진을 찾는다.
-// 12팀은 서버 대진표 적재(ContestBracketInitializer)에서 이름이 고정되고, 2·3라운드도
-// 같은 이름으로 올라가므로 이름이 곧 열쇠다. 키 순서는 대진표 왼쪽부터 1~12번이다.
-// ⚠️ 서버에서 팀 이름을 바꾸면 여기도 함께 바꾼다. 못 찾으면 빈 원을 그린다.
 export interface TeamPhoto {
   src: string;
   srcSet: string;

@@ -5,13 +5,9 @@ import { lockIllustration } from "@/shared/ui";
 import { PLAYLIST_BOTTOM_ANCHOR_ID } from "../model/playlistAnchors";
 
 interface ClosedSectionProps {
-  // selection: 신청 마감 · 홍보팀 선정 중 · 최종 목록 비공개 (PLST 단계 SELECTION)
-  // published: 최종 목록 공개됨 → GROOVE PLAYLIST 페이지로 유도 (PLST 단계 PUBLISHED)
   variant: "selection" | "published";
 }
 
-// 신청 폼·검색 UI 없이 안내만 노출하는 하단 섹션. Figma 555:2474.
-// SELECTION 문구는 원본 그대로, PUBLISHED는 공개 사실과 이동 버튼으로 바꾼다.
 export const ClosedSection = ({ variant }: ClosedSectionProps) => {
   const navigate = useNavigate();
   const isPublished = variant === "published";

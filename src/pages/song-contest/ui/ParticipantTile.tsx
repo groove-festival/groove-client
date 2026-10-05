@@ -7,7 +7,6 @@ interface ParticipantTileProps {
   onClick?: () => void;
 }
 
-// "진행 중인 투표"/"참여한 투표" 카드에서 쓰는 큰 선택형 참가자 타일.
 export function ParticipantTile({
   name,
   selected,

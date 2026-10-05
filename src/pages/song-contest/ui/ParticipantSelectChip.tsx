@@ -7,9 +7,6 @@ interface ParticipantSelectChipProps {
   onClick?: () => void;
 }
 
-// 결선(3자 대결) 투표 전용 가로형 선택 칩. 2자 대결의 큰 정사각 타일
-// (ParticipantTile)과 달리 3명을 세로로 쌓아야 해서 더 컴팩트한 가로형을
-// 쓴다 (Figma 1441-15791, 1441-15852).
 export function ParticipantSelectChip({
   name,
   selected,

@@ -27,9 +27,6 @@ interface SongRequestFormProps {
   onGuideSectionEnter?: () => void;
 }
 
-// 신청 중(SUBMISSION) 하단 섹션. Figma 555:2321.
-// 곡은 PLST-2 검색 결과에서 고른 trackId로만 신청한다(PLST-3). 학번당 최종 1곡이고
-// 같은 학번의 재신청은 서버가 새 곡으로 덮어쓴다.
 export const SongRequestForm = ({
   guideOpen,
   onGuideClose,
@@ -82,7 +79,6 @@ export const SongRequestForm = ({
     picker.resetPicker();
   };
 
-  // 제출 후 첫 번째 검증 오류 메시지를 그대로 노출한다.
   const firstErrorMessage =
     submitCount > 0 ? Object.values(errors)[0]?.message : undefined;
   const termsAgreed = useWatch({ control, name: "termsAgreed" });
