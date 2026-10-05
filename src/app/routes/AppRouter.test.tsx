@@ -6,8 +6,6 @@ import { httpClient } from "@/shared/api";
 
 import { routes } from "./routeConfig";
 
-// 주문 라우트는 PUB-3 응답이 있어야 화면이 뜬다. 여기서는 라우팅만 보므로
-// 상차림비 한 줄이면 충분하다.
 const orderTableEnvelope = {
   data: {
     success: true,
@@ -74,7 +72,6 @@ const festivalStatusEnvelope = {
   status: 200,
 };
 
-// 데이터를 부르는 화면이 섞여 있어 라우팅만 보는 이 검사에도 쿼리 클라이언트가 필요하다.
 const renderRoute = (path: string) => {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   const queryClient = new QueryClient({
@@ -88,7 +85,6 @@ const renderRoute = (path: string) => {
   );
 };
 
-// 관리자·QR 주문 화면은 들어갈 때 코드를 받으므로 기본 1초보다 넉넉히 기다린다.
 const lazyRouteWait = { timeout: 5_000 };
 
 describe("AppRouter", () => {

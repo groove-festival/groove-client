@@ -24,7 +24,6 @@ const submissionStatus = {
   error: null,
 };
 
-// 홈 화면 검사는 외부 API 상태와 무관하게 같은 접수 화면을 대상으로 한다.
 export async function mockSubmissionFestivalStatus(page: Page): Promise<void> {
   await page.route("**/festival/status", (route) =>
     route.fulfill({

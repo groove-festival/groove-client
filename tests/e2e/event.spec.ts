@@ -66,7 +66,6 @@ test("selects the tapped booth and slides its card into view", async ({ page }) 
     zoneList(page).getByRole("button", { name: /GROOVE ZONE/ }),
   ).toHaveAttribute("aria-pressed", "true");
 
-  // 마지막 카드라 스크롤 끝에서 멈춘다. 이동이 끝날 때까지 기다린다.
   await expect
     .poll(async () => {
       const { scrollLeft, maxScrollLeft } = await scrollState(page);
