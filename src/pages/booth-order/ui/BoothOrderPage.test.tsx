@@ -95,13 +95,12 @@ interface OrderLineOption {
 
 interface OrderOverrides {
   depositorName?: string | null;
-  // 두 번째 줄(메뉴)에 붙은 옵션.
+
   menuOptions?: OrderLineOption[];
   paymentMethod?: PaymentMethod;
   status?: OrderStatus;
 }
 
-// 서버가 들고 있는 주문. PUB-4~7 응답이 모두 이 값을 되비춘다.
 let currentOrder: ReturnType<typeof createOrderBody> | null = null;
 
 function createOrderBody({
@@ -152,7 +151,6 @@ const apiError = (code: string, status: number) =>
     statusText: "",
   });
 
-// 주문 토큰만 브라우저에 남고, 주문 본문은 PUB-5로 다시 읽는다.
 const seedOrder = (overrides: OrderOverrides = {}) => {
   currentOrder = createOrderBody(overrides);
   window.localStorage.setItem(
@@ -190,8 +188,6 @@ const getBottomBar = () => screen.getByTestId("order-bottom-bar");
 const addFirstMenu = () =>
   fireEvent.click(screen.getAllByRole("button", { name: "메뉴명 수량 늘리기" })[0]);
 
-// 상차림비는 0개로 시작하므로 손님처럼 직접 담는다. 주문 응답(createOrderBody)도
-// 상차림비를 포함한 27,000원이다.
 const addSeparateCharge = () =>
   fireEvent.click(screen.getByRole("button", { name: "상차림비 수량 늘리기" }));
 
@@ -288,8 +284,6 @@ beforeEach(() => {
         : Promise.reject(apiError("PUB005", 404));
     }
 
-    // 같은 주막의 다른 테이블도 유효하다. 배너가 테이블별로 갈리는지 보려면
-    // 테이블 코드가 달라도 PUB-3이 성공해야 한다.
     return url.startsWith(`/pubs/${BOOTH_ID}/tables/`)
       ? Promise.resolve(
           envelope({ ...tableResponse(), tableCode: url.split("/").at(-1) }),
@@ -314,7 +308,101 @@ beforeEach(() => {
   });
 });
 
+afterEach(() => vi.restoreAllMocks());
+
 describe("BoothOrderPage", () => {
+  it("blocks a new order while the saved order is being restored", async () => {
+    seedOrder();
+    let resolveOrder!: (response: ReturnType<typeof envelope>) => void;
+    const response = new Promise<ReturnType<typeof envelope>>((resolve) => {
+      resolveOrder = resolve;
+    });
+    httpGet.mockImplementation((url: string) =>
+      url.includes("/orders/") ? response : Promise.resolve(envelope(tableResponse())),
+    );
+    renderOrderPage();
+
+    await waitFor(() =>
+      expect(httpGet).toHaveBeenCalledWith(
+        expect.stringContaining("/orders/1"),
+        expect.any(Object),
+      ),
+    );
+    expect(
+      screen.queryByRole("button", { name: "메뉴명 수량 늘리기" }),
+    ).not.toBeInTheDocument();
+    expect(httpPost).not.toHaveBeenCalled();
+    await act(async () => resolveOrder(envelope(currentOrder)));
+    expect(
+      await screen.findByRole("button", { name: "아직 완료되지 않은 주문이 있어요" }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the saved order on a network error and restores it on retry", async () => {
+    seedOrder();
+    let orderReads = 0;
+    httpGet.mockImplementation((url: string) => {
+      if (!url.includes("/orders/")) return Promise.resolve(envelope(tableResponse()));
+      orderReads += 1;
+      return orderReads === 1
+        ? Promise.reject(new AxiosError("Network Error", "ERR_NETWORK"))
+        : Promise.resolve(envelope(currentOrder));
+    });
+    renderOrderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: "페이지 새로고침" }));
+    expect(httpPost).not.toHaveBeenCalled();
+    expect(
+      window.localStorage.getItem(getOrderStorageKey(BOOTH_ID, TABLE_CODE)),
+    ).not.toBeNull();
+    expect(
+      await screen.findByRole("button", { name: "아직 완료되지 않은 주문이 있어요" }),
+    ).toBeInTheDocument();
+    expect(orderReads).toBe(2);
+  });
+
+  it("discards an unusable saved token and allows a fresh order", async () => {
+    seedOrder();
+    httpGet.mockImplementation((url: string) =>
+      url.includes("/orders/")
+        ? Promise.reject(apiError("PUB008", 403))
+        : Promise.resolve(envelope(tableResponse())),
+    );
+    await showMenuScreen();
+
+    await waitFor(() =>
+      expect(
+        window.localStorage.getItem(getOrderStorageKey(BOOTH_ID, TABLE_CODE)),
+      ).toBeNull(),
+    );
+    expect(
+      screen.queryByRole("button", { name: "아직 완료되지 않은 주문이 있어요" }),
+    ).not.toBeInTheDocument();
+    addFirstMenu();
+    expect(screen.getByRole("button", { name: "25,000원 주문하기" })).toBeEnabled();
+  });
+
+  it("keeps an accepted order accessible and warns when storing the token fails", async () => {
+    await showMenuScreen();
+    const write = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("quota");
+    });
+    await placeOrder();
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "주문을 이 브라우저에 저장하지 못했어요",
+    );
+    expect(getTransferDialog()).toBeInTheDocument();
+    write.mockRestore();
+    fireEvent.click(screen.getByRole("button", { name: "주문 저장 다시 시도" }));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(
+      JSON.parse(
+        window.localStorage.getItem(getOrderStorageKey(BOOTH_ID, TABLE_CODE))!,
+      ),
+    ).toMatchObject({ orderId: ORDER_ID, orderToken: ORDER_TOKEN });
+  });
+
   it("renders the order header without the menu button or home link", async () => {
     await showMenuScreen();
 
@@ -340,8 +428,7 @@ describe("BoothOrderPage", () => {
   it("moves a shared-spot QR to the table PUB-3 resolved for today", async () => {
     httpGet.mockImplementation((url: string) => {
       if (url.includes("/orders/")) return Promise.reject(apiError("PUB005", 404));
-      // 첫째 날 학과가 뽑은 QR(자리 코드)로 둘째 날에 들어오면 서버가 오늘 학과의
-      // 같은 번호 테이블로 옮겨 답한다.
+
       if (url === "/pubs/edu-kor-home/tables/day1-table") {
         return Promise.resolve(envelope({ ...tableResponse(), tableCode: TABLE_CODE }));
       }
@@ -385,7 +472,6 @@ describe("BoothOrderPage", () => {
       "같은 테이블에서 이미 냈다면 담지 않아도 돼요.",
     );
 
-    // 첫 주문인지는 알 수 없으므로 상차림비 없이도 주문된다.
     addFirstMenu();
     fireEvent.click(screen.getByRole("button", { name: "25,000원 주문하기" }));
     await waitFor(() =>
@@ -400,7 +486,6 @@ describe("BoothOrderPage", () => {
   it("keeps the separate charge out of the menu sections", async () => {
     await showMenuScreen();
 
-    // 상차림비가 섹션에도 남으면 수량과 합계가 두 번 잡힌다.
     expect(screen.getAllByRole("list", { name: "상차림비" })).toHaveLength(1);
     expect(screen.queryByRole("heading", { name: "상차림비" })).not.toBeInTheDocument();
   });
@@ -409,7 +494,6 @@ describe("BoothOrderPage", () => {
     useTableMenus(optionMenus());
     await showMenuScreen();
 
-    // 담기 전에는 옵션을 펼치지 않는다.
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "짜파게티 수량 늘리기" }));
@@ -424,7 +508,6 @@ describe("BoothOrderPage", () => {
       screen.getByRole("button", { name: "6,000원 주문하기" }),
     ).toBeInTheDocument();
 
-    // 체크한 옵션은 담은 수량 전체에 붙는다.
     fireEvent.click(screen.getByRole("button", { name: "짜파게티 수량 늘리기" }));
     fireEvent.click(screen.getByRole("button", { name: "12,000원 주문하기" }));
 
@@ -476,7 +559,6 @@ describe("BoothOrderPage", () => {
     const notice = screen.getByTestId("separate-charge-notice");
     expect(notice).toHaveTextContent("상차림비는 직접 담아 주세요.");
 
-    // 상차림비를 안 골라도 주문 버튼은 막지 않는다 — 안내만 한다.
     fireEvent.click(screen.getByRole("button", { name: "닭발 수량 늘리기" }));
     expect(screen.getByRole("button", { name: "15,000원 주문하기" })).toBeEnabled();
 
@@ -536,8 +618,6 @@ describe("BoothOrderPage", () => {
     expect(getBottomBar()).toHaveAttribute("inert");
   });
 
-  // 10/1 운영: 이체 안내를 닫으면 같은 메뉴가 담긴 채로 주문하기가 다시 보여
-  // 한 번 더 눌러 같은 주문이 두 건 들어갔다.
   it("empties the cart once the order is placed, so closing the transfer guide cannot repeat it", async () => {
     await showMenuScreen();
     await placeOrder();
@@ -562,7 +642,7 @@ describe("BoothOrderPage", () => {
 
     const orderButton = screen.getByRole("button", { name: "27,000원 주문하기" });
     fireEvent.click(orderButton);
-    fireEvent.click(orderButton); // 같은 프레임 안의 더블탭
+    fireEvent.click(orderButton);
     const pendingButton = await screen.findByRole("button", { name: "주문하는 중…" });
     expect(pendingButton).toBeDisabled();
     fireEvent.click(pendingButton);
@@ -809,8 +889,6 @@ describe("BoothOrderPage", () => {
   });
 
   it("stops telling a served customer to keep waiting", async () => {
-    // PAID(조리 착수)와 COMPLETED(서빙 완료)가 한 화면을 쓰던 탓에, 음식을 받은
-    // 손님에게도 "조리 중이에요. 잠시만 기다려주세요."가 계속 떠 있었다.
     seedOrder({ depositorName: "김입금", status: "COMPLETED" });
     renderOrderPage();
 
@@ -832,7 +910,6 @@ describe("BoothOrderPage", () => {
 
     fireEvent.click(within(dialog).getByRole("button", { name: "확인했습니다" }));
 
-    // 토큰을 남기면 재진입할 때마다 같은 안내가 다시 뜬다.
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "주막 이름" })).toBeInTheDocument();
     expect(

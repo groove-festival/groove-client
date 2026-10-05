@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import currencyCircleDollar from "../festival-visuals/currency-circle-dollar.svg";
 import dialogClose from "../festival-visuals/dialog-close.svg";
@@ -9,6 +9,7 @@ import { OrderDialogFrame } from "./OrderDialogFrame";
 
 interface BankTransferDialogProps {
   account: OrderAccount;
+  notice?: ReactNode;
   onChooseCash: () => void;
   onClose: () => void;
   onSubmitDepositorName: (depositorName: string) => void;
@@ -16,6 +17,7 @@ interface BankTransferDialogProps {
 
 export const BankTransferDialog = ({
   account,
+  notice,
   onChooseCash,
   onClose,
   onSubmitDepositorName,
@@ -37,6 +39,8 @@ export const BankTransferDialog = ({
       >
         <img alt="" height={18} src={dialogClose} width={18} />
       </button>
+
+      {notice}
 
       <div className="flex w-full flex-col items-center gap-4">
         <div className="flex w-full flex-col gap-6">
@@ -64,7 +68,6 @@ export const BankTransferDialog = ({
                 </div>
 
                 <ul className="w-full list-disc space-y-[15px] pl-[18px] text-xs leading-[15px]">
-                  {/* 줄바꿈은 <br />, 강조는 <strong className="font-bold">…</strong> */}
                   <li>
                     위 계좌로 <strong className="font-bold">주문 금액</strong>을 입금해
                     주세요.
