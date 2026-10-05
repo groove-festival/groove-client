@@ -2,13 +2,12 @@ import { type ReactNode } from "react";
 
 interface OrderStatusScreenProps {
   children: ReactNode;
-  // 진행바 채움 비율(0~1).
+
   progress: number;
   subtitle: string;
   title: string;
 }
 
-// 주문 제출 뒤 상태 화면 공통 틀: 진행바, 상태 문구, 영수증.
 export const OrderStatusScreen = ({
   children,
   progress,

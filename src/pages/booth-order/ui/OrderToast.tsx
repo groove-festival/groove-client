@@ -9,10 +9,7 @@ interface OrderToastProps {
   toast: ToastState | null;
 }
 
-// 주문 흐름 공통 토스트. 팝업의 transform·backdrop-filter가 fixed 위치의
-// 기준이 되지 않도록 body로 포털하고, 스크린리더에도 알린다.
 export const OrderToast = ({ onDismiss, toast }: OrderToastProps) => {
-  // 렌더마다 새로 만들어지는 콜백이 타이머를 되감지 않도록 ref로 잡아둔다.
   const dismissRef = useRef(onDismiss);
 
   useEffect(() => {

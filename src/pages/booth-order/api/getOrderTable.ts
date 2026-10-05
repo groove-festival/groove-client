@@ -10,7 +10,6 @@ import {
 
 import { orderQueryKeys } from "./queryKeys";
 
-// PUB-3 응답은 PUB-2 페이로드를 통째로 품고 있어 pub이 두 번 중첩된다.
 interface OrderTableResponseBody {
   orderable: boolean;
   pub: BoothDetailResponseBody;
@@ -21,14 +20,11 @@ interface OrderTableResponseBody {
 export interface OrderTable {
   booth: BoothOrderDetail;
   isOrderable: boolean;
-  // 서버가 옮겨 답한 테이블. 날짜별로 나눠 쓰는 자리의 QR 을 쉬는 학과 쪽으로 찍으면
-  // 오늘 여는 학과의 같은 번호 테이블이 온다. 요청 주소와 다르면 이 값으로 바꾼다.
+
   tableCode: string;
   tableNumber: number;
 }
 
-// 없는 부스(PUB002)와 없는 테이블(PUB003)을 구분해 안내하지 않는다. 구분하면
-// 테이블 코드를 찍어보며 존재 여부를 알아낼 수 있다 (API 명세 PUB-3).
 export function isOrderTableNotFound(error: unknown): boolean {
   return (
     error instanceof ApiError && (error.code === "PUB002" || error.code === "PUB003")

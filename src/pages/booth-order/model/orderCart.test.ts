@@ -159,7 +159,6 @@ describe("orderCart with several separate charges", () => {
     cart = changeQuantity(cart, perTable, 1);
     expect(hasSelectedSeparateCharge(jointBooth, cart)).toBe(true);
 
-    // 상차림비만 담고 메뉴가 없으면 여전히 주문할 수 없다.
     cart = changeQuantity(cart, chicken, -1);
     expect(canPlaceOrder(jointBooth, cart)).toBe(false);
   });
@@ -227,7 +226,6 @@ describe("orderCart options", () => {
     expect(line.optionIds).toEqual([31, 32]);
     expect(line.price).toBe(5_000);
 
-    // 다시 누르면 해제된다.
     selection = toggleOption(selection, noodles, upgrade.id);
     expect(buildOrderLines(optionBooth, cart, selection)[0].price).toBe(4_000);
   });

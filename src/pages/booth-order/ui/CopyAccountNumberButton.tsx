@@ -13,8 +13,6 @@ interface CopyAccountNumberButtonProps {
   className?: string;
 }
 
-// 계좌번호 뒤에 붙는 작은 복사 버튼. 누르면 결과를 화면 하단 토스트로 잠깐
-// 보여주고 스크린리더에도 알린다.
 export const CopyAccountNumberButton = ({
   accountNumber,
   className = "",

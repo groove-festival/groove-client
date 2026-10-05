@@ -23,7 +23,6 @@ describe("getOrderScreen", () => {
   });
 
   it("keeps a transfer awaiting deposit on the menu screen", () => {
-    // 팝업을 닫은 입금대기는 별도 화면 없이 상단 배너로 대신한다 (FR-1.4-4).
     expect(getOrderScreen(createOrder())).toBe("menu");
   });
 
@@ -36,8 +35,7 @@ describe("getOrderScreen", () => {
       "depositClaimed",
     );
     expect(getOrderScreen(createOrder({ status: "PAID" }))).toBe("completed");
-    // 서빙까지 끝난 주문은 조리 중과 같은 화면을 쓰지 않는다 (FR-1.8-0의
-    // 손님 문구 4단계). 합쳐두면 음식을 받은 손님이 계속 "조리 중"을 본다.
+
     expect(getOrderScreen(createOrder({ status: "COMPLETED" }))).toBe("served");
   });
 

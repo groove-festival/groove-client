@@ -4,8 +4,6 @@ interface IncompleteOrderBannerProps {
   onOpen: () => void;
 }
 
-// 입금자명을 내지 않고 나간 주문이 있을 때 상단바 위에 고정되는 배너.
-// 상단바가 스크롤로 숨을 때 배너 뒤로 들어가도록 헤더보다 위에 둔다.
 export const IncompleteOrderBanner = ({ onOpen }: IncompleteOrderBannerProps) => {
   return (
     <button

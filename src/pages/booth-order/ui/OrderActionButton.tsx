@@ -4,7 +4,6 @@ interface OrderActionButtonProps {
   onClick: () => void;
 }
 
-// 주문 흐름의 라임색 주요 버튼(주문하기·입금자명 수정하기·추가 주문하기).
 export const OrderActionButton = ({
   disabled = false,
   label,

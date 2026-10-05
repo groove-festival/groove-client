@@ -17,7 +17,6 @@ const booth = (
     yRatio: number | null;
   }> = {},
 ) => ({
-  // null 을 그대로 넘길 수 있어야 구역 없는 주막을 검사할 수 있다.
   area: overrides.area === undefined ? ("PARKING" as const) : overrides.area,
   boothCode,
   xRatio: overrides.xRatio ?? null,

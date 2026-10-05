@@ -63,7 +63,7 @@ describe("toPlacedOrder mapping", () => {
       bank: "국민",
       holder: "홍길동",
     });
-    // 옵션을 모르는 서버는 options를 보내지 않는다. 없으면 빈 목록으로 읽는다.
+
     expect(order.lines).toEqual([
       { menuId: 4, name: "닭발", options: [], price: 15_000, quantity: 2 },
     ]);
@@ -128,15 +128,13 @@ describe("createOrder", () => {
     const [url, body, config] = httpPost.mock.calls[0];
     expect(url).toBe("/pubs/elec-eh/tables/table-a/orders");
     expect(body).toEqual({ items: [{ menuId: 4, quantity: 2 }] });
-    // 서버는 UUID 가 아닌 멱등키를 400(C001)으로 거부한다 (실서버 확인).
+
     expect(config?.headers?.["Idempotency-Key"]).toMatch(UUID_PATTERN);
     expect(created.orderToken).toBe("token-7");
     expect(created.order.status).toBe("PENDING_DEPOSIT");
   });
 
   it("still sends a UUID when the browser has no crypto.randomUUID", async () => {
-    // 구형·인앱 브라우저는 randomUUID 가 없다. 예전 폴백은 UUID 가 아닌
-    // 문자열을 만들어 그런 기기에서는 주문이 전부 400 으로 실패했다.
     const originalCrypto = globalThis.crypto;
     const { getRandomValues } = originalCrypto;
     Object.defineProperty(globalThis, "crypto", {

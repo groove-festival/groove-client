@@ -7,8 +7,6 @@ interface DepositorNameFieldProps {
 
 const DEPOSITOR_NAME_MAX_LENGTH = 20;
 
-// 입금자명 입력칸. 디자인의 "입금자명 *" 표시는 값이 비어 있을 때만 보이는
-// 라벨로 그리고, 스크린리더에는 필수 입력으로 알린다.
 export const DepositorNameField = ({ onChange, value }: DepositorNameFieldProps) => {
   const inputId = useId();
 

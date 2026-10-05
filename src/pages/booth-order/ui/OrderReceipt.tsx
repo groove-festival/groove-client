@@ -34,8 +34,6 @@ const ReceiptRow = ({
   </div>
 );
 
-// 영수증 모양의 주문 내역. 현금 주문은 입금자명·계좌 번호 없이 주막명·주문
-// 메뉴·결제 금액만 보여준다.
 export const OrderReceipt = ({
   account,
   boothName,

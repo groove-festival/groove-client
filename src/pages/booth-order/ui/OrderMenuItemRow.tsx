@@ -4,7 +4,7 @@ import { formatWon } from "../lib/formatWon";
 
 interface OrderMenuItemRowProps {
   className?: string;
-  // 좌우 여백. 둥근 카드 안(상차림비)에서는 모서리에 붙지 않게 왼쪽을 넓힌다.
+
   insetClassName?: string;
   isOptionSelected?: (optionId: number) => boolean;
   item: BoothMenuItem;
@@ -22,9 +22,6 @@ const formatItemPrice = (item: BoothMenuItem) => {
   return item.price === null ? "가격" : formatWon(item.price);
 };
 
-// 주문 화면의 메뉴 한 줄. 메뉴명·가격과 `- n +` 수량 조절로 구성한다. 옵션이
-// 있는 메뉴는 담은 뒤에만 옵션 체크를 펼친다 — 담기 전에 보이면 옵션만 체크하고
-// 수량을 안 올린 채 지나치기 쉽다.
 export const OrderMenuItemRow = ({
   className = "",
   insetClassName = "px-3",

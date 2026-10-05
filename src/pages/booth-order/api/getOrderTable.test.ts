@@ -23,7 +23,6 @@ const menu = (menuId: number, overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-// PUB-3 응답은 PUB-2 페이로드를 통째로 품고 있어 pub이 두 번 중첩된다.
 const tableBody = {
   orderable: true,
   pub: {
@@ -98,7 +97,6 @@ describe("getOrderTable", () => {
   });
 
   it("keeps every separate charge, not just the first", async () => {
-    // 1인·테이블당 상차림비를 나누거나 연합 주막이 학과별로 받는 경우가 있다.
     httpGet.mockResolvedValueOnce(
       envelope({
         ...tableBody,
