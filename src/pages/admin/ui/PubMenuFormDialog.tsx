@@ -1,8 +1,9 @@
 import { X } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { menuCategories, type MenuCategory } from "@/entities/booth";
+import { useDialogLifecycle } from "@/shared/ui";
 
 import {
   emptyMenuDraft,
@@ -25,11 +26,6 @@ export interface PubMenuFormDialogProps {
   title: string;
 }
 
-// 메뉴 등록(PUB-A5)과 수정(PUB-A6)이 같은 입력을 받아 한 다이얼로그를 쓴다.
-// 사진은 목록 행에서 따로 올린다 (PUB-A12).
-//
-// 닫힌 상태를 이 안에서 다루지 않는다. 부모가 닫을 때 아예 렌더하지 않으므로
-// 고치던 값이 언마운트와 함께 사라지고, 다시 열면 initialDraft로 새로 시작한다.
 export const PubMenuFormDialog = ({
   initialDraft,
   isPending,
@@ -41,25 +37,7 @@ export const PubMenuFormDialog = ({
   const dialogRef = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState<MenuDraft>(initialDraft ?? emptyMenuDraft);
 
-  useEffect(() => {
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    dialogRef.current?.focus();
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onCancel();
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = previousOverflow;
-      previouslyFocused?.focus();
-    };
-  }, [onCancel]);
+  useDialogLifecycle({ dialogRef, onDismiss: onCancel });
 
   const draftError = getMenuDraftError(draft);
 
@@ -149,9 +127,6 @@ export const PubMenuFormDialog = ({
             />
           </label>
 
-          {/* 옵션은 손님이 담은 메뉴 아래에서 체크하는 선택 사항이다. 조건을
-              확인할 수 없는 할인("메인 메뉴와 함께 주문 시")도 손님 체크를 믿고
-              받으므로, 직원이 주문 내역에서 보고 판단한다. */}
           <fieldset className="flex flex-col gap-2">
             <legend className="text-xs text-[#a2a2a2]">
               옵션 (선택) — 할인은 -1000처럼 입력

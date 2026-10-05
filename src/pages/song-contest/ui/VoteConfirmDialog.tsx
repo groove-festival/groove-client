@@ -1,19 +1,19 @@
-import { useEffect, useId, useRef } from "react";
+import { useId, useRef } from "react";
 import { createPortal } from "react-dom";
+
+import { useDialogLifecycle } from "@/shared/ui";
 
 import { ParticipantAvatar } from "./ParticipantAvatar";
 
 interface VoteConfirmDialogProps {
   participantName: string;
   pending: boolean;
-  // 마감·중복 투표 등으로 제출이 실패했을 때만 채워진다.
+
   errorMessage?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-// 참가자 선택 후 "투표하기"를 눌렀을 때 뜨는 최종 확인 팝업 (node 1441:15595,
-// 레이어명 "투표 확인 버튼"). 확정 후에는 수정·재투표가 불가하다.
 export function VoteConfirmDialog({
   participantName,
   pending,
@@ -24,14 +24,7 @@ export function VoteConfirmDialog({
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    dialogRef.current?.focus();
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onCancel();
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onCancel]);
+  useDialogLifecycle({ dialogRef, onDismiss: onCancel });
 
   return createPortal(
     <div
@@ -48,7 +41,6 @@ export function VoteConfirmDialog({
         role="dialog"
         tabIndex={-1}
       >
-        {/* 두 버튼 모달은 입금자명 수정 모달(DepositorNameEditDialog)과 같은 틀을 쓴다. */}
         <p
           className="text-center text-xl leading-6 font-semibold text-[#fcfcfc]"
           id={titleId}

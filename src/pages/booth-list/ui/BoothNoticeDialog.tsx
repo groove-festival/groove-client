@@ -1,4 +1,6 @@
-import { useEffect } from "react";
+import { useRef } from "react";
+
+import { useDialogLifecycle } from "@/shared/ui";
 
 import cheersIcon from "../festival-visuals/cheers.svg";
 
@@ -11,14 +13,8 @@ export const BoothNoticeDialog = ({
   onClose,
   onDismissPermanently,
 }: BoothNoticeDialogProps) => {
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, []);
+  const dialogRef = useRef<HTMLElement>(null);
+  useDialogLifecycle({ dialogRef, onDismiss: onClose });
 
   return (
     <div className="fixed top-0 left-1/2 z-[70] flex h-dvh w-full max-w-[600px] -translate-x-1/2 items-center justify-center overflow-y-auto bg-[rgba(28,28,28,0.5)] p-4 backdrop-blur-[4px]">
@@ -26,6 +22,8 @@ export const BoothNoticeDialog = ({
         aria-labelledby="booth-notice-title"
         aria-modal="true"
         className="flex max-h-[calc(100dvh-32px)] w-full max-w-[320px] flex-col items-center gap-4 overflow-y-auto rounded-[36px] bg-[rgba(252,252,252,0.5)] px-6 py-8 backdrop-blur-[24px]"
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
       >
         <div className="flex w-full flex-col gap-8">
@@ -41,7 +39,6 @@ export const BoothNoticeDialog = ({
             </div>
 
             <ul className="w-full list-disc space-y-[15px] pl-[18px] text-xs leading-[15px]">
-              {/* 줄바꿈은 <br />, 강조는 <strong className="font-bold">…</strong> */}
               <li>
                 주막에서는{" "}
                 <strong className="font-bold">주류를 판매하지 않습니다.</strong>

@@ -1,17 +1,10 @@
-import { useEffect } from "react";
+import { useBodyScrollLock } from "@/shared/ui";
 import { createPortal } from "react-dom";
 
 import locationIcon from "../festival-visuals/location-icon.webp";
 
 export function VoteLocationFindingOverlay() {
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, []);
+  useBodyScrollLock();
 
   return createPortal(
     <div

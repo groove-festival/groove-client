@@ -1,8 +1,8 @@
 import { LocateFixed, X } from "lucide-react";
-import { useEffect } from "react";
+import { useRef } from "react";
 import { createPortal } from "react-dom";
 
-import { InAppBrowserNotice } from "@/shared/ui";
+import { InAppBrowserNotice, useDialogLifecycle } from "@/shared/ui";
 
 interface CampusInAppLocationDialogProps {
   onClose: () => void;
@@ -11,14 +11,8 @@ interface CampusInAppLocationDialogProps {
 export const CampusInAppLocationDialog = ({
   onClose,
 }: CampusInAppLocationDialogProps) => {
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, []);
+  const dialogRef = useRef<HTMLElement>(null);
+  useDialogLifecycle({ dialogRef, onDismiss: onClose });
 
   return createPortal(
     <div className="fixed top-0 left-1/2 z-[70] flex h-dvh w-full max-w-[600px] -translate-x-1/2 items-center justify-center overflow-y-auto bg-[rgba(28,28,28,0.5)] p-4 backdrop-blur-[4px]">
@@ -26,6 +20,8 @@ export const CampusInAppLocationDialog = ({
         aria-labelledby="campus-in-app-location-title"
         aria-modal="true"
         className="relative flex max-h-[calc(100dvh-32px)] w-full max-w-[320px] flex-col items-center gap-8 overflow-y-auto rounded-[36px] bg-[rgba(252,252,252,0.5)] px-6 pt-[52px] pb-8 backdrop-blur-[24px]"
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
       >
         <button

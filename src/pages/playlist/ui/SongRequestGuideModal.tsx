@@ -1,11 +1,10 @@
-import { useEffect, useId, useRef } from "react";
+import { useId, useRef } from "react";
 import { createPortal } from "react-dom";
 
-import { warningIcon } from "@/shared/ui";
+import { warningIcon, useDialogLifecycle } from "@/shared/ui";
 
 const guidelineEmphasisClassName = "font-black text-[#20f0f0]";
 
-// 유의사항 안내 문구. Figma 805:10865의 순서를 그대로 따른다.
 const guidelines = [
   {
     id: "request-period",
@@ -55,8 +54,6 @@ interface SongRequestGuideModalProps {
   onClose: () => void;
 }
 
-// GROOVE PLAYLIST 신청 유의 사항 팝업. Figma 805:10857.
-// 표현 전용 컴포넌트로, 노출 시점은 호출부가 open으로 제어한다.
 export const SongRequestGuideModal = ({
   open,
   onClose,
@@ -66,38 +63,7 @@ export const SongRequestGuideModal = ({
   const dialogRef = useRef<HTMLDivElement>(null);
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    // 확인 버튼이 눌린 것처럼 보이지 않도록, 포커스는 버튼이 아니라
-    // 다이얼로그 컨테이너로 옮긴다. 포커스는 여전히 모달 안에 갇힌다.
-    dialogRef.current?.focus();
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-
-      // 확인 버튼 하나뿐이므로 Tab 이동을 그 버튼으로 가둔다.
-      if (event.key === "Tab") {
-        event.preventDefault();
-        confirmButtonRef.current?.focus();
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = previousOverflow;
-      previouslyFocused?.focus({ preventScroll: true });
-    };
-  }, [open, onClose]);
+  useDialogLifecycle({ dialogRef, open, onDismiss: onClose });
 
   if (!open) {
     return null;

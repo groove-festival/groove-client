@@ -1,19 +1,18 @@
 import { Check, ListFilter } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+
+import { useDialogLifecycle } from "@/shared/ui";
 
 import { formatTableFilter } from "../model/tableFilter";
 
 interface TableFilterSheetProps {
   onChange: (tables: number[]) => void;
-  // 고를 수 있는 테이블 번호. 테이블 목록(PUB-A11)을 못 받았으면 주문에서 모은다.
+
   tableNumbers: number[];
   tables: number[];
 }
 
-// "내 담당 테이블"만 보게 하는 필터. 버튼은 지금 보고 있는 범위를 그대로
-// 적어 두어, 필터가 걸린 채 주문이 없다고 오해하지 않게 한다. 고르는 화면은
-// 엄지로 누르기 쉬운 하단 시트다.
 export const TableFilterSheet = ({
   onChange,
   tableNumbers,
@@ -25,21 +24,11 @@ export const TableFilterSheet = ({
   const sheetRef = useRef<HTMLDivElement>(null);
   const isFiltered = tables.length > 0;
 
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    sheetRef.current?.focus();
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [isOpen]);
+  useDialogLifecycle({
+    dialogRef: sheetRef,
+    open: isOpen,
+    onDismiss: () => setIsOpen(false),
+  });
 
   const open = () => {
     setDraft(tables);

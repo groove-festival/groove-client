@@ -1,19 +1,19 @@
-import { useEffect, useId, useRef } from "react";
+import { useId, useRef } from "react";
 import { createPortal } from "react-dom";
+
+import { useDialogLifecycle } from "@/shared/ui";
 
 import type { CompletedSong } from "../model/songRequestForm";
 
 interface SongRequestCompleteModalProps {
   open: boolean;
   song: CompletedSong | null;
-  // 변경: 팝업만 닫고 입력값을 유지한다.
+
   onChange: () => void;
-  // 확인: 팝업을 닫고 폼을 초기화한다.
+
   onConfirm: () => void;
 }
 
-// 노래 신청 완료 팝업. Figma 805:10830.
-// 표현 전용 컴포넌트로, 노출 시점은 호출부가 open으로 제어한다.
 export const SongRequestCompleteModal = ({
   open,
   song,
@@ -23,62 +23,7 @@ export const SongRequestCompleteModal = ({
   const titleId = useId();
   const descriptionId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
-  const changeButtonRef = useRef<HTMLButtonElement>(null);
-  const confirmButtonRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    // 버튼이 아니라 다이얼로그 컨테이너로 포커스를 옮긴다.
-    dialogRef.current?.focus();
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onChange();
-        return;
-      }
-
-      if (event.key !== "Tab") {
-        return;
-      }
-
-      // 두 버튼 사이로 포커스를 가둔다.
-      const focusables = [changeButtonRef.current, confirmButtonRef.current].filter(
-        (element): element is HTMLButtonElement => element !== null,
-      );
-      if (focusables.length === 0) {
-        return;
-      }
-
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-      const active = document.activeElement;
-
-      if (event.shiftKey && active === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && active === last) {
-        event.preventDefault();
-        first.focus();
-      } else if (!focusables.includes(active as HTMLButtonElement)) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = previousOverflow;
-      previouslyFocused?.focus();
-    };
-  }, [open, onChange]);
+  useDialogLifecycle({ dialogRef, open: open && song !== null, onDismiss: onChange });
 
   if (!open || !song) {
     return null;
@@ -113,7 +58,6 @@ export const SongRequestCompleteModal = ({
               data-clarity-mask="true"
               id={descriptionId}
             >
-              {/* 앨범 커버. 없으면 디자인 placeholder 원을 유지한다. */}
               {song.albumCoverUrl ? (
                 <img
                   alt=""
@@ -138,7 +82,6 @@ export const SongRequestCompleteModal = ({
             <button
               className="flex h-[43px] w-[120px] items-center justify-center rounded-[12px] bg-[rgba(252,252,252,0.3)] px-5 text-base font-semibold text-[#fcfcfc] transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
               onClick={onChange}
-              ref={changeButtonRef}
               type="button"
             >
               변경
@@ -146,7 +89,6 @@ export const SongRequestCompleteModal = ({
             <button
               className="flex h-[43px] w-[120px] items-center justify-center rounded-[12px] bg-[#5d00ff] px-5 text-base font-semibold text-[#fcfcfc] transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
               onClick={onConfirm}
-              ref={confirmButtonRef}
               type="button"
             >
               확인

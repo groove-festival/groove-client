@@ -1,6 +1,8 @@
+import { useRef } from "react";
 import { Link, useLocation } from "react-router";
 
 import { useFestivalStatus } from "@/entities/festival";
+import { useDialogLifecycle } from "@/shared/ui";
 
 import { navItems } from "../model/navItems";
 
@@ -10,6 +12,8 @@ interface FestivalMenuProps {
 }
 
 export const FestivalMenu = ({ isOpen, onClose }: FestivalMenuProps) => {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogLifecycle({ dialogRef, open: isOpen, onDismiss: onClose });
   const location = useLocation();
   const { data: festivalStatus } = useFestivalStatus();
   const previewBadge =
@@ -27,6 +31,9 @@ export const FestivalMenu = ({ isOpen, onClose }: FestivalMenuProps) => {
         isOpen ? "" : "pointer-events-none"
       }`}
       role="dialog"
+      ref={dialogRef}
+      tabIndex={-1}
+      inert={!isOpen}
     >
       <div
         className={`h-full w-full [scrollbar-width:none] overflow-y-auto bg-[#1c1c1c] transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none [&::-webkit-scrollbar]:hidden ${

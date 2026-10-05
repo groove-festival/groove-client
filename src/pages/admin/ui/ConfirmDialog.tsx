@@ -1,18 +1,19 @@
-import { useEffect, useId, useRef } from "react";
+import { useId, useRef } from "react";
 import { createPortal } from "react-dom";
+
+import { useDialogLifecycle } from "@/shared/ui";
 
 interface ConfirmDialogProps {
   open: boolean;
   title: string;
   description?: string;
   confirmLabel?: string;
-  // 확인 버튼을 위험 동작 색으로.
+
   danger?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-// 되돌리기 어려운 관리자 동작(삭제·단계 override) 앞에 세우는 확인 다이얼로그.
 export const ConfirmDialog = ({
   open,
   title,
@@ -25,29 +26,7 @@ export const ConfirmDialog = ({
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    dialogRef.current?.focus();
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onCancel();
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = previousOverflow;
-      previouslyFocused?.focus();
-    };
-  }, [open, onCancel]);
+  useDialogLifecycle({ dialogRef, open, onDismiss: onCancel });
 
   if (!open) {
     return null;

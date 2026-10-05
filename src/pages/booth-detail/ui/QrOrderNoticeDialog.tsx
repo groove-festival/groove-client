@@ -1,4 +1,6 @@
-import { useEffect } from "react";
+import { useRef } from "react";
+
+import { useDialogLifecycle } from "@/shared/ui";
 
 import qrCode from "../festival-visuals/qr-code.svg";
 
@@ -11,14 +13,8 @@ export const QrOrderNoticeDialog = ({
   onClose,
   onDismissPermanently,
 }: QrOrderNoticeDialogProps) => {
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, []);
+  const dialogRef = useRef<HTMLElement>(null);
+  useDialogLifecycle({ dialogRef, onDismiss: onClose });
 
   return (
     <div className="fixed top-0 left-1/2 z-[70] flex h-dvh w-full max-w-[600px] -translate-x-1/2 items-center justify-center overflow-y-auto bg-[rgba(28,28,28,0.5)] p-4 backdrop-blur-[24px]">
@@ -26,6 +22,8 @@ export const QrOrderNoticeDialog = ({
         aria-labelledby="qr-order-notice-title"
         aria-modal="true"
         className="flex max-h-[calc(100dvh-32px)] w-full max-w-[320px] flex-col items-center gap-4 overflow-y-auto rounded-[36px] bg-[rgba(252,252,252,0.5)] px-6 py-8 backdrop-blur-[4px]"
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
       >
         <div className="flex w-full flex-col gap-9">
